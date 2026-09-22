@@ -28,4 +28,10 @@ public class NguoiDung {
 
     @Column(name = "VaiTro", length = 20)
     private String vaiTro;
+
+    @Column(name = "SoDienThoai", length = 20)
+    private String soDienThoai;
+
+    @Column(name = "Email", length = 100)
+    private String email;
 }

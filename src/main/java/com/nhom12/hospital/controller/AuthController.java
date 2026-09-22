@@ -2,6 +2,7 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.dto.LoginRequest;
 import com.nhom12.hospital.dto.LoginResponse;
+import com.nhom12.hospital.dto.RegisterRequest;
 import com.nhom12.hospital.entity.NguoiDung;
 import com.nhom12.hospital.repository.NguoiDungRepository;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -26,8 +28,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-
-
         Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(request.getUsername());
 
         if (userOpt.isEmpty()) {
@@ -36,14 +36,6 @@ public class AuthController {
         }
 
         NguoiDung user = userOpt.get();
-
-        // IN LOG ĐỂ SOI LỖI THỰC TẾ
-        System.out.println("=== KIEM TRA LOGIN ===");
-        System.out.println("Password gui len: [" + request.getPassword() + "]");
-        System.out.println("Mat khau trong DB: [" + user.getMatKhau() + "]");
-        System.out.println("Do dai trong DB : " + (user.getMatKhau() != null ? user.getMatKhau().length() : 0));
-        System.out.println("Ket qua so khop : " + passwordEncoder.matches(request.getPassword(), user.getMatKhau()));
-        System.out.println("======================");
 
         if (!passwordEncoder.matches(request.getPassword(), user.getMatKhau())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -56,23 +48,36 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest request) {
-        Optional<NguoiDung> existing = nguoiDungRepository.findByTenDangNhap(request.getUsername());
-        NguoiDung user;
-
-        if (existing.isPresent()) {
-            user = existing.get();
-        } else {
-            user = new NguoiDung();
-            user.setTenDangNhap(request.getUsername());
-            user.setHoTen("Quản Trị Viên");
-            user.setVaiTro("ADMIN");
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        // 1. Kiểm tra trường bắt buộc
+        if (request.getTenDangNhap() == null || request.getTenDangNhap().trim().isEmpty() ||
+            request.getMatKhau() == null || request.getMatKhau().trim().isEmpty() ||
+            request.getHoTen() == null || request.getHoTen().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Vui lòng nhập đầy đủ tên đăng nhập, mật khẩu và họ tên!"));
         }
 
-        // Tự động mã hóa mật khẩu bằng BCrypt của Spring Security
-        user.setMatKhau(passwordEncoder.encode(request.getPassword()));
+        // 2. Kiểm tra tài khoản trùng lặp
+        Optional<NguoiDung> existing = nguoiDungRepository.findByTenDangNhap(request.getTenDangNhap().trim());
+        if (existing.isPresent()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Tên đăng nhập đã tồn tại!"));
+        }
+
+        // 3. Tạo tài khoản với đầy đủ thông tin
+        NguoiDung user = new NguoiDung();
+        user.setTenDangNhap(request.getTenDangNhap().trim());
+        user.setMatKhau(passwordEncoder.encode(request.getMatKhau().trim()));
+        user.setHoTen(request.getHoTen().trim());
+        user.setSoDienThoai(request.getSoDienThoai());
+        user.setEmail(request.getEmail());
+        user.setVaiTro("PATIENT");
+
         nguoiDungRepository.save(user);
 
-        return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay."
+        ));
     }
 }
