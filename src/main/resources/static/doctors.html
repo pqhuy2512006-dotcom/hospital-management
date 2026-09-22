@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Bác Sĩ & Lịch Trực - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR CHUẨN 10 PHÂN HỆ */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content-body {
+            padding: 24px 32px;
+        }
+
+        /* TAB NAVIGATION */
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #e0f2fe;
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ACTIONS & SEARCH */
+        .action-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 380px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 14px 0 38px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-add-doc {
+            height: 40px;
+            padding: 0 18px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-doc:hover {
+            background: var(--primary-hover);
+        }
+
+        /* TABLE */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .doc-badge {
+            font-weight: 700;
+            color: var(--primary);
+            background: #e0f2fe;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-duty { background: #d1fae5; color: #065f46; }
+        .status-off { background: #fee2e2; color: #991b1b; }
+
+        .btn-tbl-edit {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: #fef3c7;
+            color: #b45309;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-tbl-edit:hover {
+            background: #fde68a;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 640px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            height: 40px;
+            padding: 0 16px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            height: 40px;
+            padding: 0 20px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu chuẩn 10 phân hệ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Quản Lý Nhân Sự Y Tế & Lịch Trực Tuần</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Content Body -->
+        <main class="content-body">
+            <!-- Tab chuyển đổi giữa Danh sách và Lịch trực -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('docListTab', this)">
+                    <i class="fa-solid fa-user-doctor"></i> Danh Sách Bác Sĩ & Nhân Viên (UC63)
+                </button>
+                <button class="tab-btn" onclick="switchTab('rosterTab', this)">
+                    <i class="fa-solid fa-calendar-week"></i> Bảng Phân Công Lịch Trực (Mẫu QLNV_BM2)
+                </button>
+            </div>
+
+            <!-- TAB 1: DANH SÁCH BÁC SĨ (UC63) -->
+            <div id="docListTab" class="tab-content active">
+                <div class="action-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="docSearchInput" class="search-input" 
+                               placeholder="Tìm bác sĩ theo tên, chuyên khoa, phòng khám..." 
+                               onkeyup="filterDoctors()">
+                    </div>
+                    <button class="btn-add-doc" onclick="openAddDocModal()">
+                        <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên / Bác Sĩ Mới (UC64)
+                    </button>
+                </div>
+
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã NV</th>
+                                <th>Họ và Tên</th>
+                                <th>Học Vị / Chức Danh</th>
+                                <th>Chuyên Khoa</th>
+                                <th>Phòng Khám</th>
+                                <th>Số Điện Thoại</th>
+                                <th>Trạng Thái Ca</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorTableBody">
+                            <!-- Render bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: LỊCH TRỰC TUẦN (MẪU QLNV_BM2) -->
+            <div id="rosterTab" class="tab-content">
+                <div class="table-card" style="padding: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fa-solid fa-clipboard-user" style="color:var(--primary);"></i> Lịch Trực Bác Sĩ Trong Tuần (Khoa Khám Bệnh)
+                        </h3>
+                        <span style="font-size: 13px; color: var(--text-muted);">Tuần: 21/09/2026 – 27/09/2026</span>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 160px;">Thứ / Ngày</th>
+                                <th>Ca Sáng (07:00 - 11:30)</th>
+                                <th>Ca Chiều (13:30 - 17:00)</th>
+                                <th>Ca Trực Đêm (17:00 - 07:00)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Thứ 2 (21/09)</strong></td>
+                                <td>BS. CKI. Trần Văn Hùng (Nội)<br><small>ThS. Nguyễn Thị Mai (TMH)</small></td>
+                                <td>BS. Đỗ Minh Quân (Ngoại)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">BS. CKI. Trần Văn Hùng (Trực cấp cứu)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thứ 3 (22/09)</strong></td>
+                                <td>BS. Đỗ Minh Quân (Ngoại)</td>
+                                <td>BS. CKI. Trần Văn Hùng (Nội)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">ThS. Nguyễn Thị Mai</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thứ 4 (23/09)</strong></td>
+                                <td>ThS. Nguyễn Thị Mai (TMH)</td>
+                                <td>BS. CKI. Lê Quốc Dũng (Tiêu hóa)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">BS. Đỗ Minh Quân</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thứ 5 (24/09)</strong></td>
+                                <td>BS. CKI. Trần Văn Hùng (Nội)</td>
+                                <td>BS. Đỗ Minh Quân (Ngoại)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">BS. CKI. Lê Quốc Dũng</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thứ 6 (25/09)</strong></td>
+                                <td>ThS. Nguyễn Thị Mai (TMH)</td>
+                                <td>BS. CKI. Trần Văn Hùng (Nội)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">BS. CKI. Trần Văn Hùng</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thứ 7 (26/09)</strong></td>
+                                <td>BS. CKI. Lê Quốc Dũng (Khám theo yêu cầu)</td>
+                                <td>BS. Đỗ Minh Quân (Khám ngoài giờ)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">ThS. Nguyễn Thị Mai</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chủ Nhật (27/09)</strong></td>
+                                <td>BS. Đỗ Minh Quân (Trực cấp cứu)</td>
+                                <td>BS. CKI. Trần Văn Hùng (Trực ngoại viện)</td>
+                                <td><span style="color:#ef4444; font-weight:600;">Kíp trực luân phiên</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL THÊM / CẬP NHẬT HỒ SƠ NHÂN VIÊN BÁC SĨ (MẪU QLNV_BM1) -->
+    <div class="modal-overlay" id="doctorModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fa-solid fa-user-doctor" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế (Mẫu QLNV_BM1)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeDoctorModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveDoctor(event)">
+                <div class="modal-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Mã Nhân Viên *</label>
+                            <input type="text" id="dMaNV" class="form-control" readonly style="background:#f1f5f9; font-weight:700; color:var(--primary);">
+                        </div>
+                        <div class="form-group">
+                            <label>Họ và Tên Bác Sĩ / Nhân Viên *</label>
+                            <input type="text" id="dHoTen" class="form-control" placeholder="Ví dụ: Trần Văn Hùng" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Học Vị / Chức Danh *</label>
+                            <select id="dHocVi" class="form-control" required>
+                                <option value="Bác sĩ CKI">BS. CKI</option>
+                                <option value="Bác sĩ CKII">BS. CKII</option>
+                                <option value="Thạc sĩ Bác sĩ">ThS. Bác sĩ</option>
+                                <option value="Tiến sĩ Bác sĩ">TS. Bác sĩ</option>
+                                <option value="Bác sĩ Đa khoa">Bác sĩ Đa khoa</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chuyên Khoa Làm Việc *</label>
+                            <select id="dChuyenKhoa" class="form-control" required>
+                                <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp</option>
+                                <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng</option>
+                                <option value="Khoa Ngoại Tiêu Hóa">Khoa Ngoại Tiêu Hóa</option>
+                                <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
+                                <option value="Khoa Chẩn Đoán Hình Ảnh">Khoa Cận Lâm Sàng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Phòng Khám Phụ Trách *</label>
+                            <input type="text" id="dPhongKham" class="form-control" placeholder="Ví dụ: P.204" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số Điện Thoại Liên Lạc *</label>
+                            <input type="tel" id="dSDT" class="form-control" placeholder="Ví dụ: 0912348899" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Chứng Chỉ Hành Nghề (CCHN)</label>
+                            <input type="text" id="dCCHN" class="form-control" placeholder="Ví dụ: 012345/BYT-CCHN">
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng Thái Làm Việc</label>
+                            <select id="dDangTruc" class="form-control">
+                                <option value="true">Đang trực ca / Sẵn sàng khám</option>
+                                <option value="false">Tạm nghỉ / Không trực</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeDoctorModal()">Hủy Bỏ</button>
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT NGHIỆP VỤ BÁC SĨ -->
+    <script>
+        let doctors = [
+            {
+                maNV: "NV-DOC01",
+                hoTen: "Trần Văn Hùng",
+                hocVi: "BS. CKI",
+                chuyenKhoa: "Khoa Nội Tổng Hợp",
+                phongKham: "P.204 (Tầng 2)",
+                sdt: "0912348899",
+                cchn: "001234/HCM-CCHN",
+                dangTruc: true
+            },
+            {
+                maNV: "NV-DOC02",
+                hoTen: "Nguyễn Thị Mai",
+                hocVi: "ThS. Bác sĩ",
+                chuyenKhoa: "Khoa Tai Mũi Họng",
+                phongKham: "P.108 (Tầng 1)",
+                sdt: "0988223344",
+                cchn: "005678/HCM-CCHN",
+                dangTruc: true
+            },
+            {
+                maNV: "NV-DOC03",
+                hoTen: "Lê Quốc Dũng",
+                hocVi: "BS. CKI",
+                chuyenKhoa: "Khoa Ngoại Tiêu Hóa",
+                phongKham: "P.301 (Tầng 3)",
+                sdt: "0903114455",
+                cchn: "009988/HCM-CCHN",
+                dangTruc: false
+            },
+            {
+                maNV: "NV-DOC04",
+                hoTen: "Đỗ Minh Quân",
+                hocVi: "Bác sĩ Đa khoa",
+                chuyenKhoa: "Khoa Cấp Cứu",
+                phongKham: "Khu Cấp Cứu A",
+                sdt: "0977112233",
+                cchn: "004321/HCM-CCHN",
+                dangTruc: true
+            }
+        ];
+
+        let isEditDoc = false;
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function renderDoctors(list = doctors) {
+            const tbody = document.getElementById('doctorTableBody');
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Không tìm thấy nhân viên/bác sĩ phù hợp</td></tr>`;
+                return;
+            }
+
+            list.forEach(doc => {
+                const statusHtml = doc.dangTruc
+                    ? '<span class="status-pill status-duty"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Đang trực ca</span>'
+                    : '<span class="status-pill status-off"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Không trực</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="doc-badge">${doc.maNV}</span></td>
+                        <td><strong>${doc.hoTen}</strong></td>
+                        <td>${doc.hocVi}</td>
+                        <td>${doc.chuyenKhoa}</td>
+                        <td>${doc.phongKham}</td>
+                        <td>${doc.sdt}</td>
+                        <td>${statusHtml}</td>
+                        <td>
+                            <button class="btn-tbl-edit" onclick="openEditDocModal('${doc.maNV}')">
+                                <i class="fa-solid fa-pen-to-square"></i> Sửa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterDoctors() {
+            const kw = document.getElementById('docSearchInput').value.trim().toLowerCase();
+            const filtered = doctors.filter(d => 
+                d.hoTen.toLowerCase().includes(kw) ||
+                d.chuyenKhoa.toLowerCase().includes(kw) ||
+                d.phongKham.toLowerCase().includes(kw) ||
+                d.maNV.toLowerCase().includes(kw)
+            );
+            renderDoctors(filtered);
+        }
+
+        function openAddDocModal() {
+            isEditDoc = false;
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế Mới (UC64)';
+            document.getElementById('dMaNV').value = `NV-DOC0${doctors.length + 1}`;
+            document.getElementById('dHoTen').value = '';
+            document.getElementById('dPhongKham').value = '';
+            document.getElementById('dSDT').value = '';
+            document.getElementById('dCCHN').value = '';
+            document.getElementById('doctorModal').style.display = 'flex';
+        }
+
+        function openEditDocModal(maNV) {
+            const doc = doctors.find(d => d.maNV === maNV);
+            if (!doc) return;
+
+            isEditDoc = true;
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Bác Sĩ (UC65)';
+            document.getElementById('dMaNV').value = doc.maNV;
+            document.getElementById('dHoTen').value = doc.hoTen;
+            document.getElementById('dHocVi').value = doc.hocVi;
+            document.getElementById('dChuyenKhoa').value = doc.chuyenKhoa;
+            document.getElementById('dPhongKham').value = doc.phongKham;
+            document.getElementById('dSDT').value = doc.sdt;
+            document.getElementById('dCCHN').value = doc.cchn;
+            document.getElementById('dDangTruc').value = doc.dangTruc ? "true" : "false";
+
+            document.getElementById('doctorModal').style.display = 'flex';
+        }
+
+        function closeDoctorModal() {
+            document.getElementById('doctorModal').style.display = 'none';
+        }
+
+        function handleSaveDoctor(e) {
+            e.preventDefault();
+            const maNV = document.getElementById('dMaNV').value;
+            const hoTen = document.getElementById('dHoTen').value.trim();
+            const hocVi = document.getElementById('dHocVi').value;
+            const chuyenKhoa = document.getElementById('dChuyenKhoa').value;
+            const phongKham = document.getElementById('dPhongKham').value.trim();
+            const sdt = document.getElementById('dSDT').value.trim();
+            const cchn = document.getElementById('dCCHN').value.trim();
+            const dangTruc = document.getElementById('dDangTruc').value === "true";
+
+            if (!isEditDoc) {
+                // Kiểm tra trùng số điện thoại theo quy tắc QLNV
+                if (doctors.some(d => d.sdt === sdt)) {
+                    alert(`Số điện thoại ${sdt} đã được đăng ký cho nhân viên khác!`);
+                    return;
+                }
+
+                doctors.push({ maNV, hoTen, hocVi, chuyenKhoa, phongKham, sdt, cchn, dangTruc });
+                alert(`Thêm bác sĩ ${hoTen} vào hệ thống thành công!`);
+            } else {
+                const target = doctors.find(d => d.maNV === maNV);
+                if (target) {
+                    target.hoTen = hoTen;
+                    target.hocVi = hocVi;
+                    target.chuyenKhoa = chuyenKhoa;
+                    target.phongKham = phongKham;
+                    target.sdt = sdt;
+                    target.cchn = cchn;
+                    target.dangTruc = dangTruc;
+                    alert(`Cập nhật thông tin bác sĩ ${hoTen} thành công!`);
+                }
+            }
+
+            closeDoctorModal();
+            renderDoctors();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderDoctors();
+        };
+    </script>
+</body>
+</html>

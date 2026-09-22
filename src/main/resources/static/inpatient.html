@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Khoa, Phòng & Giường Bệnh - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .content-body {
+            padding: 24px 32px;
+        }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-card .val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* FILTER & CONTROLS */
+        .controls-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .select-filter {
+            height: 40px;
+            padding: 0 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .select-filter:focus {
+            border-color: var(--primary);
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .dot.available { background: #d1fae5; border: 1.5px solid #10b981; }
+        .dot.occupied { background: #fee2e2; border: 1.5px solid #ef4444; }
+
+        /* SƠ ĐỒ PHÒNG & GIƯỜNG */
+        .rooms-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .room-block {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .room-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .room-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .beds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 14px;
+        }
+
+        .bed-card {
+            border-radius: 10px;
+            padding: 14px;
+            border: 1.5px solid var(--border-color);
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+            background: #ffffff;
+        }
+
+        .bed-card.available {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .bed-card.available:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .bed-card.occupied {
+            border-color: #ef4444;
+            background: #fff5f5;
+        }
+
+        .bed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .bed-id {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bed-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .badge-free { background: #d1fae5; color: #065f46; }
+        .badge-busy { background: #fee2e2; color: #991b1b; }
+
+        .bed-patient-info {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .bed-patient-info strong {
+            color: var(--slate-900);
+        }
+
+        .btn-action-bed {
+            margin-top: 10px;
+            width: 100%;
+            height: 32px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-assign {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .btn-assign:hover {
+            background: #059669;
+        }
+
+        .btn-release {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fecdd3;
+        }
+
+        .btn-release:hover {
+            background: #fecdd3;
+        }
+
+        /* MODAL POPUP */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            height: 40px;
+            padding: 0 16px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save-assign {
+            height: 40px;
+            padding: 0 20px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html" class="active"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Quản Lý Khoa, Phòng Bệnh & Điều Phối Giường Nội Trú</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Body -->
+        <main class="content-body">
+            <!-- Thống kê tổng số giường -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div>
+                        <div class="label">Tổng Số Giường Thiết Lập</div>
+                        <div class="val" id="lblTotalBeds">18</div>
+                    </div>
+                    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="label">Giường Đang Sử Dụng</div>
+                        <div class="val" id="lblOccupiedBeds" style="color: #ef4444;">11</div>
+                    </div>
+                    <div class="stat-icon" style="background: #fee2e2; color: #ef4444;">
+                        <i class="fa-solid fa-user-injured"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="label">Giường Còn Trống (Khả Dụng)</div>
+                        <div class="val" id="lblAvailableBeds" style="color: #10b981;">7</div>
+                    </div>
+                    <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="label">Công Suất Sử Dụng Giường</div>
+                        <div class="val" id="lblOccupancyRate">61.1%</div>
+                    </div>
+                    <div class="stat-icon" style="background: #fef3c7; color: #b45309;">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bộ lọc & Chú thích -->
+            <div class="controls-card">
+                <div class="filter-group">
+                    <label style="font-size: 13.5px; font-weight: 600;">Lọc theo Khoa:</label>
+                    <select id="selDept" class="select-filter" onchange="renderRooms()">
+                        <option value="ALL">Tất cả các khoa điều trị</option>
+                        <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp</option>
+                        <option value="Khoa Ngoại Tiêu Hóa">Khoa Ngoại Tiêu Hóa</option>
+                        <option value="Khoa Cấp Cứu">Khoa Cấp Cứu & Hồi Sức</option>
+                    </select>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="dot available"></div>
+                        <span>Giường trống (Sẵn sàng tiếp nhận)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot occupied"></div>
+                        <span>Đang có bệnh nhân nằm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sơ đồ phòng bệnh và giường -->
+            <div class="rooms-container" id="roomsContainer">
+                <!-- Render bằng Javascript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL XẾP GIƯỜNG BỆNH NHÂN -->
+    <div class="modal-overlay" id="assignModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-bed" style="color: var(--primary);"></i> Xếp Bệnh Nhân Vào Giường</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <form onsubmit="confirmAssignBed(event)">
+                <div class="modal-body">
+                    <div style="background:#f8fafc; padding:10px 14px; border-radius:8px; font-size:13.5px; border:1px solid var(--border-color);">
+                        Giường chỉ định: <strong id="modalBedId" style="color:var(--primary);">G-301-A</strong> | <span id="modalRoomName">Phòng 301</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mã Bệnh Nhân (Mã BN) *</label>
+                        <input type="text" id="assignPatientId" class="form-control" placeholder="Ví dụ: BN20260001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và Tên Bệnh Nhân *</label>
+                        <input type="text" id="assignPatientName" class="form-control" placeholder="Nhập tên người bệnh" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Chẩn Đoán Nhập Viện</label>
+                        <input type="text" id="assignDiagnosis" class="form-control" placeholder="Ví dụ: Viêm phổi cấp, theo dõi K...">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày Giờ Nhập Viện *</label>
+                        <input type="datetime-local" id="assignDate" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeAssignModal()">Hủy</button>
+                    <button type="submit" class="btn-save-assign">
+                        <i class="fa-solid fa-check"></i> Xác Nhận Nhận Giường
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC GIƯỜNG BỆNH -->
+    <script>
+        // Dữ liệu mẫu danh sách phòng và giường (theo bảng GIUONGBENH & NOITRU trong CSDL)
+        let departmentsData = [
+            {
+                deptName: "Khoa Nội Tổng Hợp",
+                rooms: [
+                    {
+                        roomId: "P201",
+                        roomName: "Phòng 201 (Nội Tổng Hợp - 4 Giường)",
+                        beds: [
+                            { bedId: "GB-201-1", status: "OCCUPIED", patientId: "BN20260001", patientName: "Nguyễn Văn An", inDate: "2026-09-18 09:30", diag: "Viêm loét dạ dày tá tràng" },
+                            { bedId: "GB-201-2", status: "OCCUPIED", patientId: "BN20260002", patientName: "Trần Thị Mai", inDate: "2026-09-19 14:15", diag: "Theo dõi sốt xuất huyết Dengue" },
+                            { bedId: "GB-201-3", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null },
+                            { bedId: "GB-201-4", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
+                        ]
+                    },
+                    {
+                        roomId: "P202",
+                        roomName: "Phòng 202 (Nội Tim Mạch - 3 Giường)",
+                        beds: [
+                            { bedId: "GB-202-1", status: "OCCUPIED", patientId: "BN20260003", patientName: "Lê Hoàng Long", inDate: "2026-09-20 08:00", diag: "Tăng huyết áp độ 2" },
+                            { bedId: "GB-202-2", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null },
+                            { bedId: "GB-202-3", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
+                        ]
+                    }
+                ]
+            },
+            {
+                deptName: "Khoa Ngoại Tiêu Hóa",
+                rooms: [
+                    {
+                        roomId: "P301",
+                        roomName: "Phòng 301 (Hậu Phẫu Ngoại - 4 Giường)",
+                        beds: [
+                            { bedId: "GB-301-1", status: "OCCUPIED", patientId: "BN20260004", patientName: "Võ Văn Kiệt", inDate: "2026-09-17 11:20", diag: "Hậu phẫu cắt ruột thừa ngày 3" },
+                            { bedId: "GB-301-2", status: "OCCUPIED", patientId: "BN20260005", patientName: "Đỗ Thị Bích", inDate: "2026-09-19 16:40", diag: "Sỏi túi mật có triệu chứng" },
+                            { bedId: "GB-301-3", status: "OCCUPIED", patientId: "BN20260006", patientName: "Phạm Hữu Tài", inDate: "2026-09-20 10:00", diag: "Viêm tụy cấp nhẹ" },
+                            { bedId: "GB-301-4", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
+                        ]
+                    }
+                ]
+            },
+            {
+                deptName: "Khoa Cấp Cứu",
+                rooms: [
+                    {
+                        roomId: "P101",
+                        roomName: "Phòng 101 (Lưu Bệnh Cấp Cứu - 5 Giường)",
+                        beds: [
+                            { bedId: "GB-101-1", status: "OCCUPIED", patientId: "BN20260007", patientName: "Huỳnh Quốc Đạt", inDate: "2026-09-21 02:30", diag: "Đa chấn thương phần mềm" },
+                            { bedId: "GB-101-2", status: "OCCUPIED", patientId: "BN20260008", patientName: "Nguyễn Minh Tân", inDate: "2026-09-21 05:15", diag: "Ngộ độc thực phẩm" },
+                            { bedId: "GB-101-3", status: "OCCUPIED", patientId: "BN20260009", patientName: "Lý Gia Hân", inDate: "2026-09-21 07:00", diag: "Cơn hen phế quản cấp" },
+                            { bedId: "GB-101-4", status: "OCCUPIED", patientId: "BN20260010", patientName: "Bùi Văn Nam", inDate: "2026-09-21 07:45", diag: "Chóng mặt kịch phát" },
+                            { bedId: "GB-101-5", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        let selectedTargetBed = null;
+
+        function renderRooms() {
+            const filterDept = document.getElementById('selDept').value;
+            const container = document.getElementById('roomsContainer');
+            container.innerHTML = '';
+
+            let totalBeds = 0;
+            let occupiedBeds = 0;
+
+            departmentsData.forEach(dept => {
+                if (filterDept !== 'ALL' && dept.deptName !== filterDept) return;
+
+                dept.rooms.forEach(room => {
+                    let bedsHtml = '';
+
+                    room.beds.forEach(bed => {
+                        totalBeds++;
+                        const isOccupied = bed.status === 'OCCUPIED';
+                        if (isOccupied) occupiedBeds++;
+
+                        const cardClass = isOccupied ? 'occupied' : 'available';
+                        const badgeHtml = isOccupied 
+                            ? '<span class="bed-badge badge-busy"><i class="fa-solid fa-lock"></i> Có người</span>'
+                            : '<span class="bed-badge badge-free"><i class="fa-solid fa-check"></i> Trống</span>';
+
+                        const infoHtml = isOccupied
+                            ? `
+                                <div class="bed-patient-info">
+                                    <div>Bệnh nhân: <strong>${bed.patientName}</strong></div>
+                                    <div>Mã BN: <strong>${bed.patientId}</strong></div>
+                                    <div>Chẩn đoán: ${bed.diag}</div>
+                                    <div>Vào viện: <small>${bed.inDate}</small></div>
+                                </div>
+                                <button class="btn-action-bed btn-release" onclick="releaseBed('${bed.bedId}')">
+                                    <i class="fa-solid fa-person-walking-arrow-right"></i> Trả Giường / Xuất Viện
+                                </button>
+                            `
+                            : `
+                                <div class="bed-patient-info" style="color:#059669; min-height:74px; display:flex; align-items:center; justify-content:center;">
+                                    <span><i class="fa-regular fa-circle-check"></i> Giường sạch sẵn sàng</span>
+                                </div>
+                                <button class="btn-action-bed btn-assign" onclick="openAssignModal('${bed.bedId}', '${room.roomName}')">
+                                    <i class="fa-solid fa-user-plus"></i> Xếp Bệnh Nhân
+                                </button>
+                            `;
+
+                        bedsHtml += `
+                            <div class="bed-card ${cardClass}">
+                                <div class="bed-header">
+                                    <span class="bed-id"><i class="fa-solid fa-bed"></i> ${bed.bedId}</span>
+                                    ${badgeHtml}
+                                </div>
+                                ${infoHtml}
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML += `
+                        <div class="room-block">
+                            <div class="room-header">
+                                <h4><i class="fa-solid fa-door-open" style="color:var(--primary);"></i> ${room.roomName}</h4>
+                                <span style="font-size:13px; color:var(--text-muted);">Khoa: <strong>${dept.deptName}</strong></span>
+                            </div>
+                            <div class="beds-grid">
+                                ${bedsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            // Cập nhật thẻ thống kê
+            const availableBeds = totalBeds - occupiedBeds;
+            const rate = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : 0;
+
+            document.getElementById('lblTotalBeds').innerText = totalBeds;
+            document.getElementById('lblOccupiedBeds').innerText = occupiedBeds;
+            document.getElementById('lblAvailableBeds').innerText = availableBeds;
+            document.getElementById('lblOccupancyRate').innerText = `${rate}%`;
+        }
+
+        // Mở Modal xếp giường
+        function openAssignModal(bedId, roomName) {
+            selectedTargetBed = bedId;
+            document.getElementById('modalBedId').innerText = bedId;
+            document.getElementById('modalRoomName').innerText = roomName;
+            
+            // Tự điền ngày giờ hiện tại
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('assignDate').value = now.toISOString().slice(0, 16);
+
+            document.getElementById('assignModal').style.display = 'flex';
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').style.display = 'none';
+        }
+
+        // Xác nhận gán bệnh nhân vào giường
+        function confirmAssignBed(e) {
+            e.preventDefault();
+            const pid = document.getElementById('assignPatientId').value.trim();
+            const pname = document.getElementById('assignPatientName').value.trim();
+            const diag = document.getElementById('assignDiagnosis').value.trim() || 'Theo dõi điều trị nội trú';
+            const indate = document.getElementById('assignDate').value.replace('T', ' ');
+
+            // Tìm và cập nhật giường
+            departmentsData.forEach(dept => {
+                dept.rooms.forEach(room => {
+                    const bed = room.beds.find(b => b.bedId === selectedTargetBed);
+                    if (bed) {
+                        bed.status = 'OCCUPIED';
+                        bed.patientId = pid;
+                        bed.patientName = pname;
+                        bed.diag = diag;
+                        bed.inDate = indate;
+                    }
+                });
+            });
+
+            closeAssignModal();
+            renderRooms();
+            alert(`Đã xếp bệnh nhân ${pname} (${pid}) vào giường ${selectedTargetBed} thành công!`);
+        }
+
+        // Trả giường / Xuất viện
+        function releaseBed(bedId) {
+            if (confirm(`Bạn có chắc chắn muốn làm thủ tục xuất viện và giải phóng giường ${bedId}?`)) {
+                departmentsData.forEach(dept => {
+                    dept.rooms.forEach(room => {
+                        const bed = room.beds.find(b => b.bedId === bedId);
+                        if (bed) {
+                            bed.status = 'AVAILABLE';
+                            bed.patientId = null;
+                            bed.patientName = null;
+                            bed.diag = null;
+                            bed.inDate = null;
+                        }
+                    });
+                });
+                renderRooms();
+                alert(`Giường ${bedId} đã được trả và chuyển sang trạng thái Sẵn sàng tiếp nhận!`);
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderRooms();
+        };
+    </script>
+    <script src="/auth-guard.js"></script>
+</body>
+</html>

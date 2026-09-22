@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Cận Lâm Sàng & Xét Nghiệm - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .content-body {
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* DANH SÁCH CHỈ ĐỊNH (CỘT TRÁI) */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 680px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        .order-item:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .order-item.active {
+            border-color: var(--primary);
+            background: #e0f2fe;
+        }
+
+        .order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .badge-pending { background: #fef3c7; color: #b45309; }
+        .badge-completed { background: #d1fae5; color: #065f46; }
+
+        /* FORM NHẬP KẾT QUẢ (CỘT PHẢI) */
+        .patient-summary {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 13.5px;
+        }
+
+        .patient-summary strong {
+            color: var(--slate-900);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .input-val {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .input-val:focus {
+            border-color: var(--primary);
+        }
+
+        .input-val.abnormal {
+            border-color: var(--danger);
+            color: var(--danger);
+            font-weight: 700;
+            background: #fff1f2;
+        }
+
+        .status-abnormal-tag {
+            color: #ef4444;
+            font-weight: 700;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        textarea.form-control {
+            width: 100%;
+            height: 70px;
+            padding: 8px 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            resize: vertical;
+        }
+
+        textarea.form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-submit-result {
+            height: 44px;
+            padding: 0 24px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit-result:hover {
+            background: var(--primary-hover);
+        }
+
+        @media (max-width: 1024px) {
+            .content-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html" class="active"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Phòng Tiếp Nhận Chỉ Định & Nhập Kết Quả Cận Lâm Sàng</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Body -->
+        <main class="content-body">
+            <!-- Cột trái: Danh sách yêu cầu xét nghiệm chờ tiếp nhận -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-list-check"></i> Hàng Đợi Xét Nghiệm (CLS)</h3>
+                    <span class="badge badge-pending" id="pendingCount">3 yêu cầu</span>
+                </div>
+                <div class="order-list" id="orderContainer">
+                    <!-- Render bằng JS -->
+                </div>
+            </div>
+
+            <!-- Cột phải: Phiếu nhập kết quả mẫu QLCLS_BM1 -->
+            <div class="panel-card" id="resultFormCard">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-file-medical"></i> Phiếu Kết Quả Xét Nghiệm (Mẫu QLCLS_BM1)</h3>
+                    <span id="orderStatusBadge" class="badge badge-pending">Chờ nhập kết quả</span>
+                </div>
+
+                <div class="patient-summary">
+                    <div>Mã chỉ định: <strong id="lblOrderCode">CLS2026-001</strong></div>
+                    <div>Họ và tên: <strong id="lblPatientName">Nguyễn Văn An</strong></div>
+                    <div>Mã bệnh nhân: <strong id="lblPatientId">BN20260001</strong></div>
+                    <div>Bác sĩ chỉ định: <strong id="lblDoctor">BS. CKI. Trần Văn Hùng</strong></div>
+                    <div>Khoa: <strong id="lblDept">Khoa Nội Tổng Hợp</strong></div>
+                    <div>Dịch vụ: <strong id="lblService" style="color: var(--primary);">Tổng phân tích tế bào máu</strong></div>
+                </div>
+
+                <form id="labResultForm" onsubmit="handleSaveResult(event)">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Chỉ Số</th>
+                                <th style="width: 140px;">Kết Quả Đo</th>
+                                <th>Đơn Vị</th>
+                                <th>Khoảng Tham Chiếu</th>
+                                <th>Đánh Giá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testParametersBody">
+                            <!-- Render chỉ số xét nghiệm -->
+                        </tbody>
+                    </table>
+
+                    <div class="form-group">
+                        <label>Kết luận của Kỹ thuật viên / Bác sĩ đọc kết quả *</label>
+                        <textarea id="labConclusion" class="form-control" placeholder="Ghi chú kết luận tổng thể (ví dụ: Số lượng bạch cầu tăng nhẹ, nghi ngờ nhiễm khuẩn...)"></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                        <div style="font-size: 13px; color: var(--text-muted);">
+                            Kỹ thuật viên phụ trách: <strong>KTV. Phạm Quốc Huy</strong>
+                        </div>
+                        <button type="submit" class="btn-submit-result" id="btnSaveResult">
+                            <i class="fa-solid fa-paper-plane"></i> Lưu & Trả Kết Quả Về Bác Sĩ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT NGHIỆP VỤ CẬN LÂM SÀNG -->
+    <script>
+        // Dữ liệu chỉ định mẫu chuyển từ phòng khám qua
+        let labOrders = [
+            {
+                id: "CLS2026-001",
+                patientId: "BN20260001",
+                patientName: "Nguyễn Văn An",
+                doctor: "BS. CKI. Trần Văn Hùng",
+                dept: "Khoa Nội Tổng Hợp",
+                service: "Tổng phân tích tế bào máu (Huyết học)",
+                status: "PENDING",
+                params: [
+                    { name: "Số lượng hồng cầu (RBC)", val: "", unit: "T/L", refMin: 4.2, refMax: 5.4 },
+                    { name: "Huyết sắc tố (Hb)", val: "", unit: "g/L", refMin: 130, refMax: 160 },
+                    { name: "Số lượng bạch cầu (WBC)", val: "", unit: "G/L", refMin: 4.0, refMax: 10.0 },
+                    { name: "Số lượng tiểu cầu (PLT)", val: "", unit: "G/L", refMin: 150, refMax: 400 }
+                ],
+                conclusion: ""
+            },
+            {
+                id: "CLS2026-002",
+                patientId: "BN20260002",
+                patientName: "Trần Thị Mai",
+                doctor: "BS. CKI. Trần Văn Hùng",
+                dept: "Khoa Nội Tổng Hợp",
+                service: "Sinh hóa máu (Đường huyết Glucose)",
+                status: "PENDING",
+                params: [
+                    { name: "Glucose lúc đói", val: "", unit: "mmol/L", refMin: 3.9, refMax: 6.4 },
+                    { name: "Ure máu", val: "", unit: "mmol/L", refMin: 2.5, refMax: 7.5 },
+                    { name: "Creatinine", val: "", unit: "µmol/L", refMin: 62, refMax: 115 }
+                ],
+                conclusion: ""
+            },
+            {
+                id: "CLS2026-003",
+                patientId: "BN20260003",
+                patientName: "Lê Hoàng Long",
+                doctor: "ThS. Nguyễn Thị Mai",
+                dept: "Khoa Tai Mũi Họng",
+                service: "X-Quang tim phổi thẳng",
+                status: "COMPLETED",
+                params: [
+                    { name: "Hình ảnh nhu mô phổi", val: "Bình thường", unit: "---", refMin: null, refMax: null },
+                    { name: "Bóng tim", val: "Không to", unit: "---", refMin: null, refMax: null }
+                ],
+                conclusion: "Hình ảnh tim phổi thẳng hiện tại chưa thấy tổn thương rõ rệt."
+            }
+        ];
+
+        let currentSelectedIndex = 0;
+
+        function renderOrderList() {
+            const container = document.getElementById('orderContainer');
+            container.innerHTML = '';
+
+            let pendingCount = 0;
+
+            labOrders.forEach((order, index) => {
+                if (order.status === 'PENDING') pendingCount++;
+
+                const activeClass = index === currentSelectedIndex ? 'active' : '';
+                const badgeStatus = order.status === 'PENDING' 
+                    ? '<span class="badge badge-pending">Chờ thực hiện</span>'
+                    : '<span class="badge badge-completed">Đã trả kết quả</span>';
+
+                container.innerHTML += `
+                    <div class="order-item ${activeClass}" onclick="selectOrder(${index})">
+                        <div class="order-item-header">
+                            <strong>${order.id}</strong>
+                            ${badgeStatus}
+                        </div>
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${order.patientName} (${order.patientId})</div>
+                        <div style="font-size: 12.5px; color: var(--text-muted);"><i class="fa-solid fa-stethoscope"></i> ${order.service}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Chỉ định: ${order.doctor}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('pendingCount').innerText = `${pendingCount} yêu cầu`;
+        }
+
+        function selectOrder(index) {
+            currentSelectedIndex = index;
+            renderOrderList();
+            loadOrderForm(labOrders[index]);
+        }
+
+        function loadOrderForm(order) {
+            document.getElementById('lblOrderCode').innerText = order.id;
+            document.getElementById('lblPatientName').innerText = order.patientName;
+            document.getElementById('lblPatientId').innerText = order.patientId;
+            document.getElementById('lblDoctor').innerText = order.doctor;
+            document.getElementById('lblDept').innerText = order.dept;
+            document.getElementById('lblService').innerText = order.service;
+
+            const badge = document.getElementById('orderStatusBadge');
+            const btn = document.getElementById('btnSaveResult');
+            const conclusionInput = document.getElementById('labConclusion');
+
+            if (order.status === 'COMPLETED') {
+                badge.className = 'badge badge-completed';
+                badge.innerText = 'Đã hoàn tất & Trả kết quả';
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Đã Trả Kết Quả';
+            } else {
+                badge.className = 'badge badge-pending';
+                badge.innerText = 'Chờ nhập kết quả';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Lưu & Trả Kết Quả Về Bác Sĩ';
+            }
+
+            conclusionInput.value = order.conclusion || '';
+
+            // Render tham số
+            const tbody = document.getElementById('testParametersBody');
+            tbody.innerHTML = '';
+
+            order.params.forEach((param, pIdx) => {
+                const refText = param.refMin !== null ? `${param.refMin} - ${param.refMax}` : 'Bình thường';
+                const isCompleted = order.status === 'COMPLETED';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${param.name}</strong></td>
+                        <td>
+                            <input type="text" class="input-val" id="param_val_${pIdx}" 
+                                value="${param.val}" 
+                                ${isCompleted ? 'readonly' : ''} 
+                                onkeyup="checkAbnormal(${pIdx})"
+                                placeholder="Nhập kết quả...">
+                        </td>
+                        <td>${param.unit}</td>
+                        <td>${refText}</td>
+                        <td id="eval_${pIdx}">
+                            <!-- Đánh giá hiển thị tự động -->
+                        </td>
+                    </tr>
+                `;
+                checkAbnormal(pIdx);
+            });
+        }
+
+        function checkAbnormal(pIdx) {
+            const order = labOrders[currentSelectedIndex];
+            const param = order.params[pIdx];
+            const input = document.getElementById(`param_val_${pIdx}`);
+            const evalTd = document.getElementById(`eval_${pIdx}`);
+
+            if (!input || !evalTd) return;
+
+            const val = parseFloat(input.value);
+
+            if (isNaN(val) || param.refMin === null) {
+                input.classList.remove('abnormal');
+                evalTd.innerHTML = input.value ? '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Đạt</span>' : '';
+                return;
+            }
+
+            if (val < param.refMin) {
+                input.classList.add('abnormal');
+                evalTd.innerHTML = '<span class="status-abnormal-tag"><i class="fa-solid fa-arrow-down"></i> Giảm thấp</span>';
+            } else if (val > param.refMax) {
+                input.classList.add('abnormal');
+                evalTd.innerHTML = '<span class="status-abnormal-tag"><i class="fa-solid fa-arrow-up"></i> Tăng cao</span>';
+            } else {
+                input.classList.remove('abnormal');
+                evalTd.innerHTML = '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Bình thường</span>';
+            }
+        }
+
+        function handleSaveResult(e) {
+            e.preventDefault();
+            const order = labOrders[currentSelectedIndex];
+            const conclusion = document.getElementById('labConclusion').value.trim();
+
+            if (!conclusion) {
+                alert("Vui lòng nhập kết luận tổng thể trước khi trả kết quả về bác sĩ!");
+                return;
+            }
+
+            // Lưu các giá trị đo được
+            order.params.forEach((param, pIdx) => {
+                const input = document.getElementById(`param_val_${pIdx}`);
+                if (input) param.val = input.value;
+            });
+
+            order.conclusion = conclusion;
+            order.status = 'COMPLETED';
+
+            alert(`Lưu và trả kết quả chỉ định ${order.id} về hồ sơ bệnh án thành công! Bác sĩ đã có thể xem được ngay.`);
+            renderOrderList();
+            loadOrderForm(order);
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderOrderList();
+            loadOrderForm(labOrders[0]);
+        };
+    </script>
+    <script src="/auth-guard.js"></script>
+</body>
+</html>

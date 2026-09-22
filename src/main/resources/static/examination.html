@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám Bệnh & Kê Đơn - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR CHUẨN 10 PHÂN HỆ */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .content-body {
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* QUEUE LIST (CỘT TRÁI) */
+        .queue-item {
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        .queue-item:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .queue-item.active {
+            border-color: var(--primary);
+            background: #e0f2fe;
+        }
+
+        .queue-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .badge-stt {
+            font-weight: 700;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+        }
+
+        .badge-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .status-waiting { background: #fef3c7; color: #b45309; }
+        .status-examining { background: #d1fae5; color: #065f46; }
+
+        /* FORM KHÁM (CỘT PHẢI) */
+        .patient-summary-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            font-size: 13.5px;
+        }
+
+        .patient-summary-box strong {
+            color: var(--text-dark);
+        }
+
+        .vital-signs-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            height: 38px;
+            padding: 0 10px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        textarea.form-control {
+            height: 60px;
+            padding: 8px;
+            resize: vertical;
+        }
+
+        /* SECTION KHỐI CLS VÀ ĐƠN THUỐC */
+        .section-box {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 18px;
+            background: #ffffff;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .btn-add-item {
+            background: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-add-item:hover {
+            background: #bae6fd;
+        }
+
+        .btn-del-item {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-finish-exam {
+            width: 100%;
+            height: 46px;
+            background: var(--success);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            transition: all 0.2s;
+        }
+
+        .btn-finish-exam:hover {
+            background: #059669;
+        }
+
+        @media (max-width: 1100px) {
+            .content-body {
+                grid-template-columns: 1fr;
+            }
+            .vital-signs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu chuẩn 10 phân hệ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html" class="active"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Layout -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Phòng Khám Nội Tổng Hợp (P.204) - BS. CKI. Trần Văn Hùng</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Cột trái: Hàng đợi khám bệnh của phòng -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-users"></i> Bệnh Nhân Đang Chờ Khám</h3>
+                    <span class="badge-stt" id="waitingCount">3 ca</span>
+                </div>
+                <div id="queueContainer">
+                    <!-- Render bằng JS -->
+                </div>
+            </div>
+
+            <!-- Cột phải: Phiếu Khám Bệnh (Mẫu QLKB_BM1) -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Phiếu Khám Bệnh & Kê Đơn (Mẫu QLKB_BM1)</h3>
+                    <span style="font-size:12.5px; color:var(--text-muted);">Mã phiếu: <strong id="lblExamCode">PK2026-0089</strong></span>
+                </div>
+
+                <!-- Thông tin hành chính & Cảnh báo dị ứng (UC30) -->
+                <div class="patient-summary-box">
+                    <div>Bệnh nhân: <strong id="lblPatientName">Nguyễn Văn An</strong></div>
+                    <div>Mã BN: <strong id="lblPatientId">BN2026000001</strong></div>
+                    <div>BHYT: <strong id="lblBHYT">DN4790880012345</strong></div>
+                    <div>Tuổi / Giới tính: <strong id="lblAgeGender">38 tuổi (Nam)</strong></div>
+                    <div style="grid-column: span 2; color: var(--danger); font-weight: 600;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Dị ứng thuốc: <span id="lblAllergy">Dị ứng Penicillin</span>
+                    </div>
+                </div>
+
+                <form onsubmit="handleFinishExam(event)">
+                    <!-- Sinh hiệu (Vital Signs) -->
+                    <div class="vital-signs-grid">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Mạch (lần/p)</label>
+                            <input type="number" id="vMach" class="form-control" value="78" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Nhiệt độ (°C)</label>
+                            <input type="number" step="0.1" id="vNhietDo" class="form-control" value="37.2" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Huyết áp (mmHg)</label>
+                            <input type="text" id="vHuyetAp" class="form-control" value="120/80" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Nhịp thở (lần/p)</label>
+                            <input type="number" id="vNhipTho" class="form-control" value="18" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Cân nặng (kg)</label>
+                            <input type="number" step="0.5" id="vCanNang" class="form-control" value="68">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11.5px;">Chiều cao (cm)</label>
+                            <input type="number" id="vChieuCao" class="form-control" value="172">
+                        </div>
+                    </div>
+
+                    <!-- Triệu chứng & Khám lâm sàng (UC31) -->
+                    <div class="form-group">
+                        <label>Lý do đến khám / Triệu chứng lâm sàng *</label>
+                        <textarea id="txtSymptoms" class="form-control" required placeholder="Đau thượng vị âm ỉ sau ăn, ợ hơi, cồn cào buốt rát..."></textarea>
+                    </div>
+
+                    <!-- Chọn mã chuẩn đoán ICD-10 (UC32) -->
+                    <div class="form-group">
+                        <label>Chẩn Đoán Bệnh Theo Danh Mục Chuẩn (Mã ICD-10) *</label>
+                        <select id="selICD" class="form-control" required style="font-weight:600; color:var(--primary);">
+                            <option value="K29.7 - Viêm dạ dày mạn tính, không đặc hiệu">K29.7 - Viêm dạ dày mạn tính, không đặc hiệu</option>
+                            <option value="K21.9 - Bệnh trào ngược dạ dày - thực quản">K21.9 - Bệnh trào ngược dạ dày - thực quản</option>
+                            <option value="I10 - Tăng huyết áp vô căn (nguyên phát)">I10 - Tăng huyết áp vô căn (nguyên phát)</option>
+                            <option value="J02.9 - Viêm họng cấp, không đặc hiệu">J02.9 - Viêm họng cấp, không đặc hiệu</option>
+                            <option value="A90 - Sốt xuất huyết Dengue">A90 - Sốt xuất huyết Dengue</option>
+                        </select>
+                    </div>
+
+                    <!-- KHỐI 1: CHỈ ĐỊNH CẬN LÂM SÀNG (CLS) (UC37 & UC43) -->
+                    <div class="section-box">
+                        <div class="section-title">
+                            <span><i class="fa-solid fa-flask-vial" style="color:#6366f1;"></i> Chỉ Định Dịch Vụ Cận Lâm Sàng (Xét Nghiệm / CĐHA)</span>
+                            <button type="button" class="btn-add-item" onclick="addCLSItem()">
+                                <i class="fa-solid fa-plus"></i> Thêm Chỉ Định CLS
+                            </button>
+                        </div>
+                        <table id="clsTable">
+                            <thead>
+                                <tr>
+                                    <th>Dịch Vụ Cận Lâm Sàng</th>
+                                    <th>Khoa Tiếp Nhận</th>
+                                    <th>Trạng Thái / Kết Quả Đã Trả (UC43)</th>
+                                    <th style="width:40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="clsTableBody">
+                                <tr>
+                                    <td>
+                                        <select class="form-control" style="height:32px;">
+                                            <option value="CLS01">Tổng phân tích tế bào máu ngoại vi (Bằng máy laser)</option>
+                                            <option value="CLS02">Sinh hóa máu: Định lượng Glucose</option>
+                                            <option value="CLS03">Nội soi thực quản - dạ dày - tá tràng</option>
+                                            <option value="CLS04">X-Quang ngực thẳng</option>
+                                        </select>
+                                    </td>
+                                    <td>Phòng Xét Nghiệm CLS</td>
+                                    <td><span style="color:#059669; font-weight:600;"><i class="fa-solid fa-check"></i> Đã có kết quả: Hồng cầu 4.6 T/L, Hb 142 g/L</span></td>
+                                    <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- KHỐI 2: ĐƠN THUỐC ĐIỀU TRỊ (UC34 & UC35) -->
+                    <div class="section-box">
+                        <div class="section-title">
+                            <span><i class="fa-solid fa-pills" style="color:#059669;"></i> Đơn Thuốc Ngoại Trú (Trừ kho tự động & Kiểm tra tồn kho)</span>
+                            <button type="button" class="btn-add-item" onclick="addMedRow()">
+                                <i class="fa-solid fa-plus"></i> Thêm Thuốc
+                            </button>
+                        </div>
+                        <table id="medTable">
+                            <thead>
+                                <tr>
+                                    <th>Tên Thuốc & Hàm Lượng</th>
+                                    <th style="width: 100px;">Số Lượng</th>
+                                    <th>Liều Dùng & Cách Dùng</th>
+                                    <th style="width: 120px;">Tồn Kho (UC35)</th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="medTableBody">
+                                <tr>
+                                    <td>
+                                        <select class="form-control med-select" style="height:32px;" onchange="updateStock(this)">
+                                            <option value="500" data-name="Paracetamol 500mg">Paracetamol 500mg (Viên nén)</option>
+                                            <option value="200" data-name="Amoxicillin 500mg">Amoxicillin 500mg (Kháng sinh)</option>
+                                            <option value="15" data-name="Panadol Extra">Panadol Extra</option>
+                                            <option value="350" data-name="Berberin 100mg">Berberin 100mg</option>
+                                            <option value="30" data-name="Vitamin C 500mg">Vitamin C 500mg</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control med-qty" value="10" min="1" style="height:32px;" onchange="checkStockLimit(this)">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" value="Uống 1 viên sau ăn khi đau, ngày tối đa 3 lần" style="height:32px;">
+                                    </td>
+                                    <td class="stock-cell" style="font-weight:700; color:var(--primary);">Còn 500 viên</td>
+                                    <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Lời dặn -->
+                    <div class="form-group">
+                        <label>Lời dặn của bác sĩ / Hẹn tái khám</label>
+                        <input type="text" id="txtDoctorAdvice" class="form-control" value="Ăn uống đúng giờ, tránh thức ăn cay nóng. Tái khám sau 7 ngày nếu không đỡ.">
+                    </div>
+
+                    <!-- Nút hoàn tất -->
+                    <button type="submit" class="btn-finish-exam">
+                        <i class="fa-solid fa-clipboard-check"></i> Hoàn Tất Khám Bệnh & Chuyển Đơn Sang Quầy Thuốc / Thu Ngân
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT NGHIỆP VỤ PHÒNG KHÁM -->
+    <script>
+        let patientQueue = [
+            {
+                stt: "NOI-001",
+                id: "BN2026000001",
+                name: "Nguyễn Văn An",
+                ageGender: "38 tuổi (Nam)",
+                bhyt: "DN4790880012345",
+                allergy: "Dị ứng kháng sinh Penicillin",
+                status: "EXAMINING"
+            },
+            {
+                stt: "NOI-002",
+                id: "BN2026000002",
+                name: "Trần Thị Mai",
+                ageGender: "31 tuổi (Nữ)",
+                bhyt: "GD4790950056789",
+                allergy: "Không có",
+                status: "WAITING"
+            },
+            {
+                stt: "NOI-003",
+                id: "BN2026000003",
+                name: "Lê Hoàng Long",
+                ageGender: "25 tuổi (Nam)",
+                bhyt: "Khám viện phí (Không có BHYT)",
+                allergy: "Dị ứng Aspirin",
+                status: "WAITING"
+            }
+        ];
+
+        let selectedQueueIdx = 0;
+
+        function renderQueue() {
+            const container = document.getElementById('queueContainer');
+            container.innerHTML = '';
+
+            let waitCount = 0;
+
+            patientQueue.forEach((p, idx) => {
+                if (p.status === 'WAITING') waitCount++;
+
+                const activeClass = idx === selectedQueueIdx ? 'active' : '';
+                const badge = p.status === 'EXAMINING' 
+                    ? '<span class="badge-status status-examining">Đang khám</span>'
+                    : '<span class="badge-status status-waiting">Chờ gọi khám</span>';
+
+                container.innerHTML += `
+                    <div class="queue-item ${activeClass}" onclick="selectPatient(${idx})">
+                        <div class="queue-item-top">
+                            <span class="badge-stt">${p.stt}</span>
+                            ${badge}
+                        </div>
+                        <div style="font-weight:700; font-size:14px;">${p.name}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Mã BN: ${p.id}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('waitingCount').innerText = `${waitCount} ca chờ`;
+        }
+
+        function selectPatient(idx) {
+            selectedQueueIdx = idx;
+            const p = patientQueue[idx];
+
+            document.getElementById('lblPatientName').innerText = p.name;
+            document.getElementById('lblPatientId').innerText = p.id;
+            document.getElementById('lblBHYT').innerText = p.bhyt;
+            document.getElementById('lblAgeGender').innerText = p.ageGender;
+            document.getElementById('lblAllergy').innerText = p.allergy;
+
+            renderQueue();
+        }
+
+        // Thêm hàng chỉ định CLS (UC37)
+        function addCLSItem() {
+            const tbody = document.getElementById('clsTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>
+                    <select class="form-control" style="height:32px;">
+                        <option value="CLS02">Sinh hóa máu: Định lượng Glucose</option>
+                        <option value="CLS04">X-Quang ngực thẳng</option>
+                        <option value="CLS05">Siêu âm ổ bụng tổng quát</option>
+                        <option value="CLS01">Tổng phân tích tế bào máu ngoại vi</option>
+                    </select>
+                </td>
+                <td>Phòng Xét Nghiệm CLS</td>
+                <td><span style="color:#b45309; font-weight:600;"><i class="fa-solid fa-clock"></i> Đã gửi chỉ định - Chờ phòng CLS tiếp nhận</span></td>
+                <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // Thêm hàng thuốc (UC34)
+        function addMedRow() {
+            const tbody = document.getElementById('medTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>
+                    <select class="form-control med-select" style="height:32px;" onchange="updateStock(this)">
+                        <option value="350" data-name="Berberin 100mg">Berberin 100mg</option>
+                        <option value="500" data-name="Paracetamol 500mg">Paracetamol 500mg</option>
+                        <option value="200" data-name="Amoxicillin 500mg">Amoxicillin 500mg</option>
+                        <option value="30" data-name="Vitamin C 500mg">Vitamin C 500mg</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control med-qty" value="10" min="1" style="height:32px;" onchange="checkStockLimit(this)">
+                </td>
+                <td>
+                    <input type="text" class="form-control" value="Uống ngày 2 lần, mỗi lần 1 viên" style="height:32px;">
+                </td>
+                <td class="stock-cell" style="font-weight:700; color:var(--primary);">Còn 350 viên</td>
+                <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // Xóa dòng
+        function deleteRow(btn) {
+            btn.closest('tr').remove();
+        }
+
+        // Cập nhật tồn kho hiển thị (UC35)
+        function updateStock(selectEl) {
+            const stock = selectEl.value;
+            const row = selectEl.closest('tr');
+            row.querySelector('.stock-cell').innerText = `Còn ${stock} viên`;
+            checkStockLimit(row.querySelector('.med-qty'));
+        }
+
+        // Kiểm tra kê vượt tồn kho (UC35)
+        function checkStockLimit(qtyInput) {
+            const row = qtyInput.closest('tr');
+            const selectEl = row.querySelector('.med-select');
+            const maxStock = parseInt(selectEl.value);
+            const qty = parseInt(qtyInput.value) || 0;
+
+            if (qty > maxStock) {
+                alert(`Cảnh báo: Số lượng kê (${qty}) vượt quá số lượng tồn kho hiện có (${maxStock})! Vui lòng điều chỉnh.`);
+                qtyInput.value = maxStock;
+            }
+        }
+
+        // Hoàn tất lượt khám
+        function handleFinishExam(e) {
+            e.preventDefault();
+            const currentPatient = patientQueue[selectedQueueIdx];
+            const icd = document.getElementById('selICD').value;
+
+            alert(`Khám bệnh thành công cho bệnh nhân: ${currentPatient.name}!\nChẩn đoán: ${icd}\nPhiếu khám đã được chuyển sang Quầy Thuốc và Bộ phận Viện phí.`);
+            
+            currentPatient.status = "DONE";
+            // Chuyển sang bệnh nhân kế tiếp
+            if (selectedQueueIdx < patientQueue.length - 1) {
+                selectedQueueIdx++;
+                patientQueue[selectedQueueIdx].status = "EXAMINING";
+                selectPatient(selectedQueueIdx);
+            } else {
+                renderQueue();
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderQueue();
+            selectPatient(0);
+        };
+    </script>
+</body>
+</html>

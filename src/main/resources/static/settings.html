@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cấu Hình Hệ Thống & Quản Lý Tài Khoản - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR CHUẨN 10 PHÂN HỆ */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content-body {
+            padding: 24px 32px;
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #e0f2fe;
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* PANELS */
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            height: 40px;
+            padding: 0 22px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .role-admin { background: #fee2e2; color: #991b1b; }
+        .role-doc { background: #e0f2fe; color: #0369a1; }
+        .role-cashier { background: #fef3c7; color: #b45309; }
+        .role-pharmacy { background: #d1fae5; color: #065f46; }
+        .role-nurse { background: #ede9fe; color: #6366f1; }
+        .role-lab { background: #ccfbf1; color: #0f766e; }
+
+        /* RBAC MATRIX TABLE */
+        .matrix-table th, .matrix-table td {
+            text-align: center;
+        }
+        .matrix-table td:first-child, .matrix-table th:first-child {
+            text-align: left;
+        }
+        .chk-yes { color: #10b981; font-size: 16px; }
+        .chk-no { color: #cbd5e1; font-size: 16px; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 520px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu chuẩn 10 phân hệ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html" class="active"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Cấu Hình Hệ Thống & Quản Lý Tài Khoản Nhân Viên</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Content Body -->
+        <main class="content-body">
+            <!-- Tabs chuyển đổi chức năng -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('profileTab', this)">
+                    <i class="fa-solid fa-user-gear"></i> Thông Tin Cá Nhân & Đổi Mật Khẩu (UC04, UC05)
+                </button>
+                <button class="tab-btn" onclick="switchTab('usersTab', this)">
+                    <i class="fa-solid fa-users-gear"></i> Quản Lý & Cấp Tài Khoản Nhân Viên (UC10)
+                </button>
+                <button class="tab-btn" onclick="switchTab('rbacTab', this)">
+                    <i class="fa-solid fa-shield-halved"></i> Phân Quyền Theo Vai Trò RBAC (UC12)
+                </button>
+            </div>
+
+            <!-- TAB 1: THÔNG TIN CÁ NHÂN & ĐỔI MẬT KHẨU (UC04, UC05) -->
+            <div id="profileTab" class="tab-content active">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3><i class="fa-regular fa-id-badge" style="color:var(--primary);"></i> Cập Nhật Thông Tin Tài Khoản Đang Đăng Nhập (UC05)</h3>
+                    </div>
+                    <form onsubmit="handleUpdateProfile(event)">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Tên đăng nhập / Mã định danh</label>
+                                <input type="text" id="profUsername" class="form-control" value="admin" readonly style="background:#f1f5f9; font-weight:700;">
+                            </div>
+                            <div class="form-group">
+                                <label>Vai trò làm việc</label>
+                                <input type="text" id="profRole" class="form-control" value="ADMIN (Quản trị viên)" readonly style="background:#f1f5f9; font-weight:700; color:var(--danger);">
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Họ và Tên Nhân Viên *</label>
+                                <input type="text" id="profFullName" class="form-control" value="Quản Trị Viên Hệ Thống" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Số Điện Thoại Liên Lạc *</label>
+                                <input type="tel" id="profPhone" class="form-control" value="0901234567" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Địa Chỉ Email Công Vụ</label>
+                            <input type="email" id="profEmail" class="form-control" value="admin@medicare.his.vn">
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Cá Nhân
+                        </button>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-key" style="color:var(--warning);"></i> Đổi Mật Khẩu Truy Cập (UC04)</h3>
+                    </div>
+                    <form onsubmit="handleChangePassword(event)">
+                        <div class="form-group">
+                            <label>Mật Khẩu Hiện Tại *</label>
+                            <input type="password" id="oldPass" class="form-control" placeholder="Nhập mật khẩu đang dùng" required>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Mật Khẩu Mới *</label>
+                                <input type="password" id="newPass" class="form-control" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Xác Nhận Mật Khẩu Mới *</label>
+                                <input type="password" id="confirmPass" class="form-control" placeholder="Nhập lại mật khẩu mới" minlength="6" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" style="background:#f59e0b;">
+                            <i class="fa-solid fa-lock"></i> Cập Nhật Mật Khẩu Mới
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 2: QUẢN LÝ & CẤP TÀI KHOẢN NHÂN VIÊN (UC10) -->
+            <div id="usersTab" class="tab-content">
+                <div class="panel-card" style="padding: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="font-size: 16px; font-weight: 700;">
+                            <i class="fa-solid fa-users" style="color:var(--primary);"></i> Danh Sách Tài Khoản Nhân Viên Nội Bộ (Bảng NguoiDung)
+                        </h3>
+                        <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openCreateUserModal()">
+                            <i class="fa-solid fa-user-plus"></i> Cấp Tài Khoản Mới (UC10)
+                        </button>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tên Đăng Nhập</th>
+                                <th>Họ Và Tên</th>
+                                <th>Vai Trò Chức Vụ</th>
+                                <th>Trạng Thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <!-- Render bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: MA TRẬN PHÂN QUYỀN RBAC (UC12) -->
+            <div id="rbacTab" class="tab-content">
+                <div class="panel-card" style="padding: 20px;">
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-table-list" style="color:var(--primary);"></i> Ma Trận Phân Quyền Chức Năng Theo Vai Trò (RBAC Matrix)
+                    </h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px;">
+                        Đảm bảo nguyên tắc bảo mật y tế: Bác sĩ không thể sửa viện phí, Thu ngân không thể sửa chẩn đoán, Dược sĩ phụ trách xuất kho thuốc[cite: 1].
+                    </p>
+
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Phân Hệ Chức Năng</th>
+                                <th>Quản Trị (ADMIN)</th>
+                                <th>Bác Sĩ (DOCTOR)</th>
+                                <th>Thu Ngân (CASHIER)</th>
+                                <th>Dược Sĩ (PHARMACIST)</th>
+                                <th>Tiếp Đón (RECEPTIONIST)</th>
+                                <th>Cận Lâm Sàng (TECHNICIAN)</th>
+                                <th>Điều Dưỡng (NURSE)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1. Đặt Lịch & Tiếp Đón</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. Hồ Sơ Bệnh Nhân (EMR)</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. Khám Bệnh & Kê Đơn</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>4. Xét Nghiệm & CĐHA (CLS)</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i> (Xem KQ)</td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i> (Nhập KQ)</td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>5. Kho Dược & Cấp Phát Thuốc</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>6. Quản Lý Giường Nội Trú</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>7. Thu Viện Phí & Hóa Đơn</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>8. Báo Cáo Doanh Thu / Thống Kê</strong></td>
+                                <td><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL CẤP TÀI KHOẢN MỚI (UC10) -->
+    <div class="modal-overlay" id="createUserModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-shield" style="color:var(--primary);"></i> Cấp Tài Khoản Nhân Viên Mới (UC10)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeCreateUserModal()">&times;</button>
+            </div>
+            <form onsubmit="handleCreateUser(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Tên Đăng Nhập *</label>
+                        <input type="text" id="nuUsername" class="form-control" placeholder="Ví dụ: bs_hung hoặc tn_nga" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Họ và Tên Nhân Viên *</label>
+                        <input type="text" id="nuFullName" class="form-control" placeholder="Nhập tên nhân sự" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vai Trò Chức Năng (RBAC) *</label>
+                        <select id="nuRole" class="form-control" required>
+                            <option value="DOCTOR">Bác Sĩ (DOCTOR)</option>
+                            <option value="CASHIER">Thu Ngân (CASHIER)</option>
+                            <option value="PHARMACIST">Dược Sĩ (PHARMACIST)</option>
+                            <option value="RECEPTIONIST">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
+                            <option value="TECHNICIAN">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
+                            <option value="NURSE">Điều Dưỡng Nội Trú (NURSE)</option>
+                            <option value="ADMIN">Quản Trị Viên (ADMIN)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mật Khẩu Ban Đầu *</label>
+                        <input type="password" id="nuPassword" class="form-control" value="123456" minlength="6" required>
+                        <small style="color:var(--text-muted);">Mặc định: 123456 (Nhân viên bắt buộc đổi sau lần đầu đăng nhập)</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-logout" style="background:#ffffff; color:#64748b; border:1px solid #cbd5e1;" onclick="closeCreateUserModal()">Hủy</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-check"></i> Cấp Tài Khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC CẤU HÌNH & TÀI KHOẢN -->
+    <script>
+        // Dữ liệu tài khoản mẫu
+        let users = [
+            { username: "admin", fullName: "Quản Trị Viên Hệ Thống", role: "ADMIN", status: "Hoạt động" },
+            { username: "bacsi", fullName: "BS. CKI. Trần Văn Hùng", role: "DOCTOR", status: "Hoạt động" },
+            { username: "thungan", fullName: "Nguyễn Thu Ngân", role: "CASHIER", status: "Hoạt động" },
+            { username: "duocsi", fullName: "Dược Sĩ Lê Thị Lan", role: "PHARMACIST", status: "Hoạt động" },
+            { username: "letan", fullName: "Nhân Viên Tiếp Đón Mai", role: "RECEPTIONIST", status: "Hoạt động" },
+            { username: "ktv_cls", fullName: "KTV. Phạm Quốc Huy", role: "TECHNICIAN", status: "Hoạt động" },
+            { username: "dieuduong", fullName: "ĐD. Huỳnh Thị Thảo", role: "NURSE", status: "Hoạt động" }
+        ];
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function renderUsers() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                let badgeClass = 'role-admin';
+                if (u.role === 'DOCTOR') badgeClass = 'role-doc';
+                else if (u.role === 'CASHIER') badgeClass = 'role-cashier';
+                else if (u.role === 'PHARMACIST') badgeClass = 'role-pharmacy';
+                else if (u.role === 'NURSE') badgeClass = 'role-nurse';
+                else if (u.role === 'TECHNICIAN') badgeClass = 'role-lab';
+                else if (u.role === 'RECEPTIONIST') badgeClass = 'role-doc';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.fullName}</td>
+                        <td><span class="role-badge ${badgeClass}">${u.role}</span></td>
+                        <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status}</span></td>
+                        <td>
+                            <button type="button" style="padding:4px 8px; border:1px solid #fee2e2; background:#ffffff; color:#ef4444; border-radius:4px; cursor:pointer; font-size:12px;" onclick="resetUserPass('${u.username}')">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại mật khẩu
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Cập nhật thông tin cá nhân (UC05)
+        function handleUpdateProfile(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('profFullName').value.trim();
+            const phone = document.getElementById('profPhone').value.trim();
+            const email = document.getElementById('profEmail').value.trim();
+
+            alert(`Cập nhật thông tin tài khoản cá nhân thành công!\nHọ tên: ${fullName}\nSĐT: ${phone}\nEmail: ${email}`);
+        }
+
+        // Đổi mật khẩu (UC04)
+        function handleChangePassword(e) {
+            e.preventDefault();
+            const oldP = document.getElementById('oldPass').value;
+            const newP = document.getElementById('newPass').value;
+            const confirmP = document.getElementById('confirmPass').value;
+
+            if (newP !== confirmP) {
+                alert("Lỗi: Mật khẩu mới và mật khẩu xác nhận không khớp nhau!");
+                return;
+            }
+
+            alert("Đổi mật khẩu tài khoản thành công! Vui lòng ghi nhớ mật khẩu mới cho các phiên làm việc tiếp theo.");
+            e.target.reset();
+        }
+
+        // Modal cấp tài khoản (UC10)
+        function openCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'flex';
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'none';
+        }
+
+        function handleCreateUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('nuUsername').value.trim();
+            const fullName = document.getElementById('nuFullName').value.trim();
+            const role = document.getElementById('nuRole').value;
+
+            if (users.some(u => u.username === username)) {
+                alert(`Tên đăng nhập "${username}" đã tồn tại! Vui lòng chọn tên đăng nhập khác.`);
+                return;
+            }
+
+            users.push({ username, fullName, role, status: "Hoạt động" });
+            alert(`Cấp tài khoản nhân sự thành công!\nTài khoản: ${username}\nVai trò: ${role}\nMật khẩu mặc định: 123456`);
+            
+            closeCreateUserModal();
+            renderUsers();
+        }
+
+        function resetUserPass(username) {
+            if (confirm(`Bạn có chắc muốn đặt lại mật khẩu cho tài khoản ${username} về mặc định (123456)?`)) {
+                alert(`Đã đặt lại mật khẩu cho tài khoản ${username} thành công!`);
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderUsers();
+        };
+    </script>
+</body>
+</html>

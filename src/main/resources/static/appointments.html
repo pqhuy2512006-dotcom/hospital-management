@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Lịch & Hàng Đợi Tiếp Đón - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .content-body {
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        /* KHUNG CHỌN GIỜ KHÁM */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .slot-btn {
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 8px 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot-btn:hover:not(.disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .slot-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .slot-btn.disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .btn-submit-action {
+            width: 100%;
+            height: 44px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-submit-action:hover {
+            background: var(--primary-hover);
+        }
+
+        /* BẢNG HÀNG ĐỢI */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge-stt {
+            display: inline-block;
+            font-weight: 700;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .status-waiting { background: #fef3c7; color: #b45309; }
+        .status-examining { background: #e0f2fe; color: #0369a1; }
+        .status-done { background: #d1fae5; color: #065f46; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+        .btn-cancel-appt {
+            border: 1px solid #fee2e2;
+            background: #ffffff;
+            color: #ef4444;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel-appt:hover {
+            background: #fee2e2;
+        }
+
+        @media (max-width: 1024px) {
+            .content-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html" class="active"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Quản Lý Lịch Hẹn & Điều Phối Hàng Đợi Khám</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Body -->
+        <main class="content-body">
+            <!-- Cột trái: Biểu mẫu Đặt lịch & Tiếp nhận -->
+            <div class="panel-card">
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="switchApptTab('online', this)">
+                        <i class="fa-solid fa-globe"></i> Đặt Lịch Online
+                    </button>
+                    <button class="tab-btn" onclick="switchApptTab('walkin', this)">
+                        <i class="fa-solid fa-person-walking"></i> Tiếp Nhận Tại Quầy
+                    </button>
+                </div>
+
+                <!-- FORM 1: ĐẶT LỊCH KHÁM ONLINE (BỆNH NHÂN) -->
+                <div id="pane-online" class="tab-pane active">
+                    <form onsubmit="handleBookOnline(event)">
+                        <div class="form-group">
+                            <label>Họ và Tên Bệnh Nhân *</label>
+                            <input type="text" id="onlName" class="form-control" placeholder="Nhập tên người khám" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số Điện Thoại / CCCD *</label>
+                            <input type="text" id="onlContact" class="form-control" placeholder="Nhập SĐT hoặc CCCD để tra cứu" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa Khám Bệnh *</label>
+                            <select id="onlDept" class="form-control" onchange="updateDoctors()" required>
+                                <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp</option>
+                                <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng</option>
+                                <option value="Khoa Tim Mạch">Khoa Tim Mạch</option>
+                                <option value="Khoa Ngoại Tiêu Hóa">Khoa Ngoại Tiêu Hóa</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bác Sĩ Phụ Trách</label>
+                            <select id="onlDoctor" class="form-control">
+                                <option value="BS. Trần Văn Hùng">BS. CKI. Trần Văn Hùng</option>
+                                <option value="BS. Nguyễn Thị Mai">ThS. Nguyễn Thị Mai</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Khám Hẹn Trước *</label>
+                            <input type="date" id="onlDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Khung Giờ Khám Còn Trống *</label>
+                            <div class="time-slots">
+                                <div class="slot-btn active" onclick="selectSlot(this)">08:00 - 08:30</div>
+                                <div class="slot-btn" onclick="selectSlot(this)">08:30 - 09:00</div>
+                                <div class="slot-btn disabled">09:00 - 09:30 (Đầy)</div>
+                                <div class="slot-btn" onclick="selectSlot(this)">09:30 - 10:00</div>
+                                <div class="slot-btn" onclick="selectSlot(this)">10:00 - 10:30</div>
+                                <div class="slot-btn disabled">10:30 - 11:00 (Đầy)</div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit-action">
+                            <i class="fa-solid fa-calendar-plus"></i> Xác Nhận Đặt Lịch Hẹn
+                        </button>
+                    </form>
+                </div>
+
+                <!-- FORM 2: ĐĂNG KÝ KHÁM TRỰC TIẾP (LỄ TÂN CẤP SỐ) -->
+                <div id="pane-walkin" class="tab-pane">
+                    <form onsubmit="handleRegisterWalkin(event)">
+                        <div class="form-group">
+                            <label>Họ và Tên Bệnh Nhân *</label>
+                            <input type="text" id="walkName" class="form-control" placeholder="Tên bệnh nhân đến quầy" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số CCCD / Mã BHYT *</label>
+                            <input type="text" id="walkCCCD" class="form-control" placeholder="Tra cứu hoặc tạo hồ sơ nhanh" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa Khám Chỉ Định *</label>
+                            <select id="walkDept" class="form-control" required>
+                                <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp (Phòng 201)</option>
+                                <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng (Phòng 108)</option>
+                                <option value="Khoa Cấp Cứu">Khoa Cấp Cứu (Tầng 1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Lý do khám / Triệu chứng ban đầu</label>
+                            <textarea id="walkReason" class="form-control" style="height: 70px; padding: 8px;" placeholder="Sốt nhẹ, ho kéo dài..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-action" style="background: #059669;">
+                            <i class="fa-solid fa-ticket"></i> Cấp Số Thứ Tự & Đưa Vào Hàng Đợi
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Cột phải: Hàng đợi khám bệnh theo thời gian thực -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-users-line"></i> Hàng Đợi Tiếp Nhận & Lịch Hẹn Trong Ngày</h3>
+                    <select id="filterDept" class="form-control" style="width: 200px; height: 34px;" onchange="renderQueue()">
+                        <option value="ALL">Tất cả các khoa</option>
+                        <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp</option>
+                        <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng</option>
+                        <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
+                    </select>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Bệnh Nhân</th>
+                            <th>Khoa Khám</th>
+                            <th>Thời Gian / Giờ Hẹn</th>
+                            <th>Hình Thức</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTableBody">
+                        <!-- Render bằng JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script Nghiệp vụ Hàng đợi -->
+    <script>
+        let selectedTimeSlot = "08:00 - 08:30";
+
+        // Dữ liệu hàng đợi mẫu
+        let appointments = [
+            { id: 1, stt: "NOI-001", patientName: "Nguyễn Văn An", dept: "Khoa Nội Tổng Hợp", time: "08:00 - 08:30", type: "Online", status: "EXAMINING" },
+            { id: 2, stt: "NOI-002", patientName: "Trần Thị Mai", dept: "Khoa Nội Tổng Hợp", time: "08:30 - 09:00", type: "Online", status: "WAITING" },
+            { id: 3, stt: "TMH-001", patientName: "Lê Hoàng Long", dept: "Khoa Tai Mũi Họng", time: "Hiện tại", type: "Trực tiếp", status: "WAITING" },
+            { id: 4, stt: "CC-001", patientName: "Phạm Hồng Phát", dept: "Khoa Cấp Cứu", time: "Hiện tại", type: "Trực tiếp", status: "DONE" }
+        ];
+
+        function switchApptTab(paneKey, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(`pane-${paneKey}`).classList.add('active');
+        }
+
+        function selectSlot(element) {
+            if (element.classList.contains('disabled')) return;
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+            selectedTimeSlot = element.innerText;
+        }
+
+        function renderQueue() {
+            const filter = document.getElementById('filterDept').value;
+            const tbody = document.getElementById('queueTableBody');
+            tbody.innerHTML = '';
+
+            const list = filter === 'ALL' ? appointments : appointments.filter(a => a.dept === filter);
+
+            list.forEach((item, index) => {
+                let badgeStatus = '';
+                if (item.status === 'WAITING') badgeStatus = '<span class="badge-status status-waiting">Đang chờ khám</span>';
+                else if (item.status === 'EXAMINING') badgeStatus = '<span class="badge-status status-examining">Đang khám</span>';
+                else if (item.status === 'DONE') badgeStatus = '<span class="badge-status status-done">Đã hoàn thành</span>';
+                else badgeStatus = '<span class="badge-status status-cancelled">Đã hủy</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge-stt">${item.stt}</span></td>
+                        <td><strong>${item.patientName}</strong></td>
+                        <td>${item.dept}</td>
+                        <td>${item.time}</td>
+                        <td><small>${item.type}</small></td>
+                        <td>${badgeStatus}</td>
+                        <td>
+                            ${item.status === 'WAITING' ? `<button class="btn-cancel-appt" onclick="cancelAppt(${item.id})"><i class="fa-solid fa-xmark"></i> Hủy</button>` : '---'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function handleBookOnline(e) {
+            e.preventDefault();
+            const name = document.getElementById('onlName').value;
+            const dept = document.getElementById('onlDept').value;
+            const prefix = dept.includes('Nội') ? 'NOI' : (dept.includes('Họng') ? 'TMH' : 'K');
+            
+            const newAppt = {
+                id: Date.now(),
+                stt: `${prefix}-00${appointments.length + 1}`,
+                patientName: name,
+                dept: dept,
+                time: selectedTimeSlot,
+                type: "Online",
+                status: "WAITING"
+            };
+
+            appointments.push(newAppt);
+            renderQueue();
+            alert(`Đặt lịch khám online thành công!\nSố thứ tự dự kiến: ${newAppt.stt} lúc ${selectedTimeSlot}`);
+            e.target.reset();
+        }
+
+        function handleRegisterWalkin(e) {
+            e.preventDefault();
+            const name = document.getElementById('walkName').value;
+            const dept = document.getElementById('walkDept').value;
+            const prefix = dept.includes('Nội') ? 'NOI' : (dept.includes('Họng') ? 'TMH' : 'CC');
+
+            const newAppt = {
+                id: Date.now(),
+                stt: `${prefix}-00${appointments.length + 1}`,
+                patientName: name,
+                dept: dept,
+                time: "Hiện tại",
+                type: "Trực tiếp",
+                status: "WAITING"
+            };
+
+            appointments.push(newAppt);
+            renderQueue();
+            alert(`Cấp số thứ tự khám trực tiếp thành công!\nSố khám: ${newAppt.stt} tại ${dept}`);
+            e.target.reset();
+        }
+
+        function cancelAppt(id) {
+            if (confirm("Bạn có chắc chắn muốn hủy lịch hẹn này?")) {
+                const target = appointments.find(a => a.id === id);
+                if (target) {
+                    target.status = 'CANCELLED';
+                    renderQueue();
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            // Đặt ngày mặc định là hôm nay
+            document.getElementById('onlDate').valueAsDate = new Date();
+            renderQueue();
+        };
+    </script>
+    <script src="/auth-guard.js"></script>
+</body>
+</html>

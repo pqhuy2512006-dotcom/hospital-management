@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Bệnh Nhân & Hồ Sơ Bệnh Án - MEDICARE HIS</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR CHUẨN 10 PHÂN HỆ */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN LAYOUT */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content-body {
+            padding: 24px 32px;
+        }
+
+        /* ACTIONS & SEARCH BAR */
+        .action-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 380px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 14px 0 38px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-create-patient {
+            height: 40px;
+            padding: 0 18px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-create-patient:hover {
+            background: var(--primary-hover);
+        }
+
+        /* TABLE */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge-code {
+            display: inline-block;
+            font-weight: 700;
+            color: var(--primary);
+            background: #e0f2fe;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .badge-bhyt {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-tbl {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-view-emr {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+        .btn-view-emr:hover { background: #bae6fd; }
+
+        .btn-edit {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .btn-edit:hover { background: #fde68a; }
+
+        /* MODAL COMMON */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 680px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 72vh;
+            overflow-y: auto;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            height: 40px;
+            padding: 0 16px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            height: 40px;
+            padding: 0 20px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* EMR TIMELINE CARD */
+        .emr-header-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .emr-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            background: #ffffff;
+        }
+
+        .emr-item-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu chuẩn 10 phân hệ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html" class="active"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Hồ Sơ Bệnh Nhân & Bệnh Án Điện Tử (EMR)</h2>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </header>
+
+        <!-- Main Body Content -->
+        <main class="content-body">
+            <!-- Thanh tác vụ & Tìm kiếm bệnh nhân (UC26) -->
+            <div class="action-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="patientSearchInput" class="search-input" 
+                           placeholder="Tra cứu CCCD, Mã BHYT, Tên hoặc SĐT..." 
+                           onkeyup="filterPatients()">
+                </div>
+                <button class="btn-create-patient" onclick="openCreateModal()">
+                    <i class="fa-solid fa-user-plus"></i> Tạo Hồ Sơ Bệnh Nhân Mới (UC24)
+                </button>
+            </div>
+
+            <!-- Bảng danh sách bệnh nhân -->
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã BN</th>
+                            <th>Họ và Tên</th>
+                            <th>Ngày Sinh / Tuổi</th>
+                            <th>Giới Tính</th>
+                            <th>Số CCCD</th>
+                            <th>Số Điện Thoại</th>
+                            <th>Bảo Hiểm Y Tế</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTableBody">
+                        <!-- Render bằng Javascript -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL TẠO / CẬP NHẬT HỒ SƠ BỆNH NHÂN (MẪU QLBN_BM1) -->
+    <div class="modal-overlay" id="patientModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân (Mẫu QLBN_BM1)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closePatientModal()">&times;</button>
+            </div>
+            <form id="patientForm" onsubmit="handleSavePatient(event)">
+                <div class="modal-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Mã Bệnh Nhân (Tự động sinh)</label>
+                            <input type="text" id="fMaBN" class="form-control" readonly style="background:#f1f5f9; font-weight:700; color:var(--primary);">
+                        </div>
+                        <div class="form-group">
+                            <label>Họ và Tên Bệnh Nhân *</label>
+                            <input type="text" id="fHoTen" class="form-control" placeholder="Ví dụ: Nguyễn Văn An" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Ngày Tháng Năm Sinh *</label>
+                            <input type="date" id="fNgaySinh" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giới Tính *</label>
+                            <select id="fGioiTinh" class="form-control" required>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Số CCCD / Định Danh (Khóa khi sửa) *</label>
+                            <input type="text" id="fCCCD" class="form-control" placeholder="12 chữ số" required maxlength="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Mã Thẻ BHYT (Nếu có)</label>
+                            <input type="text" id="fMaBHYT" class="form-control" placeholder="15 ký tự thẻ BHYT">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Số Điện Thoại Liên Lạc *</label>
+                            <input type="tel" id="fSDT" class="form-control" placeholder="Ví dụ: 0912345678" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nhóm Máu</label>
+                            <select id="fNhomMau" class="form-control">
+                                <option value="Chưa xác định">Chưa xác định</option>
+                                <option value="O+">O+</option>
+                                <option value="A+">A+</option>
+                                <option value="B+">B+</option>
+                                <option value="AB+">AB+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa Chỉ Thường Trú</label>
+                        <input type="text" id="fDiaChi" class="form-control" placeholder="Số nhà, Phường/Xã, Quận/Huyện, Tỉnh/TP">
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Người Liên Hệ Khẩn Cấp</label>
+                            <input type="text" id="fNguoiThan" class="form-control" placeholder="Họ tên thân nhân / Mối quan hệ">
+                        </div>
+                        <div class="form-group">
+                            <label>SĐT Người Thân Khẩn Cấp</label>
+                            <input type="tel" id="fSDTThan" class="form-control" placeholder="SĐT liên hệ khẩn cấp">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tiền Sử Bệnh Nền / Dị Ứng Thuốc (Rất quan trọng khi kê đơn)</label>
+                        <input type="text" id="fDiUng" class="form-control" placeholder="Ví dụ: Dị ứng Penicillin, Tiền sử tăng huyết áp...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closePatientModal()">Hủy Bỏ</button>
+                    <button type="submit" class="btn-save" id="btnSavePatient">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL XEM LỊCH SỬ BỆNH ÁN & ĐƠN THUỐC / CLS CŨ (UC28, UC29) -->
+    <div class="modal-overlay" id="emrModal">
+        <div class="modal-box" style="max-width: 760px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Lịch Sử Khám Bệnh & Đơn Thuốc / CLS (Mã: <span id="emrMaBN"></span>)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeEmrModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="emr-header-box">
+                    <div>Bệnh nhân: <strong id="emrHoTen">---</strong></div>
+                    <div>Số CCCD: <strong id="emrCCCD">---</strong></div>
+                    <div>Thẻ BHYT: <strong id="emrBHYT">---</strong></div>
+                    <div style="grid-column: span 3; color: var(--danger); font-weight:600;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo dị ứng: <span id="emrDiUng">Không có</span>
+                    </div>
+                </div>
+
+                <h4 style="font-size: 15px; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Danh Sách Các Lần Khám Trước
+                </h4>
+
+                <div id="emrHistoryList">
+                    <!-- Render các lần khám cũ bằng JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeEmrModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT NGHIỆP VỤ BỆNH NHÂN -->
+    <script>
+        // Dữ liệu bệnh nhân mẫu theo đúng cấu trúc CSDL
+        let patients = [
+            {
+                maBN: "BN2026000001",
+                hoTen: "Nguyễn Văn An",
+                ngaySinh: "1988-04-12",
+                gioiTinh: "Nam",
+                cccd: "079088001234",
+                sdt: "0912345678",
+                maBHYT: "DN4790880012345",
+                nhomMau: "O+",
+                diaChi: "Quận 1, TP. Hồ Chí Minh",
+                nguoiThan: "Nguyễn Văn Ba (Bố)",
+                sdtThan: "0903112233",
+                diUng: "Dị ứng kháng sinh Penicillin",
+                history: [
+                    {
+                        ngayKham: "18/09/2026 09:30",
+                        bacSi: "BS. CKI. Trần Văn Hùng",
+                        khoa: "Khoa Nội Tổng Hợp",
+                        chanDoan: "K29.7 - Viêm dạ dày mạn tính, trào ngược dạ dày thực quản",
+                        cls: "Nội soi thực quản dạ dày (Kèm HP âm tính)",
+                        donThuoc: "Esomeprazole 40mg (28 viên), Phosphalugel (30 gói)"
+                    }
+                ]
+            },
+            {
+                maBN: "BN2026000002",
+                hoTen: "Trần Thị Mai",
+                ngaySinh: "1995-10-25",
+                gioiTinh: "Nữ",
+                cccd: "079095005678",
+                sdt: "0987654321",
+                maBHYT: "GD4790950056789",
+                nhomMau: "A+",
+                diaChi: "Quận 3, TP. Hồ Chí Minh",
+                nguoiThan: "Lê Văn Tự (Chồng)",
+                sdtThan: "0988776655",
+                diUng: "Không có",
+                history: [
+                    {
+                        ngayKham: "19/09/2026 14:15",
+                        bacSi: "BS. CKI. Trần Văn Hùng",
+                        khoa: "Khoa Nội Tổng Hợp",
+                        chanDoan: "A90 - Sốt xuất huyết Dengue ngày thứ 3",
+                        cls: "Công thức máu: Bạch cầu giảm nhẹ, Tiểu cầu 165 G/L",
+                        donThuoc: "Paracetamol 500mg (20 viên), Oresol 245 (10 gói)"
+                    }
+                ]
+            },
+            {
+                maBN: "BN2026000003",
+                hoTen: "Lê Hoàng Long",
+                ngaySinh: "2001-01-15",
+                gioiTinh: "Nam",
+                cccd: "079201009988",
+                sdt: "0903112233",
+                maBHYT: "",
+                nhomMau: "B+",
+                diaChi: "Bình Thạnh, TP. Hồ Chí Minh",
+                nguoiThan: "Hoàng Thị Cúc (Mẹ)",
+                sdtThan: "0909112233",
+                diUng: "Dị ứng Aspirin",
+                history: []
+            }
+        ];
+
+        let isEditMode = false;
+
+        // Tự sinh mã bệnh nhân: BN + 2026 + 6 số thứ tự (UC25)
+        function generatePatientId() {
+            const nextSeq = String(patients.length + 1).padStart(6, '0');
+            return `BN2026${nextSeq}`;
+        }
+
+        // Tính tuổi từ ngày sinh
+        function calculateAge(dateString) {
+            if (!dateString) return '';
+            const today = new Date();
+            const birthDate = new Date(dateString);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Render bảng dữ liệu bệnh nhân
+        function renderPatients(dataList = patients) {
+            const tbody = document.getElementById('patientTableBody');
+            tbody.innerHTML = '';
+
+            if (dataList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Không tìm thấy hồ sơ bệnh nhân phù hợp</td></tr>`;
+                return;
+            }
+
+            dataList.forEach(p => {
+                const age = calculateAge(p.ngaySinh);
+                const bhytBadge = p.maBHYT 
+                    ? `<span class="badge-bhyt"><i class="fa-solid fa-shield-halved"></i> ${p.maBHYT}</span>`
+                    : `<span style="color:var(--text-muted); font-size:12px;">Viện phí thường</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge-code">${p.maBN}</span></td>
+                        <td><strong>${p.hoTen}</strong></td>
+                        <td>${p.ngaySinh} <small>(${age} tuổi)</small></td>
+                        <td>${p.gioiTinh}</td>
+                        <td>${p.cccd}</td>
+                        <td>${p.sdt}</td>
+                        <td>${bhytBadge}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn-tbl btn-view-emr" onclick="viewPatientEMR('${p.maBN}')" title="Xem lịch sử bệnh án">
+                                    <i class="fa-solid fa-book-medical"></i> Bệnh Án
+                                </button>
+                                <button class="btn-tbl btn-edit" onclick="openEditModal('${p.maBN}')" title="Sửa thông tin">
+                                    <i class="fa-solid fa-pen-to-square"></i> Sửa
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Tra cứu tìm kiếm bệnh nhân (UC26)
+        function filterPatients() {
+            const kw = document.getElementById('patientSearchInput').value.trim().toLowerCase();
+            const filtered = patients.filter(p => 
+                p.hoTen.toLowerCase().includes(kw) ||
+                p.cccd.includes(kw) ||
+                p.sdt.includes(kw) ||
+                p.maBN.toLowerCase().includes(kw) ||
+                (p.maBHYT && p.maBHYT.toLowerCase().includes(kw))
+            );
+            renderPatients(filtered);
+        }
+
+        // Mở Modal tạo mới (UC24)
+        function openCreateModal() {
+            isEditMode = false;
+            document.getElementById('patientForm').reset();
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân Mới (Mẫu QLBN_BM1)';
+            document.getElementById('fMaBN').value = generatePatientId();
+            
+            // Mở khóa ô CCCD và BHYT
+            const cccdInput = document.getElementById('fCCCD');
+            const bhytInput = document.getElementById('fMaBHYT');
+            cccdInput.readOnly = false;
+            cccdInput.style.backgroundColor = '#ffffff';
+            bhytInput.readOnly = false;
+            bhytInput.style.backgroundColor = '#ffffff';
+
+            document.getElementById('patientModal').style.display = 'flex';
+        }
+
+        // Mở Modal chỉnh sửa thông tin bệnh nhân (UC27)
+        function openEditModal(maBN) {
+            const p = patients.find(item => item.maBN === maBN);
+            if (!p) return;
+
+            isEditMode = true;
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Bệnh Nhân (UC27)';
+            document.getElementById('fMaBN').value = p.maBN;
+            document.getElementById('fHoTen').value = p.hoTen;
+            document.getElementById('fNgaySinh').value = p.ngaySinh;
+            document.getElementById('fGioiTinh').value = p.gioiTinh;
+            
+            // Khóa trường CCCD theo đúng quy định đặc tả (Không cho sửa CCCD/BHYT sau khi tạo hồ sơ)
+            const cccdInput = document.getElementById('fCCCD');
+            const bhytInput = document.getElementById('fMaBHYT');
+            cccdInput.value = p.cccd;
+            cccdInput.readOnly = true;
+            cccdInput.style.backgroundColor = '#f1f5f9';
+
+            bhytInput.value = p.maBHYT || '';
+            bhytInput.readOnly = true;
+            bhytInput.style.backgroundColor = '#f1f5f9';
+
+            document.getElementById('fSDT').value = p.sdt;
+            document.getElementById('fNhomMau').value = p.nhomMau || 'Chưa xác định';
+            document.getElementById('fDiaChi').value = p.diaChi || '';
+            document.getElementById('fNguoiThan').value = p.nguoiThan || '';
+            document.getElementById('fSDTThan').value = p.sdtThan || '';
+            document.getElementById('fDiUng').value = p.diUng || '';
+
+            document.getElementById('patientModal').style.display = 'flex';
+        }
+
+        function closePatientModal() {
+            document.getElementById('patientModal').style.display = 'none';
+        }
+
+        // Lưu hồ sơ bệnh nhân (Tạo mới hoặc Sửa)
+        function handleSavePatient(e) {
+            e.preventDefault();
+            const maBN = document.getElementById('fMaBN').value;
+            const hoTen = document.getElementById('fHoTen').value.trim();
+            const ngaySinh = document.getElementById('fNgaySinh').value;
+            const gioiTinh = document.getElementById('fGioiTinh').value;
+            const cccd = document.getElementById('fCCCD').value.trim();
+            const sdt = document.getElementById('fSDT').value.trim();
+            const maBHYT = document.getElementById('fMaBHYT').value.trim();
+            const nhomMau = document.getElementById('fNhomMau').value;
+            const diaChi = document.getElementById('fDiaChi').value.trim();
+            const nguoiThan = document.getElementById('fNguoiThan').value.trim();
+            const sdtThan = document.getElementById('fSDTThan').value.trim();
+            const diUng = document.getElementById('fDiUng').value.trim() || 'Không có';
+
+            if (!isEditMode) {
+                // Kiểm tra trùng CCCD (Ràng buộc toàn vẹn số 7)
+                const isDuplicate = patients.some(p => p.cccd === cccd);
+                if (isDuplicate) {
+                    alert(`Lỗi: Số CCCD (${cccd}) đã tồn tại trong hệ thống! Không thể tạo trùng hồ sơ.`);
+                    return;
+                }
+
+                const newPatient = {
+                    maBN, hoTen, ngaySinh, gioiTinh, cccd, sdt, maBHYT, nhomMau, diaChi, nguoiThan, sdtThan, diUng,
+                    history: []
+                };
+                patients.unshift(newPatient);
+                alert(`Tạo thành công hồ sơ bệnh nhân mới: ${hoTen} (Mã: ${maBN})!`);
+            } else {
+                // Cập nhật thông tin bệnh nhân
+                const target = patients.find(p => p.maBN === maBN);
+                if (target) {
+                    target.hoTen = hoTen;
+                    target.ngaySinh = ngaySinh;
+                    target.gioiTinh = gioiTinh;
+                    target.sdt = sdt;
+                    target.nhomMau = nhomMau;
+                    target.diaChi = diaChi;
+                    target.nguoiThan = nguoiThan;
+                    target.sdtThan = sdtThan;
+                    target.diUng = diUng;
+                    alert(`Cập nhật thông tin bệnh nhân ${hoTen} thành công!`);
+                }
+            }
+
+            closePatientModal();
+            renderPatients();
+        }
+
+        // Xem lịch sử khám bệnh và hồ sơ bệnh án (UC28 & UC29)
+        function viewPatientEMR(maBN) {
+            const p = patients.find(item => item.maBN === maBN);
+            if (!p) return;
+
+            document.getElementById('emrMaBN').innerText = p.maBN;
+            document.getElementById('emrHoTen').innerText = p.hoTen;
+            document.getElementById('emrCCCD').innerText = p.cccd;
+            document.getElementById('emrBHYT').innerText = p.maBHYT || 'Không có (Khám dịch vụ)';
+            document.getElementById('emrDiUng').innerText = p.diUng;
+
+            const histContainer = document.getElementById('emrHistoryList');
+            histContainer.innerHTML = '';
+
+            if (p.history.length === 0) {
+                histContainer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Bệnh nhân chưa có lịch sử khám bệnh trước đây.</div>`;
+            } else {
+                p.history.forEach((h, idx) => {
+                    histContainer.innerHTML += `
+                        <div class="emr-item">
+                            <div class="emr-item-top">
+                                <span><i class="fa-solid fa-calendar-day"></i> Lần khám ngày: <strong>${h.ngayKham}</strong></span>
+                                <span><i class="fa-solid fa-user-doctor"></i> ${h.bacSi} (${h.khoa})</span>
+                            </div>
+                            <div style="font-size: 13.5px; line-height: 1.6;">
+                                <div>Chẩn đoán lâm sàng: <strong style="color:var(--primary);">${h.chanDoan}</strong></div>
+                                <div>Chỉ định & Kết quả CLS: <span>${h.cls}</span></div>
+                                <div>Đơn thuốc đã kê: <span style="color:#059669; font-weight:600;">${h.donThuoc}</span></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('emrModal').style.display = 'flex';
+        }
+
+        function closeEmrModal() {
+            document.getElementById('emrModal').style.display = 'none';
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = function() {
+            renderPatients();
+        };
+    </script>
+</body>
+</html>
