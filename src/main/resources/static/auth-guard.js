@@ -12,7 +12,7 @@
         'RECEPTIONIST': ['dashboard.html', 'appointments.html', 'patients.html', 'doctors.html'],
         'TECHNICIAN': ['dashboard.html', 'laboratory.html'],
         'NURSE': ['dashboard.html', 'inpatient.html', 'patients.html'],
-        'PATIENT': ['appointments.html', 'patients.html', 'billing.html']
+        'PATIENT': ['appointments.html', 'billing.html']
     };
 
     // Trang công khai không cần đăng nhập
