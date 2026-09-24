@@ -287,47 +287,6 @@
             color: var(--slate-500);
         }
 
-        .quick-accounts {
-            background: var(--slate-100);
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-md);
-            padding: 8px 12px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .quick-accounts-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--slate-600);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .account-chip {
-            border: none;
-            background: var(--white);
-            color: var(--primary);
-            padding: 4px 9px;
-            border-radius: 6px;
-            font-size: 11.5px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid var(--slate-200);
-            transition: all 0.2s;
-        }
-
-        .account-chip:hover {
-            background: var(--primary);
-            color: var(--white);
-            border-color: var(--primary);
-        }
-
         .form-group {
             margin-bottom: 16px;
         }
@@ -389,7 +348,6 @@
             color: var(--primary);
         }
 
-        /* Đồng bộ hóa giao diện thẻ select */
         select.form-input {
             appearance: none;
             -webkit-appearance: none;
@@ -528,6 +486,96 @@
             color: var(--emerald);
         }
 
+        .register-link-row {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 13.5px;
+            color: var(--slate-600);
+        }
+
+        .register-link-row a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .register-link-row a:hover {
+            text-decoration: underline;
+        }
+
+        /* MODAL ĐĂNG KÝ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--white);
+            width: 100%;
+            max-width: 520px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            animation: modalAppear 0.3s ease;
+        }
+
+        @keyframes modalAppear {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            background: var(--slate-100);
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            padding: 10px 18px;
+            background: var(--slate-100);
+            color: var(--slate-700);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         @media (max-width: 900px) {
             .portal-wrapper {
                 flex-direction: column;
@@ -588,15 +636,16 @@
         </div>
     </div>
 
-    <!-- CỘT PHẢI -->
+    <!-- CỘT PHẢI: ĐĂNG NHẬP -->
     <div class="portal-form-side">
         <div class="form-title-group">
             <h2>Đăng Nhập Hệ Thống</h2>
             <p>Nhập thông tin tài khoản được cấp quyền bởi ban quản trị</p>
         </div>
 
+        <!-- FORM ĐĂNG NHẬP CHÍNH -->
         <form id="loginForm" autocomplete="off">
-            <!-- Trường chọn vai trò (đã chuẩn hóa style đồng bộ) -->
+            <!-- Vai trò làm việc -->
             <div class="form-group">
                 <div class="form-label-row">
                     <label class="form-label" for="roleSelect">Vai trò làm việc</label>
@@ -604,12 +653,15 @@
                 <div class="input-container">
                     <i class="fa-solid fa-user-tag input-icon"></i>
                     <select id="roleSelect" class="form-input" required>
-                        <option value="ADMIN">Quản Trị Viên (Admin)</option>
-                        <option value="DOCTOR">Bác Sĩ</option>
-                        <option value="CASHIER">Thu Ngân / Kế Toán</option>
-                        <option value="PHARMACIST">Dược Sĩ</option>
-                        <option value="RECEPTIONIST">Tiếp Đón / Lễ Tân</option>
-                    </select>
+    <option value="QuanTri">Quản Trị Viên</option>
+    <option value="BacSi">Bác Sĩ</option>
+    <option value="DieuDuong">Điều Dưỡng</option>
+    <option value="LeTan">Lễ Tân</option>
+    <option value="DuocSi">Dược Sĩ</option>
+    <option value="KTV">Kỹ Thuật Viên</option>
+    <option value="ThuNgan">Thu Ngân</option>
+    <option value="BenhNhan">Bệnh Nhân</option>
+</select>
                     <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
             </div>
@@ -662,19 +714,81 @@
                 <a href="javascript:void(0)" class="link-forgot" onclick="showSupportNotice()">Quên mật khẩu?</a>
             </div>
 
-            <!-- Nút gửi -->
+            <!-- Nút submit đăng nhập -->
             <button type="submit" class="btn-submit" id="submitBtn">
                 <span id="btnText">Đăng Nhập Ngay</span>
                 <i class="fa-solid fa-arrow-right-to-bracket" id="btnIcon"></i>
             </button>
 
-            <!-- Hộp thông báo -->
+            <!-- Link mở modal đăng ký -->
+            <div class="register-link-row">
+                Bạn là bệnh nhân chưa có tài khoản? 
+                <a href="javascript:void(0)" onclick="openRegisterModal()">Đăng ký ngay</a>
+            </div>
+
+            <!-- Hộp thông báo đăng nhập -->
             <div id="toastAlert" class="toast-alert">
                 <i class="fa-solid fa-circle-exclamation" id="toastIcon"></i>
                 <div id="toastMessage"></div>
             </div>
         </form>
     </div>   
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL ĐĂNG KÝ TÀI KHOẢN MỚI (DÀNH CHO BỆNH NHÂN) -->
+<!-- ========================================== -->
+<div id="registerModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Đăng Ký Tài Khoản Bệnh Nhân</h3>
+            <button type="button" style="background:none; border:none; font-size:22px; cursor:pointer;" onclick="closeRegisterModal()">&times;</button>
+        </div>
+
+        <!-- FORM ĐĂNG KÝ ĐỘC LẬP KẾT NỐI VỚI DATABASE -->
+        <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Tên Đăng Nhập *</label>
+                    <div class="input-container">
+                        <i class="fa-regular fa-id-badge input-icon"></i>
+                        <input type="text" id="regUsername" class="form-input" placeholder="Nhập tên tài khoản (viết liền, không dấu)" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Địa Chỉ Email</label>
+                    <div class="input-container">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="regEmail" class="form-input" placeholder="email@example.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mật Khẩu *</label>
+                    <div class="input-container">
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <input type="password" id="regPassword" class="form-input" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Xác Nhận Mật Khẩu *</label>
+                    <div class="input-container">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="regConfirmPassword" class="form-input" placeholder="Nhập lại mật khẩu" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeRegisterModal()">Hủy</button>
+                    <button type="submit" class="btn-submit" style="width: auto; padding: 0 24px;">
+                        <i class="fa-solid fa-check"></i> Xác Nhận Đăng Ký
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -691,13 +805,48 @@
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessage');
 
-    // Chức năng điền nhanh tài khoản kèm tự chọn đúng vai trò
-    function fillTestAccount(user, pass, role) {
-        usernameInput.value = user;
-        passwordInput.value = pass;
-        if (role) roleSelect.value = role;
-        hideToast();
-        passwordInput.focus();
+    const roleAliasMap = {
+        ADMIN: 'QuanTri',
+        QUANTRI: 'QuanTri',
+        QUAN_TRI: 'QuanTri',
+        DOCTOR: 'BacSi',
+        BACSI: 'BacSi',
+        BAC_SI: 'BacSi',
+        NURSE: 'DieuDuong',
+        DIEUDUONG: 'DieuDuong',
+        DIEU_DUONG: 'DieuDuong',
+        RECEPTIONIST: 'LeTan',
+        LETAN: 'LeTan',
+        LE_TAN: 'LeTan',
+        PHARMACIST: 'DuocSi',
+        DUOCSI: 'DuocSi',
+        DUOC_SI: 'DuocSi',
+        TECHNICIAN: 'KTV',
+        KTV: 'KTV',
+        KYTHUATVIEN: 'KTV',
+        KY_THUAT_VIEN: 'KTV',
+        CASHIER: 'ThuNgan',
+        THUNGAN: 'ThuNgan',
+        THU_NGAN: 'ThuNgan',
+        PATIENT: 'BenhNhan',
+        BENHNHAN: 'BenhNhan',
+        BENH_NHAN: 'BenhNhan'
+    };
+
+    function normalizeRole(role) {
+        if (!role) return 'BenhNhan';
+        const raw = String(role).trim();
+        const key = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        return roleAliasMap[key] || raw;
+    }
+
+    function getRedirectUrlByRole(role) {
+        const normalized = normalizeRole(role);
+        if (normalized === 'BenhNhan') return '/appointments.html';
+        if (normalized === 'BacSi') return '/examination.html';
+        if (normalized === 'ThuNgan') return '/billing.html';
+        if (normalized === 'DuocSi') return '/pharmacy.html';
+        return '/dashboard.html';
     }
 
     // Đổi trạng thái hiển thị mật khẩu
@@ -715,12 +864,21 @@
         toastAlert.style.display = 'none';
     }
 
-    // Xử lý gửi API đăng nhập vào Spring Boot
+    // Modal Đăng Ký
+    function openRegisterModal() {
+        document.getElementById('registerModal').style.display = 'flex';
+    }
+
+    function closeRegisterModal() {
+        document.getElementById('registerModal').style.display = 'none';
+    }
+
+    // 1. XỬ LÝ ĐĂNG NHẬP GỌI SPRING BOOT DATABASE
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideToast();
 
-        const role = roleSelect.value;
+        const selectedRole = normalizeRole(roleSelect.value);
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
@@ -737,62 +895,109 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    username: username, 
-                    password: password,
-                    role: role 
+                body: JSON.stringify({
+                    username: username,
+                    password: password
                 })
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Kiểm tra xem vai trò chọn ở form có khớp vai trò thực tế trong CSDL không
-                if (data.vaiTro && data.vaiTro.toUpperCase() !== role.toUpperCase()) {
+                const serverRole = normalizeRole(data.vaiTro || selectedRole);
+                const displayName = data.hoTen || username;
+
+                if (data.vaiTro && serverRole !== selectedRole) {
                     displayToast(
-                        'error', 
-                        'fa-solid fa-triangle-exclamation', 
-                        `Tài khoản này có vai trò là <strong>${data.vaiTro}</strong>, không phải <strong>${role}</strong>. Vui lòng chọn đúng vai trò!`
+                        'error',
+                        'fa-solid fa-triangle-exclamation',
+                        `Tài khoản này có vai trò là <strong>${data.vaiTro}</strong>, không phải <strong>${selectedRole}</strong>. Vui lòng chọn đúng vai trò!`
                     );
                     setLoadingState(false);
                     return;
                 }
 
                 displayToast(
-                    'success', 
-                    'fa-solid fa-circle-check', 
-                    `<strong>Đăng nhập thành công!</strong><br>Chào mừng <strong>${data.hoTen}</strong> (${data.vaiTro}).`
+                    'success',
+                    'fa-solid fa-circle-check',
+                    `<strong>Đăng nhập thành công!</strong><br>Chào mừng <strong>${displayName}</strong> (${serverRole}).`
                 );
 
-                // Lưu thông tin vào sessionStorage để auth-guard.js hoạt động
                 sessionStorage.setItem('authenticatedUser', JSON.stringify({
                     username: username,
-                    hoTen: data.hoTen,
-                    vaiTro: data.vaiTro,
+                    hoTen: displayName,
+                    vaiTro: serverRole,
+                    role: serverRole,
+                    fullName: displayName,
                     loginTime: new Date().toISOString()
                 }));
 
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = getRedirectUrlByRole(serverRole);
                 }, 1000);
 
             } else {
                 displayToast(
-                    'error', 
-                    'fa-solid fa-circle-xmark', 
+                    'error',
+                    'fa-solid fa-circle-xmark',
                     data.message || 'Mật khẩu hoặc tên đăng nhập không chính xác.'
                 );
             }
         } catch (error) {
             displayToast(
-                'error', 
-                'fa-solid fa-server', 
-                'Không thể kết nối đến máy chủ Backend (Cổng 8080). Vui lòng kiểm tra lại Spring Boot!'
+                'error',
+                'fa-solid fa-server',
+                'Không thể kết nối đến máy chủ Backend (Cổng 8080). Vui lòng kiểm tra Spring Boot!'
             );
         } finally {
             setLoadingState(false);
         }
     });
+
+    // 2. XỬ LÝ ĐĂNG KÝ TÀI KHOẢN MỚI LƯU TRỰC TIẾP XUỐNG DATABASE
+    async function handleRegisterSubmit(event) {
+        event.preventDefault();
+
+        const username = document.getElementById('regUsername').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+        const confirmPass = document.getElementById('regConfirmPassword').value.trim();
+
+        if (password !== confirmPass) {
+            alert("Lỗi: Mật khẩu xác nhận không khớp nhau!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tenDangNhap: username,
+                    matKhau: password,
+                    email: email
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert("Chúc mừng! " + data.message);
+                document.getElementById('registerForm').reset();
+                closeRegisterModal();
+                usernameInput.value = username;
+                roleSelect.value = 'BenhNhan';
+                passwordInput.focus();
+            } else {
+                alert("Đăng ký không thành công: " + (data.message || "Lỗi dữ liệu"));
+            }
+        } catch (err) {
+            console.error("Lỗi:", err);
+            alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại Spring Boot!");
+        }
+    }
 
     function setLoadingState(isLoading) {
         submitBtn.disabled = isLoading;
@@ -812,6 +1017,5 @@
         toastAlert.style.display = 'flex';
     }
 </script>
-
 </body>
 </html>
