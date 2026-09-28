@@ -2,17 +2,19 @@
  * MEDICARE HIS - RBAC Frontend Guard
  * Tự động kiểm tra phiên đăng nhập và lọc menu sidebar theo vai trò
  */
-(function () {
+(async function () {
     // 1. Ma trận phân quyền chi tiết
     const rolePermissions = {
-        'QuanTri': ['*'],
-        'BacSi': ['dashboard.html', 'examination.html', 'laboratory.html', 'patients.html'],
-        'ThuNgan': ['dashboard.html', 'billing.html', 'patients.html'],
-        'DuocSi': ['dashboard.html', 'pharmacy.html'],
-        'LeTan': ['dashboard.html', 'appointments.html', 'patients.html', 'doctors.html'],
-        'KTV': ['dashboard.html', 'laboratory.html'],
-        'DieuDuong': ['dashboard.html', 'inpatient.html', 'patients.html'],
-        'BenhNhan': ['appointments.html', 'patients.html', 'billing.html']
+        'QuanTri': ['dashboard.html', 'settings.html'],
+        'BacSi': ['examination.html', 'laboratory.html', 'patients.html'],
+        'ThuNgan': ['billing.html', 'patients.html'],
+        'DuocSi': ['pharmacy.html'],
+        'LeTan': ['appointments.html', 'patients.html', 'doctors.html'],
+        'KTV': ['laboratory.html'],
+        'DieuDuong': ['inpatient.html', 'patients.html'],
+        'BenhNhan': ['appointments.html', 'billing.html'],
+        'QuanLyNhanSu': ['settings.html'],
+        'BanGiamDoc': ['dashboard.html', 'settings.html']
     };
 
     const roleAliasMap = {
@@ -31,7 +33,13 @@
         CASHIER: 'ThuNgan',
         THUNGAN: 'ThuNgan',
         PATIENT: 'BenhNhan',
-        BENHNHAN: 'BenhNhan'
+        BENHNHAN: 'BenhNhan',
+        HR: 'QuanLyNhanSu',
+        NHANSU: 'QuanLyNhanSu',
+        QUANLYNHANSU: 'QuanLyNhanSu',
+        DIRECTOR: 'BanGiamDoc',
+        GIAMDOC: 'BanGiamDoc',
+        BANGIAMDOC: 'BanGiamDoc'
     };
 
     function normalizeRole(role) {
@@ -53,39 +61,66 @@
         return;
     }
 
-    // 3. Đọc thông tin người dùng từ sessionStorage
-    const userJson = sessionStorage.getItem('authenticatedUser');
+    window.logout = async function () {
+        try {
+            const csrfResponse = await fetch('/api/v1/auth/csrf');
+            if (!csrfResponse.ok) throw new Error('Không lấy được mã bảo mật.');
+            const csrfToken = (await csrfResponse.json()).token;
+            const response = await fetch('/api/v1/auth/logout', {
+                method: 'POST',
+                headers: { 'X-XSRF-TOKEN': csrfToken }
+            });
+            if (!response.ok) throw new Error('Máy chủ không xác nhận đăng xuất.');
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        } catch {
+            alert('Không thể đăng xuất an toàn. Vui lòng thử lại.');
+        }
+    };
 
-    // Nếu chưa đăng nhập -> đuổi về trang login.html
-    if (!userJson) {
-        alert('Phiên làm việc đã hết hạn hoặc bạn chưa đăng nhập! Vui lòng đăng nhập.');
+    // 3. Lấy danh tính và vai trò từ JWT đã được backend xác minh
+    let user;
+    try {
+        const response = await fetch('/api/v1/auth/me', {
+            headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) throw new Error('Phiên đăng nhập không hợp lệ.');
+
+        const account = await response.json();
+        const storedUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+        user = {
+            ...storedUser,
+            username: account.username,
+            role: account.role,
+            vaiTro: account.role,
+            fullName: storedUser.fullName || account.username
+        };
+        sessionStorage.setItem('authenticatedUser', JSON.stringify(user));
+    } catch {
+        sessionStorage.removeItem('authenticatedUser');
         window.location.href = '/login.html';
         return;
     }
 
-    const user = JSON.parse(userJson);
-    const userRole = normalizeRole(user.role || user.vaiTro || 'GUEST');
+    const userRole = normalizeRole(user.role || user.vaiTro);
     const allowedPages = rolePermissions[userRole] || [];
 
     // 4. Chặn truy cập trái quyền (Nếu cố tình gõ link vào thanh địa chỉ)
-    const isAllowed = allowedPages.includes('*') || allowedPages.includes(currentPage);
+    const isAllowed = allowedPages.includes(currentPage);
     if (!isAllowed) {
         alert(`Tài khoản vai trò [${userRole}] không có quyền truy cập vào phân hệ này!`);
         // Chuyển về trang đầu tiên họ được phép truy cập
-        const redirectPage = allowedPages[0] !== '*' ? allowedPages[0] : 'dashboard.html';
-        window.location.href = `/${redirectPage}`;
+        window.location.href = `/${allowedPages[0] || 'login.html'}`;
         return;
     }
 
     // 5. Khi DOM tải xong -> Tự động ẩn các nút menu mà người đó không có quyền
-    document.addEventListener('DOMContentLoaded', function () {
+    function initializePage() {
         // Cập nhật tên người dùng lên góc trên nếu có thẻ hiển thị
         const usernameDisplay = document.getElementById('userFullnameDisplay');
         if (usernameDisplay) {
             usernameDisplay.innerText = `${user.fullName} (${user.role})`;
         }
-
-        if (allowedPages.includes('*')) return; // ADMIN thì thấy tất cả
 
         const menuItems = document.querySelectorAll('.sidebar-menu li a');
         menuItems.forEach(item => {
@@ -98,5 +133,28 @@
                 }
             }
         });
-    });
+
+        if (userRole !== 'QuanTri') {
+            document.querySelectorAll('[data-admin-only="true"]').forEach(element => {
+                element.hidden = true;
+            });
+        }
+
+        if (userRole === 'QuanTri') {
+            document.querySelectorAll('[data-profile-update="true"]').forEach(element => {
+                element.hidden = true;
+            });
+            const profileTabTitle = document.getElementById('profileTabTitle');
+            if (profileTabTitle) {
+                profileTabTitle.innerText = 'Đổi Mật Khẩu (UC04)';
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePage, { once: true });
+    } else {
+        initializePage();
+    }
+
 })();

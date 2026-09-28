@@ -661,6 +661,8 @@
     <option value="KTV">Kỹ Thuật Viên</option>
     <option value="ThuNgan">Thu Ngân</option>
     <option value="BenhNhan">Bệnh Nhân</option>
+    <option value="QuanLyNhanSu">Quản Lý Nhân Sự</option>
+    <option value="BanGiamDoc">Ban Giám Đốc</option>
 </select>
                     <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
@@ -830,7 +832,13 @@
         THU_NGAN: 'ThuNgan',
         PATIENT: 'BenhNhan',
         BENHNHAN: 'BenhNhan',
-        BENH_NHAN: 'BenhNhan'
+        BENH_NHAN: 'BenhNhan',
+        HR: 'QuanLyNhanSu',
+        NHANSU: 'QuanLyNhanSu',
+        QUANLYNHANSU: 'QuanLyNhanSu',
+        DIRECTOR: 'BanGiamDoc',
+        GIAMDOC: 'BanGiamDoc',
+        BANGIAMDOC: 'BanGiamDoc'
     };
 
     function normalizeRole(role) {
@@ -846,6 +854,12 @@
         if (normalized === 'BacSi') return '/examination.html';
         if (normalized === 'ThuNgan') return '/billing.html';
         if (normalized === 'DuocSi') return '/pharmacy.html';
+        if (normalized === 'LeTan') return '/appointments.html';
+        if (normalized === 'KTV') return '/laboratory.html';
+        if (normalized === 'DieuDuong') return '/inpatient.html';
+        if (normalized === 'QuanTri') return '/dashboard.html';
+        if (normalized === 'QuanLyNhanSu') return '/settings.html';
+        if (normalized === 'BanGiamDoc') return '/dashboard.html';
         return '/dashboard.html';
     }
 
@@ -873,6 +887,14 @@
         document.getElementById('registerModal').style.display = 'none';
     }
 
+    async function getCsrfToken() {
+        const response = await fetch('/api/v1/auth/csrf');
+        if (!response.ok) {
+            throw new Error('Không lấy được CSRF token.');
+        }
+        return (await response.json()).token;
+    }
+
     // 1. XỬ LÝ ĐĂNG NHẬP GỌI SPRING BOOT DATABASE
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -890,14 +912,17 @@
         setLoadingState(true);
 
         try {
+            const csrfToken = await getCsrfToken();
             const response = await fetch('/api/v1/auth/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-XSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
                     username: username,
-                    password: password
+                    password: password,
+                    role: selectedRole
                 })
             });
 
@@ -969,10 +994,12 @@
         }
 
         try {
+            const csrfToken = await getCsrfToken();
             const response = await fetch('/api/v1/auth/register', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-XSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
                     tenDangNhap: username,

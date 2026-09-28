@@ -2,21 +2,93 @@ package com.nhom12.hospital.security;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public enum Role {
-    QUAN_TRI("QuanTri", Set.of("*")),
-    BAC_SI("BacSi", Set.of("dashboard.html", "examination.html", "laboratory.html", "patients.html")),
-    DIEU_DUONG("DieuDuong", Set.of("dashboard.html", "inpatient.html", "patients.html")),
-    LE_TAN("LeTan", Set.of("dashboard.html", "appointments.html", "patients.html", "doctors.html")),
-    DUOC_SI("DuocSi", Set.of("dashboard.html", "pharmacy.html")),
-    KTV("KTV", Set.of("dashboard.html", "laboratory.html")),
-    THU_NGAN("ThuNgan", Set.of("dashboard.html", "billing.html", "patients.html")),
-    BENH_NHAN("BenhNhan", Set.of("appointments.html", "patients.html", "billing.html"));
+    BENH_NHAN("BenhNhan", Set.of("appointments.html", "billing.html"), Set.of(
+        Permission.ACCOUNT_REGISTER,
+        Permission.LOGIN,
+        Permission.LOGOUT,
+        Permission.PASSWORD_RESET,
+        Permission.PASSWORD_CHANGE,
+        Permission.PROFILE_UPDATE,
+        Permission.VNEID_LINK,
+        Permission.APPOINTMENT_BOOK,
+        Permission.APPOINTMENT_CANCEL_RESCHEDULE,
+        Permission.QUEUE_VIEW,
+        Permission.OWN_MEDICAL_RECORD_VIEW,
+        Permission.OWN_LAB_RESULT_VIEW,
+        Permission.OWN_PRESCRIPTION_VIEW,
+        Permission.ONLINE_PAYMENT,
+        Permission.NOTIFICATION_VIEW)),
+    LE_TAN("LeTan", Set.of("appointments.html", "patients.html", "doctors.html"), employeePermissions(
+        Permission.PATIENT_RECORD_CREATE,
+        Permission.PATIENT_RECORD_SEARCH,
+        Permission.PATIENT_RECORD_UPDATE,
+        Permission.WALK_IN_REGISTER,
+        Permission.QUEUE_MANAGE,
+        Permission.APPOINTMENT_CANCEL_RESCHEDULE,
+        Permission.DEPARTMENT_LIST_VIEW,
+        Permission.BED_STATUS_VIEW)),
+    BAC_SI("BacSi", Set.of("examination.html", "laboratory.html", "patients.html"), employeePermissions(
+        Permission.PATIENT_RECORD_SEARCH,
+        Permission.PATIENT_HISTORY_VIEW,
+        Permission.SYMPTOMS_RECORD,
+        Permission.ICD10_DIAGNOSIS_RECORD,
+        Permission.PRESCRIPTION_CREATE,
+        Permission.CLS_ORDER_CREATE,
+        Permission.REFERRAL_CONSULT,
+        Permission.CLS_RESULT_VIEW)),
+    KTV("KTV", Set.of("laboratory.html"), employeePermissions(
+        Permission.CLS_ORDER_RECEIVE,
+        Permission.CLS_RESULT_ENTER,
+        Permission.CLS_RESULT_RETURN)),
+    DUOC_SI("DuocSi", Set.of("pharmacy.html"), employeePermissions(
+        Permission.MEDICINE_CATALOG_VIEW,
+        Permission.MEDICINE_DISPENSE_FEFO,
+        Permission.MEDICINE_STOCK_RECEIVE,
+        Permission.SUPPLIER_MANAGE)),
+    THU_NGAN("ThuNgan", Set.of("billing.html", "patients.html"), employeePermissions(
+        Permission.BILLING_CALCULATE,
+        Permission.INSURANCE_APPLY,
+        Permission.PAYMENT_COLLECT,
+        Permission.INVOICE_RECEIPT_ISSUE,
+        Permission.REFUND_CREATE)),
+    DIEU_DUONG("DieuDuong", Set.of("inpatient.html", "patients.html"), employeePermissions(
+        Permission.DEPARTMENT_LIST_VIEW,
+        Permission.BED_STATUS_VIEW,
+        Permission.BED_ASSIGN,
+        Permission.INPATIENT_MONITOR,
+        Permission.INPATIENT_TRANSFER,
+        Permission.PATIENT_DISCHARGE)),
+    QUAN_LY_NHAN_SU("QuanLyNhanSu", Set.of("settings.html"), employeePermissions(
+        Permission.STAFF_VIEW,
+        Permission.STAFF_CREATE,
+        Permission.STAFF_UPDATE,
+        Permission.STAFF_SEARCH,
+        Permission.STAFF_LOCK,
+        Permission.DUTY_ROSTER_ASSIGN)),
+    QUAN_TRI("QuanTri", Set.of("dashboard.html", "settings.html"), Set.of(
+        Permission.LOGIN,
+        Permission.LOGOUT,
+        Permission.PASSWORD_CHANGE,
+        Permission.STAFF_ACCOUNT_ISSUE,
+        Permission.STAFF_PASSWORD_RESET,
+        Permission.RBAC_MANAGE,
+        Permission.AUDIT_LOG_VIEW,
+        Permission.VISIT_STATISTICS_VIEW,
+        Permission.REVENUE_STATISTICS_VIEW,
+        Permission.DISEASE_STATISTICS_VIEW,
+        Permission.REPORT_EXPORT)),
+    BAN_GIAM_DOC("BanGiamDoc", Set.of("dashboard.html", "settings.html"), employeePermissions(
+        Permission.VISIT_STATISTICS_VIEW,
+        Permission.REVENUE_STATISTICS_VIEW,
+        Permission.DISEASE_STATISTICS_VIEW,
+        Permission.REPORT_EXPORT));
 
     private static final Map<String, Role> ALIAS_MAP;
 
@@ -33,10 +105,22 @@ public enum Role {
 
     private final String value;
     private final Set<String> allowedPages;
+    private final Set<Permission> permissions;
 
-    Role(String value, Set<String> allowedPages) {
+    Role(String value, Set<String> allowedPages, Set<Permission> permissions) {
         this.value = value;
         this.allowedPages = allowedPages;
+        this.permissions = permissions;
+    }
+
+    private static Set<Permission> employeePermissions(Permission... rolePermissions) {
+        Set<Permission> permissions = EnumSet.of(
+                Permission.LOGIN,
+                Permission.LOGOUT,
+                Permission.PASSWORD_CHANGE,
+                Permission.PROFILE_UPDATE);
+        Collections.addAll(permissions, rolePermissions);
+        return Collections.unmodifiableSet(permissions);
     }
 
     public String getValue() {
@@ -47,12 +131,20 @@ public enum Role {
         return allowedPages;
     }
 
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public boolean hasPermission(Permission permission) {
+        return permissions.contains(permission);
+    }
+
     public boolean canAccess(String page) {
         if (page == null || page.isBlank()) {
             return false;
         }
         String normalized = page.trim();
-        return allowedPages.contains("*") || allowedPages.contains(normalized);
+        return allowedPages.contains("*") || allowedPages.contains(normalized)
             || allowedPages.contains(normalized.replace("/", ""));
     }
 
@@ -66,6 +158,8 @@ public enum Role {
             case KTV -> new String[] {"TECHNICIAN", "KYTHUATVIEN", "KY_THUAT_VIEN"};
             case THU_NGAN -> new String[] {"CASHIER", "THUNGAN", "THU_NGAN"};
             case BENH_NHAN -> new String[] {"PATIENT", "BENHNHAN", "BENH_NHAN"};
+            case QUAN_LY_NHAN_SU -> new String[] {"HR", "NHANSU", "QUANLYNHANSU", "QUAN_LY_NHAN_SU"};
+            case BAN_GIAM_DOC -> new String[] {"DIRECTOR", "GIAMDOC", "BANGIAMDOC", "BAN_GIAM_DOC"};
         };
     }
 
