@@ -39,4 +39,21 @@ public class LichTrucController {
         }
         return res;
     }
+
+    @PostMapping
+    public org.springframework.http.ResponseEntity<?> create(@RequestBody LichTruc lt) {
+        if (lt.getMaLichTruc() == null || lt.getMaLichTruc().trim().isEmpty()) {
+            lt.setMaLichTruc("LT" + (System.currentTimeMillis() % 10000000));
+        }
+        return org.springframework.http.ResponseEntity.ok(lichTrucRepository.save(lt));
+    }
+
+    @DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<?> delete(@PathVariable String id) {
+        if (lichTrucRepository.existsById(id)) {
+            lichTrucRepository.deleteById(id);
+            return org.springframework.http.ResponseEntity.ok(Map.of("success", true, "message", "Đã xóa phân công lịch trực!"));
+        }
+        return org.springframework.http.ResponseEntity.notFound().build();
+    }
 }

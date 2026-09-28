@@ -32,13 +32,15 @@ public class TaiKhoanController {
     private String normalizeRole(String rawRole) {
         if (rawRole == null || rawRole.trim().isEmpty()) return "BacSi";
         String r = rawRole.trim().toUpperCase();
+        if (r.contains("GIAMDOC") || r.contains("BGD") || r.contains("DIRECTOR") || r.contains("EXECUTIVE")) return "GiamDoc";
+        if (r.contains("NHANSU") || r.contains("HR")) return "NhanSu";
+        if (r.contains("ADMIN") || r.contains("QUANTRI")) return "QuanTri";
         if (r.contains("DOC") || r.contains("BACSI")) return "BacSi";
         if (r.contains("CASHIER") || r.contains("THUNGAN")) return "ThuNgan";
         if (r.contains("PHARM") || r.contains("DUOC")) return "DuocSi";
         if (r.contains("RECEPT") || r.contains("LETAN") || r.contains("TIEPDON")) return "LeTan";
         if (r.contains("TECH") || r.contains("KTV") || r.contains("KYTHUAT")) return "KTV";
         if (r.contains("NURSE") || r.contains("DIEUDUONG")) return "DieuDuong";
-        if (r.contains("ADMIN") || r.contains("QUANTRI")) return "QuanTri";
         if (r.contains("BENHNHAN") || r.contains("PATIENT")) return "BenhNhan";
         return "BacSi";
     }
@@ -105,6 +107,7 @@ public class TaiKhoanController {
                 nv.setHoTen(fullName != null && !fullName.trim().isEmpty() ? fullName.trim() : username);
                 nv.setSoDienThoai("09" + (int)(Math.random() * 90000000 + 10000000));
                 nv.setEmail(tk.getEmail());
+                nv.setGioiTinh("Nam");
                 nv.setVaiTro(dbRole);
                 nv.setTrangThai("DangLamViec");
                 nhanVienRepository.save(nv);

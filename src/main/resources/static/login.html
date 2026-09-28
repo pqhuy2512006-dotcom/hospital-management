@@ -605,10 +605,15 @@
                     <i class="fa-solid fa-user-tag input-icon"></i>
                     <select id="roleSelect" class="form-input" required>
                         <option value="QuanTri">Quản Trị Viên (Admin)</option>
-                        <option value="BacSi">Bác Sĩ</option>
-                        <option value="ThuNgan">Thu Ngân / Kế Toán</option>
-                        <option value="DuocSi">Dược Sĩ</option>
+                        <option value="GiamDoc">Ban Giám Đốc (Director)</option>
+                        <option value="NhanSu">Quản Lý Nhân Sự (HR)</option>
+                        <option value="BacSi">Bác Sĩ Điều Trị</option>
+                        <option value="ThuNgan">Thu Ngân / Kế Toán Viện Phí</option>
+                        <option value="DuocSi">Dược Sĩ Kho Dược</option>
                         <option value="LeTan">Tiếp Đón / Lễ Tân</option>
+                        <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (CLS)</option>
+                        <option value="DieuDuong">Điều Dưỡng Nội Trú</option>
+                        <option value="BenhNhan">Bệnh Nhân (Patient)</option>
                     </select>
                     <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
@@ -673,9 +678,49 @@
                 <i class="fa-solid fa-circle-exclamation" id="toastIcon"></i>
                 <div id="toastMessage"></div>
             </div>
+
+            <!-- Phân quyền nhanh - Tài khoản mẫu để kiểm thử RBAC -->
+            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px dashed #cbd5e1;">
+                <div style="font-size: 11.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-user-shield" style="color: #0284c7;"></i> Chọn Nhanh Tài Khoản (Test RBAC)</span>
+                    <span style="font-size: 10.5px; color: #94a3b8; font-weight: normal;">Pass: admin123</span>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('admin', 'admin123', 'QuanTri')">👑 Quản Trị</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('bgd_thang', 'admin123', 'GiamDoc')">🏛️ Giám Đốc</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('ns_ngoc', 'admin123', 'NhanSu')">👥 Nhân Sự</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('bs_hung', 'admin123', 'BacSi')">🩺 Bác Sĩ</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('tn_nga', 'admin123', 'ThuNgan')">💵 Thu Ngân</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('ds_lan', 'admin123', 'DuocSi')">💊 Dược Sĩ</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('ktv_huy', 'admin123', 'KTV')">🧪 KTV CLS</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('dd_hoa', 'admin123', 'DieuDuong')">🏥 Điều Dưỡng</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('lt_minh', 'admin123', 'LeTan')">📋 Lễ Tân</button>
+                    <button type="button" class="btn-role-quick" onclick="fillTestAccount('bn_an', 'admin123', 'BenhNhan')">👤 Bệnh Nhân</button>
+                </div>
+            </div>
         </form>
     </div>   
 </div>
+
+<style>
+    .btn-role-quick {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #334155;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-role-quick:hover {
+        background: #e0f2fe;
+        border-color: #0284c7;
+        color: #0284c7;
+        transform: translateY(-1px);
+    }
+</style>
 
 <script>
     const form = document.getElementById('loginForm');
@@ -747,15 +792,9 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Kiểm tra xem vai trò chọn ở form có khớp vai trò thực tế trong CSDL không
+                // Tự động đồng bộ vai trò thực tế
                 if (data.vaiTro && data.vaiTro.toUpperCase() !== role.toUpperCase()) {
-                    displayToast(
-                        'error', 
-                        'fa-solid fa-triangle-exclamation', 
-                        `Tài khoản này có vai trò là <strong>${data.vaiTro}</strong>, không phải <strong>${role}</strong>. Vui lòng chọn đúng vai trò!`
-                    );
-                    setLoadingState(false);
-                    return;
+                    roleSelect.value = data.vaiTro;
                 }
 
                 displayToast(
@@ -772,9 +811,38 @@
                     loginTime: new Date().toISOString()
                 }));
 
+                // Điều hướng theo phân quyền vai trò (Role-based Landing Page)
+                const ROLE_LANDING_PAGES = {
+                    'QuanTri': '/dashboard.html',
+                    'ADMIN': '/dashboard.html',
+                    'GiamDoc': '/dashboard.html',
+                    'DIRECTOR': '/dashboard.html',
+                    'BGD': '/dashboard.html',
+                    'NhanSu': '/doctors.html',
+                    'HR': '/doctors.html',
+                    'BacSi': '/examination.html',
+                    'DOCTOR': '/examination.html',
+                    'ThuNgan': '/billing.html',
+                    'CASHIER': '/billing.html',
+                    'DuocSi': '/pharmacy.html',
+                    'PHARMACIST': '/pharmacy.html',
+                    'KTV': '/laboratory.html',
+                    'TECHNICIAN': '/laboratory.html',
+                    'DieuDuong': '/inpatient.html',
+                    'NURSE': '/inpatient.html',
+                    'LeTan': '/appointments.html',
+                    'RECEPTIONIST': '/appointments.html',
+                    'BenhNhan': '/appointments.html',
+                    'PATIENT': '/appointments.html'
+                };
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectParam = urlParams.get('redirect');
+                const targetUrl = redirectParam || ROLE_LANDING_PAGES[data.vaiTro] || '/dashboard.html';
+
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
-                }, 1000);
+                    window.location.href = targetUrl;
+                }, 700);
 
             } else {
                 displayToast(

@@ -625,16 +625,30 @@
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Chứng Chỉ Hành Nghề (CCHN)</label>
-                            <input type="text" id="dCCHN" class="form-control" placeholder="Ví dụ: 012345/BYT-CCHN">
-                        </div>
-                        <div class="form-group">
-                            <label>Trạng Thái Làm Việc</label>
-                            <select id="dDangTruc" class="form-control">
-                                <option value="true">Đang trực ca / Sẵn sàng khám</option>
-                                <option value="false">Tạm nghỉ / Không trực</option>
+                            <label>Vai Trò / Vị Trí Công Tác *</label>
+                            <select id="dVaiTro" class="form-control" required>
+                                <option value="BacSi">Bác Sĩ Điều Trị (DOCTOR)</option>
+                                <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
+                                <option value="DuocSi">Dược Sĩ Kho Dược (PHARMACIST)</option>
+                                <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (CLS)</option>
+                                <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
+                                <option value="ThuNgan">Thu Ngân / Kế Toán Viện Phí</option>
+                                <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Trạng Thái Làm Việc *</label>
+                            <select id="dTrangThai" class="form-control" required>
+                                <option value="DangLamViec">Đang làm việc</option>
+                                <option value="NghiPhep">Nghỉ phép</option>
+                                <option value="DaNghi">Đã nghỉ việc</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Chứng Chỉ Hành Nghề (CCHN)</label>
+                        <input type="text" id="dCCHN" class="form-control" placeholder="Ví dụ: 012345/BYT-CCHN">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -663,20 +677,43 @@
                     maNV: item.maNhanVien,
                     hoTen: item.hoTen,
                     hocVi: item.trinhDoChuyenMon || 'Bác sĩ CKI',
-                    chuyenKhoa: item.chuyenKhoa || item.vaiTro || 'Chưa xác định',
+                    chuyenKhoa: item.chuyenKhoa || 'Chưa xác định',
                     phongKham: item.diaChi || 'Phòng khám',
                     sdt: item.soDienThoai || '',
                     cchn: item.chungChiHanhNghe || '',
-                    dangTruc: (item.trangThai || '').toLowerCase() === 'danglamviec'
+                    vaiTro: item.vaiTro || 'BacSi',
+                    trangThai: item.trangThai || 'DangLamViec'
                 }));
 
                 renderDoctors();
+                checkHRPermissions();
             } catch (error) {
                 console.error(error);
                 const tbody = document.getElementById('doctorTableBody');
                 if (tbody) {
                     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--danger);">Không thể tải dữ liệu nhân viên từ cơ sở dữ liệu.</td></tr>`;
                 }
+            }
+        }
+
+        // Kiểm tra quyền: Chỉ Nhân Sự (NhanSu) và Quản Trị (QuanTri) mới được thêm/sửa hồ sơ
+        function checkHRPermissions() {
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const u = JSON.parse(userStr);
+                    const r = (u.vaiTro || '').toUpperCase();
+                    const isHR = r.includes('NHANSU') || r.includes('HR') || r.includes('QUANTRI') || r.includes('ADMIN');
+                    if (!isHR) {
+                        const addBtn = document.querySelector('.btn-add-doc');
+                        if (addBtn) addBtn.style.display = 'none';
+                        document.querySelectorAll('.btn-tbl-edit').forEach(btn => {
+                            btn.innerHTML = '<i class="fa-solid fa-eye"></i> Xem';
+                            btn.style.background = '#f1f5f9';
+                            btn.style.color = '#475569';
+                        });
+                    }
+                } catch(e) {}
             }
         }
 
@@ -698,9 +735,14 @@
             }
 
             list.forEach(doc => {
-                const statusHtml = doc.dangTruc
-                    ? '<span class="status-pill status-duty"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Đang trực ca</span>'
-                    : '<span class="status-pill status-off"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Không trực</span>';
+                let statusHtml = '';
+                if (doc.trangThai === 'DangLamViec') {
+                    statusHtml = '<span class="status-pill status-duty"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Đang làm việc</span>';
+                } else if (doc.trangThai === 'NghiPhep') {
+                    statusHtml = '<span class="status-pill" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Nghỉ phép</span>';
+                } else {
+                    statusHtml = '<span class="status-pill status-off"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Đã nghỉ việc</span>';
+                }
 
                 tbody.innerHTML += `
                     <tr>
@@ -719,6 +761,7 @@
                     </tr>
                 `;
             });
+            checkHRPermissions();
         }
 
         function filterDoctors() {
@@ -740,6 +783,8 @@
             document.getElementById('dPhongKham').value = '';
             document.getElementById('dSDT').value = '';
             document.getElementById('dCCHN').value = '';
+            document.getElementById('dVaiTro').value = 'BacSi';
+            document.getElementById('dTrangThai').value = 'DangLamViec';
             document.getElementById('doctorModal').style.display = 'flex';
         }
 
@@ -748,7 +793,7 @@
             if (!doc) return;
 
             isEditDoc = true;
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Bác Sĩ (UC65)';
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Nhân Sự / Bác Sĩ (UC65)';
             document.getElementById('dMaNV').value = doc.maNV;
             document.getElementById('dHoTen').value = doc.hoTen;
             document.getElementById('dHocVi').value = doc.hocVi;
@@ -756,7 +801,8 @@
             document.getElementById('dPhongKham').value = doc.phongKham;
             document.getElementById('dSDT').value = doc.sdt;
             document.getElementById('dCCHN').value = doc.cchn;
-            document.getElementById('dDangTruc').value = doc.dangTruc ? "true" : "false";
+            document.getElementById('dVaiTro').value = doc.vaiTro || 'BacSi';
+            document.getElementById('dTrangThai').value = doc.trangThai || 'DangLamViec';
 
             document.getElementById('doctorModal').style.display = 'flex';
         }
@@ -774,7 +820,8 @@
             const phongKham = document.getElementById('dPhongKham').value.trim();
             const sdt = document.getElementById('dSDT').value.trim();
             const cchn = document.getElementById('dCCHN').value.trim();
-            const dangTruc = document.getElementById('dDangTruc').value === "true";
+            const vaiTro = document.getElementById('dVaiTro').value;
+            const trangThai = document.getElementById('dTrangThai').value;
 
             const payload = {
                 maNhanVien: maNV,
@@ -784,8 +831,8 @@
                 diaChi: phongKham,
                 soDienThoai: sdt,
                 chungChiHanhNghe: cchn,
-                vaiTro: "BacSi",
-                trangThai: dangTruc ? "DangLamViec" : "DaNghi"
+                vaiTro: vaiTro,
+                trangThai: trangThai
             };
 
             try {
@@ -797,10 +844,10 @@
                     });
                     if (!res.ok) {
                         const err = await res.text();
-                        alert("Lỗi khi thêm bác sĩ: " + err);
+                        alert("Lỗi khi thêm nhân sự: " + err);
                         return;
                     }
-                    alert(`Thêm bác sĩ ${hoTen} vào hệ thống thành công!`);
+                    alert(`Thêm nhân sự ${hoTen} vào hệ thống thành công!`);
                 } else {
                     const res = await fetch(`/api/v1/nhanvien/${encodeURIComponent(maNV)}`, {
                         method: 'PUT',
@@ -809,10 +856,10 @@
                     });
                     if (!res.ok) {
                         const err = await res.text();
-                        alert("Lỗi khi cập nhật bác sĩ: " + err);
+                        alert("Lỗi khi cập nhật nhân sự: " + err);
                         return;
                     }
-                    alert(`Cập nhật thông tin bác sĩ ${hoTen} thành công!`);
+                    alert(`Cập nhật thông tin nhân sự ${hoTen} thành công!`);
                 }
 
                 closeDoctorModal();
@@ -832,5 +879,6 @@
             loadDoctors();
         };
     </script>
+    <script src="/auth-guard.js"></script>
 </body>
 </html>
