@@ -601,36 +601,45 @@
 
     <!-- SCRIPT NGHIỆP VỤ DƯỢC & KHO THUỐC -->
     <script>
-        // Dữ liệu thuốc trong kho (UC44)
-        let drugs = [
-            { id: "MED-001", name: "Paracetamol 500mg", unit: "Viên", price: 1500, stock: 500 },
-            { id: "MED-002", name: "Amoxicillin 500mg", unit: "Viên", price: 4000, stock: 200 },
-            { id: "MED-003", name: "Panadol Extra", unit: "Viên", price: 3000, stock: 15 },
-            { id: "MED-004", name: "Berberin 100mg", unit: "Viên", price: 800, stock: 350 },
-            { id: "MED-005", name: "Vitamin C 500mg", unit: "Viên", price: 2500, stock: 30 }
-        ];
+        // Dữ liệu kho thuốc và đơn thuốc được tải từ hệ thống; không còn dữ liệu mẫu.
+        let drugs = [];
+        let prescriptions = [];
 
-        // Danh sách đơn thuốc chuyển từ phòng khám sang (UC46)
-        let prescriptions = [
-            {
-                id: "DT2026-001",
-                patientName: "Nguyễn Văn An (BN2026000001)",
-                doctor: "BS. CKI. Trần Văn Hùng",
-                drugId: "MED-001",
-                drugName: "Paracetamol 500mg",
-                qty: 20,
-                status: "PENDING"
-            },
-            {
-                id: "DT2026-002",
-                patientName: "Trần Thị Mai (BN2026000002)",
-                doctor: "BS. CKI. Trần Văn Hùng",
-                drugId: "MED-004",
-                drugName: "Berberin 100mg",
-                qty: 30,
-                status: "PENDING"
+        async function loadPharmacyData() {
+            try {
+                const [drugsRes, presRes] = await Promise.all([
+                    fetch('/api/v1/thuoc'),
+                    fetch('/api/v1/donthuoc')
+                ]);
+
+                if (drugsRes.ok) {
+                    const rawDrugs = await drugsRes.json();
+                    drugs = rawDrugs.map(d => ({
+                        id: d.maThuoc,
+                        name: d.tenThuoc,
+                        unit: d.donViTinh,
+                        price: d.donGiaBan || 0,
+                        stock: d.tonKhoHienTai || 0,
+                        warningLimit: d.nguongCanhBao || 10
+                    }));
+                    renderDrugs();
+                    updateImportDrugSelect();
+                }
+
+                if (presRes.ok) {
+                    prescriptions = await presRes.json();
+                    renderPrescriptions();
+                }
+            } catch (err) {
+                console.error("Lỗi tải dữ liệu kho thuốc:", err);
             }
-        ];
+        }
+
+        function updateImportDrugSelect() {
+            const sel = document.getElementById('impDrugId');
+            if (!sel || drugs.length === 0) return;
+            sel.innerHTML = drugs.map(d => `<option value="${d.id}">${d.name} (${d.unit}) - Tồn: ${d.stock}</option>`).join('');
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -647,7 +656,7 @@
 
             list.forEach(d => {
                 let statusText = '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Đầy đủ</span>';
-                if (d.stock <= 20) {
+                if (d.stock <= (d.warningLimit || 20)) {
                     statusText = '<span style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết</span>';
                 }
 
@@ -678,6 +687,11 @@
             const tbody = document.getElementById('prescriptionTableBody');
             tbody.innerHTML = '';
 
+            if (prescriptions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Chưa có đơn thuốc nào cần xử lý.</td></tr>';
+                return;
+            }
+
             prescriptions.forEach(p => {
                 const statusHtml = p.status === 'PENDING'
                     ? '<span class="badge-status status-pending">Chờ xuất thuốc</span>'
@@ -690,9 +704,9 @@
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="badge-code">${p.id}</span></td>
-                        <td><strong>${p.patientName}</strong></td>
-                        <td>${p.doctor}</td>
-                        <td><strong>${p.drugName}</strong>: ${p.qty} viên</td>
+                        <td><strong>${p.patientName || p.patientId || 'Bệnh nhân'}</strong></td>
+                        <td>${p.doctor || 'Bác sĩ kê đơn'}</td>
+                        <td><strong>${p.drugName || p.drugId}</strong>: ${p.qty} viên</td>
                         <td>${statusHtml}</td>
                         <td>${actionHtml}</td>
                     </tr>
@@ -701,25 +715,24 @@
         }
 
         // Cấp phát thuốc & tự động trừ tồn kho (UC46, UC48)
-        function dispenseDrug(prescriptionId) {
-            const pres = prescriptions.find(p => p.id === prescriptionId);
-            if (!pres) return;
+        async function dispenseDrug(prescriptionId) {
+            try {
+                const res = await fetch(`/api/v1/donthuoc/${encodeURIComponent(prescriptionId)}/xuat`, {
+                    method: 'POST'
+                });
 
-            const targetDrug = drugs.find(d => d.id === pres.drugId);
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Lỗi xuất thuốc: " + err);
+                    return;
+                }
 
-            if (!targetDrug || targetDrug.stock < pres.qty) {
-                alert(`Không thể xuất thuốc! Số lượng tồn kho hiện tại (${targetDrug ? targetDrug.stock : 0}) không đủ để xuất đơn (${pres.qty} viên).`);
-                return;
+                alert(`Xuất thuốc thành công cho đơn ${prescriptionId}!\nĐã trừ số lượng khỏi kho dược trên SQL Server.`);
+                await loadPharmacyData();
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối khi xuất thuốc!");
             }
-
-            // Trừ tồn kho tự động (UC48)
-            targetDrug.stock -= pres.qty;
-            pres.status = 'DISPENSED';
-
-            alert(`Xuất thuốc thành công cho đơn ${prescriptionId}!\nĐã trừ ${pres.qty} viên ${targetDrug.name} khỏi kho. Số tồn hiện tại: ${targetDrug.stock} viên.`);
-
-            renderDrugs();
-            renderPrescriptions();
         }
 
         // Modal Nhập kho thuốc (UC45, UC51)
@@ -727,7 +740,6 @@
             document.getElementById('impCode').value = `PN2026-${String(Date.now()).slice(-4)}`;
             document.getElementById('impDate').valueAsDate = new Date();
             
-            // Mặc định hạn sử dụng là 2 năm sau
             const next2Years = new Date();
             next2Years.setFullYear(next2Years.getFullYear() + 2);
             document.getElementById('impExpiry').valueAsDate = next2Years;
@@ -739,20 +751,46 @@
             document.getElementById('importModal').style.display = 'none';
         }
 
-        function handleImportDrug(e) {
+        async function handleImportDrug(e) {
             e.preventDefault();
             const drugId = document.getElementById('impDrugId').value;
             const qty = parseInt(document.getElementById('impQty').value);
             const supplier = document.getElementById('impSupplier').value;
+            const invoiceNo = document.getElementById('impInvoiceNo').value;
+            const batch = document.getElementById('impBatch').value;
+            const expiry = document.getElementById('impExpiry').value;
+            const price = document.getElementById('impPrice').value;
 
-            const targetDrug = drugs.find(d => d.id === drugId);
-            if (targetDrug) {
-                targetDrug.stock += qty;
-                alert(`Nhập kho thành công!\nThuốc: ${targetDrug.name}\nSố lượng nhập thêm: +${qty} viên\nNhà cung cấp: ${supplier}\nTồn kho mới: ${targetDrug.stock} viên.`);
+            const payload = {
+                maThuoc: drugId,
+                soLuong: qty,
+                nhaCungCap: supplier,
+                soHoaDonNCC: invoiceNo,
+                soLo: batch,
+                hanSuDung: expiry,
+                donGia: price
+            };
+
+            try {
+                const res = await fetch('/api/v1/thuoc/nhapkho', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Lỗi nhập kho: " + err);
+                    return;
+                }
+
+                alert(`Nhập kho thành công!\nSố lượng nhập thêm: +${qty}\nĐã cập nhật tồn kho và tạo phiếu nhập vào CSDL SQL Server!`);
+                closeImportModal();
+                await loadPharmacyData();
+            } catch (err) {
+                console.error(err);
+                alert("Không thể kết nối đến máy chủ Backend!");
             }
-
-            closeImportModal();
-            renderDrugs();
         }
 
         function logout() {
@@ -760,9 +798,8 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            renderDrugs();
-            renderPrescriptions();
+        window.onload = async function() {
+            await loadPharmacyData();
         };
     </script>
 </body>

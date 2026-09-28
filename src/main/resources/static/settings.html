@@ -622,13 +622,13 @@
                     <div class="form-group">
                         <label>Vai Trò Chức Năng (RBAC) *</label>
                         <select id="nuRole" class="form-control" required>
-                            <option value="DOCTOR">Bác Sĩ (DOCTOR)</option>
-                            <option value="CASHIER">Thu Ngân (CASHIER)</option>
-                            <option value="PHARMACIST">Dược Sĩ (PHARMACIST)</option>
-                            <option value="RECEPTIONIST">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
-                            <option value="TECHNICIAN">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
-                            <option value="NURSE">Điều Dưỡng Nội Trú (NURSE)</option>
-                            <option value="ADMIN">Quản Trị Viên (ADMIN)</option>
+                            <option value="BacSi">Bác Sĩ (DOCTOR)</option>
+                            <option value="ThuNgan">Thu Ngân (CASHIER)</option>
+                            <option value="DuocSi">Dược Sĩ (PHARMACIST)</option>
+                            <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
+                            <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
+                            <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
+                            <option value="QuanTri">Quản Trị Viên (ADMIN)</option>
                         </select>
                     </div>
 
@@ -650,16 +650,21 @@
 
     <!-- SCRIPT LOGIC CẤU HÌNH & TÀI KHOẢN -->
     <script>
-        // Dữ liệu tài khoản mẫu
-        let users = [
-            { username: "admin", fullName: "Quản Trị Viên Hệ Thống", role: "ADMIN", status: "Hoạt động" },
-            { username: "bacsi", fullName: "BS. CKI. Trần Văn Hùng", role: "DOCTOR", status: "Hoạt động" },
-            { username: "thungan", fullName: "Nguyễn Thu Ngân", role: "CASHIER", status: "Hoạt động" },
-            { username: "duocsi", fullName: "Dược Sĩ Lê Thị Lan", role: "PHARMACIST", status: "Hoạt động" },
-            { username: "letan", fullName: "Nhân Viên Tiếp Đón Mai", role: "RECEPTIONIST", status: "Hoạt động" },
-            { username: "ktv_cls", fullName: "KTV. Phạm Quốc Huy", role: "TECHNICIAN", status: "Hoạt động" },
-            { username: "dieuduong", fullName: "ĐD. Huỳnh Thị Thảo", role: "NURSE", status: "Hoạt động" }
-        ];
+        let users = [];
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/v1/taikhoan');
+                if (response.ok) {
+                    users = await response.json();
+                    renderUsers();
+                } else {
+                    console.error("Lỗi khi tải tài khoản:", response.status);
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối API tài khoản:", error);
+            }
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -673,29 +678,49 @@
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
 
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">Chưa có tài khoản nhân viên nào.</td></tr>';
+                return;
+            }
+
             users.forEach(u => {
                 let badgeClass = 'role-admin';
-                if (u.role === 'DOCTOR') badgeClass = 'role-doc';
-                else if (u.role === 'CASHIER') badgeClass = 'role-cashier';
-                else if (u.role === 'PHARMACIST') badgeClass = 'role-pharmacy';
-                else if (u.role === 'NURSE') badgeClass = 'role-nurse';
-                else if (u.role === 'TECHNICIAN') badgeClass = 'role-lab';
-                else if (u.role === 'RECEPTIONIST') badgeClass = 'role-doc';
+                const r = (u.role || '').toUpperCase();
+                if (r.includes('DOC') || r.includes('BACSI')) badgeClass = 'role-doc';
+                else if (r.includes('CASHIER') || r.includes('THUNGAN')) badgeClass = 'role-cashier';
+                else if (r.includes('PHARM') || r.includes('DUOC')) badgeClass = 'role-pharmacy';
+                else if (r.includes('NURSE') || r.includes('DIEUDUONG')) badgeClass = 'role-nurse';
+                else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
+                else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.username}</strong></td>
-                        <td>${u.fullName}</td>
+                        <td>${u.fullName || u.username}</td>
                         <td><span class="role-badge ${badgeClass}">${u.role}</span></td>
-                        <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status}</span></td>
+                        <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status || 'Hoạt động'}</span></td>
                         <td>
-                            <button type="button" style="padding:4px 8px; border:1px solid #fee2e2; background:#ffffff; color:#ef4444; border-radius:4px; cursor:pointer; font-size:12px;" onclick="resetUserPass('${u.username}')">
+                            <button type="button" style="padding:4px 8px; border:1px solid #fee2e2; background:#ffffff; color:#ef4444; border-radius:4px; cursor:pointer; font-size:12px;" onclick="resetUserPass(${u.id}, '${u.username}')">
                                 <i class="fa-solid fa-rotate-left"></i> Đặt lại mật khẩu
                             </button>
                         </td>
                     </tr>
                 `;
             });
+        }
+
+        function initProfile() {
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.tenDangNhap) document.getElementById('profUsername').value = user.tenDangNhap;
+                    if (user.vaiTro) document.getElementById('profRole').value = user.vaiTro;
+                    if (user.hoTen) document.getElementById('profFullName').value = user.hoTen;
+                    if (user.soDienThoai) document.getElementById('profPhone').value = user.soDienThoai;
+                    if (user.email) document.getElementById('profEmail').value = user.email;
+                } catch(e) {}
+            }
         }
 
         // Cập nhật thông tin cá nhân (UC05)
@@ -705,11 +730,22 @@
             const phone = document.getElementById('profPhone').value.trim();
             const email = document.getElementById('profEmail').value.trim();
 
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    user.hoTen = fullName;
+                    user.soDienThoai = phone;
+                    user.email = email;
+                    sessionStorage.setItem('authenticatedUser', JSON.stringify(user));
+                } catch(err) {}
+            }
+
             alert(`Cập nhật thông tin tài khoản cá nhân thành công!\nHọ tên: ${fullName}\nSĐT: ${phone}\nEmail: ${email}`);
         }
 
         // Đổi mật khẩu (UC04)
-        function handleChangePassword(e) {
+        async function handleChangePassword(e) {
             e.preventDefault();
             const oldP = document.getElementById('oldPass').value;
             const newP = document.getElementById('newPass').value;
@@ -720,8 +756,30 @@
                 return;
             }
 
-            alert("Đổi mật khẩu tài khoản thành công! Vui lòng ghi nhớ mật khẩu mới cho các phiên làm việc tiếp theo.");
-            e.target.reset();
+            const username = document.getElementById('profUsername').value || 'admin';
+
+            try {
+                const res = await fetch('/api/v1/taikhoan/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        oldPassword: oldP,
+                        newPassword: newP
+                    })
+                });
+
+                if (res.ok) {
+                    alert("Đổi mật khẩu tài khoản thành công! Vui lòng ghi nhớ mật khẩu mới cho các phiên làm việc tiếp theo.");
+                    e.target.reset();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Lỗi đổi mật khẩu: " + (err.message || res.statusText));
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi đổi mật khẩu!");
+            }
         }
 
         // Modal cấp tài khoản (UC10)
@@ -733,27 +791,58 @@
             document.getElementById('createUserModal').style.display = 'none';
         }
 
-        function handleCreateUser(e) {
+        async function handleCreateUser(e) {
             e.preventDefault();
             const username = document.getElementById('nuUsername').value.trim();
             const fullName = document.getElementById('nuFullName').value.trim();
             const role = document.getElementById('nuRole').value;
+            const password = document.getElementById('nuPassword').value;
 
-            if (users.some(u => u.username === username)) {
-                alert(`Tên đăng nhập "${username}" đã tồn tại! Vui lòng chọn tên đăng nhập khác.`);
-                return;
+            try {
+                const res = await fetch('/api/v1/taikhoan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: role,
+                        fullName: fullName,
+                        email: username + "@hospital.com"
+                    })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert(`Cấp tài khoản nhân sự thành công!\nTài khoản: ${username}\nVai trò: ${role}\nMật khẩu ban đầu: ${password}`);
+                    closeCreateUserModal();
+                    e.target.reset();
+                    await loadUsers();
+                } else {
+                    alert("Lỗi cấp tài khoản: " + (data.message || res.statusText || ("Mã lỗi HTTP: " + res.status)));
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi cấp tài khoản mới: " + err.message);
             }
-
-            users.push({ username, fullName, role, status: "Hoạt động" });
-            alert(`Cấp tài khoản nhân sự thành công!\nTài khoản: ${username}\nVai trò: ${role}\nMật khẩu mặc định: 123456`);
-            
-            closeCreateUserModal();
-            renderUsers();
         }
 
-        function resetUserPass(username) {
-            if (confirm(`Bạn có chắc muốn đặt lại mật khẩu cho tài khoản ${username} về mặc định (123456)?`)) {
-                alert(`Đã đặt lại mật khẩu cho tài khoản ${username} thành công!`);
+        async function resetUserPass(id, username) {
+            if (confirm(`Bạn có chắc muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456)?`)) {
+                try {
+                    const res = await fetch(`/api/v1/taikhoan/${id}/reset-password`, {
+                        method: 'POST'
+                    });
+
+                    if (res.ok) {
+                        alert(`Đã đặt lại mật khẩu cho tài khoản "${username}" thành công về mặc định (123456)!`);
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert("Lỗi khi đặt lại mật khẩu: " + (err.message || res.statusText));
+                    }
+                } catch (err) {
+                    console.error("Lỗi:", err);
+                    alert("Lỗi kết nối máy chủ khi đặt lại mật khẩu!");
+                }
             }
         }
 
@@ -762,9 +851,11 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            renderUsers();
+        window.onload = async function() {
+            initProfile();
+            await loadUsers();
         };
     </script>
+    <script src="/auth-guard.js"></script>
 </body>
 </html>

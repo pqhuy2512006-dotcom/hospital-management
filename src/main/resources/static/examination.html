@@ -573,37 +573,63 @@
 
     <!-- SCRIPT NGHIỆP VỤ PHÒNG KHÁM -->
     <script>
-        let patientQueue = [
-            {
-                stt: "NOI-001",
-                id: "BN2026000001",
-                name: "Nguyễn Văn An",
-                ageGender: "38 tuổi (Nam)",
-                bhyt: "DN4790880012345",
-                allergy: "Dị ứng kháng sinh Penicillin",
-                status: "EXAMINING"
-            },
-            {
-                stt: "NOI-002",
-                id: "BN2026000002",
-                name: "Trần Thị Mai",
-                ageGender: "31 tuổi (Nữ)",
-                bhyt: "GD4790950056789",
-                allergy: "Không có",
-                status: "WAITING"
-            },
-            {
-                stt: "NOI-003",
-                id: "BN2026000003",
-                name: "Lê Hoàng Long",
-                ageGender: "25 tuổi (Nam)",
-                bhyt: "Khám viện phí (Không có BHYT)",
-                allergy: "Dị ứng Aspirin",
-                status: "WAITING"
-            }
-        ];
-
+        let patientQueue = [];
         let selectedQueueIdx = 0;
+        let availableDrugs = [];
+        let availableCLS = [];
+
+        async function loadPatientQueue() {
+            try {
+                const [appointmentsRes, patientsRes, drugsRes, clsRes] = await Promise.all([
+                    fetch('/api/v1/lichhen'),
+                    fetch('/api/v1/benhnhan'),
+                    fetch('/api/v1/thuoc'),
+                    fetch('/api/v1/dichvucls')
+                ]);
+
+                if (drugsRes.ok) availableDrugs = await drugsRes.json();
+                if (clsRes.ok) availableCLS = await clsRes.json();
+
+                if (!appointmentsRes.ok || !patientsRes.ok) throw new Error('Failed to load queue data');
+
+                const appointments = await appointmentsRes.json();
+                const patients = await patientsRes.json();
+                const patientMap = new Map(patients.map(p => [p.maBenhNhan, p]));
+
+                patientQueue = appointments.map((item, index) => {
+                    const patient = patientMap.get(item.maBenhNhan);
+                    return {
+                        stt: item.maLichHen || `KQ-${index + 1}`,
+                        id: item.maBenhNhan,
+                        name: patient ? patient.hoTen : item.maBenhNhan,
+                        ageGender: patient ? `${new Date().getFullYear() - new Date(patient.ngaySinh).getFullYear()} tuổi (${patient.gioiTinh})` : 'Chưa có',
+                        bhyt: patient?.maBHYT || 'Không có BHYT',
+                        allergy: patient?.tienSuDiUng || 'Không có',
+                        status: item.trangThai === 'DaKham' ? 'DONE' : (index === 0 ? 'EXAMINING' : 'WAITING')
+                    };
+                });
+
+                renderQueue();
+                if (patientQueue.length > 0) selectPatient(0);
+
+                initFirstMedRow();
+            } catch (error) {
+                console.error(error);
+                patientQueue = [];
+                renderQueue();
+            }
+        }
+
+        function initFirstMedRow() {
+            if (availableDrugs.length === 0) return;
+            const selectEl = document.querySelector('#medTableBody tr .med-select');
+            if (!selectEl) return;
+
+            selectEl.innerHTML = availableDrugs.map(d => 
+                `<option value="${d.tonKhoHienTai}" data-id="${d.maThuoc}" data-unit="${d.donViTinh}">${d.tenThuoc} (${d.donViTinh})</option>`
+            ).join('');
+            updateStock(selectEl);
+        }
 
         function renderQueue() {
             const container = document.getElementById('queueContainer');
@@ -617,7 +643,7 @@
                 const activeClass = idx === selectedQueueIdx ? 'active' : '';
                 const badge = p.status === 'EXAMINING' 
                     ? '<span class="badge-status status-examining">Đang khám</span>'
-                    : '<span class="badge-status status-waiting">Chờ gọi khám</span>';
+                    : (p.status === 'DONE' ? '<span class="badge-status" style="background:#d1fae5; color:#059669;">Đã hoàn tất</span>' : '<span class="badge-status status-waiting">Chờ gọi khám</span>');
 
                 container.innerHTML += `
                     <div class="queue-item ${activeClass}" onclick="selectPatient(${idx})">
@@ -631,18 +657,26 @@
                 `;
             });
 
-            document.getElementById('waitingCount').innerText = `${waitCount} ca chờ`;
+            const wc = document.getElementById('waitingCount');
+            if (wc) wc.innerText = `${waitCount} ca chờ`;
         }
 
         function selectPatient(idx) {
             selectedQueueIdx = idx;
             const p = patientQueue[idx];
+            if (!p) return;
 
-            document.getElementById('lblPatientName').innerText = p.name;
-            document.getElementById('lblPatientId').innerText = p.id;
-            document.getElementById('lblBHYT').innerText = p.bhyt;
-            document.getElementById('lblAgeGender').innerText = p.ageGender;
-            document.getElementById('lblAllergy').innerText = p.allergy;
+            const lblName = document.getElementById('lblPatientName');
+            const lblId = document.getElementById('lblPatientId');
+            const lblBHYT = document.getElementById('lblBHYT');
+            const lblAgeGender = document.getElementById('lblAgeGender');
+            const lblAllergy = document.getElementById('lblAllergy');
+
+            if (lblName) lblName.innerText = p.name;
+            if (lblId) lblId.innerText = p.id;
+            if (lblBHYT) lblBHYT.innerText = p.bhyt;
+            if (lblAgeGender) lblAgeGender.innerText = p.ageGender;
+            if (lblAllergy) lblAllergy.innerText = p.allergy;
 
             renderQueue();
         }
@@ -651,13 +685,22 @@
         function addCLSItem() {
             const tbody = document.getElementById('clsTableBody');
             const newRow = document.createElement('tr');
+            let optionsHtml = '';
+            if (availableCLS.length > 0) {
+                optionsHtml = availableCLS.map(c => `<option value="${c.maDichVu}">${c.tenDichVu}</option>`).join('');
+            } else {
+                optionsHtml = `
+                    <option value="CLS01">Tổng phân tích tế bào máu ngoại vi</option>
+                    <option value="CLS02">Sinh hóa máu: Định lượng Glucose</option>
+                    <option value="CLS04">X-Quang ngực thẳng</option>
+                    <option value="CLS05">Siêu âm ổ bụng tổng quát</option>
+                `;
+            }
+
             newRow.innerHTML = `
                 <td>
-                    <select class="form-control" style="height:32px;">
-                        <option value="CLS02">Sinh hóa máu: Định lượng Glucose</option>
-                        <option value="CLS04">X-Quang ngực thẳng</option>
-                        <option value="CLS05">Siêu âm ổ bụng tổng quát</option>
-                        <option value="CLS01">Tổng phân tích tế bào máu ngoại vi</option>
+                    <select class="form-control cls-select" style="height:32px;">
+                        ${optionsHtml}
                     </select>
                 </td>
                 <td>Phòng Xét Nghiệm CLS</td>
@@ -671,25 +714,33 @@
         function addMedRow() {
             const tbody = document.getElementById('medTableBody');
             const newRow = document.createElement('tr');
+            let optionsHtml = '';
+            if (availableDrugs.length > 0) {
+                optionsHtml = availableDrugs.map(d => `<option value="${d.tonKhoHienTai}" data-id="${d.maThuoc}" data-unit="${d.donViTinh}">${d.tenThuoc} (${d.donViTinh})</option>`).join('');
+            } else {
+                optionsHtml = `
+                    <option value="500" data-id="MED-001" data-unit="Vien">Paracetamol 500mg</option>
+                    <option value="200" data-id="MED-002" data-unit="Vien">Amoxicillin 500mg</option>
+                `;
+            }
+
             newRow.innerHTML = `
                 <td>
                     <select class="form-control med-select" style="height:32px;" onchange="updateStock(this)">
-                        <option value="350" data-name="Berberin 100mg">Berberin 100mg</option>
-                        <option value="500" data-name="Paracetamol 500mg">Paracetamol 500mg</option>
-                        <option value="200" data-name="Amoxicillin 500mg">Amoxicillin 500mg</option>
-                        <option value="30" data-name="Vitamin C 500mg">Vitamin C 500mg</option>
+                        ${optionsHtml}
                     </select>
                 </td>
                 <td>
                     <input type="number" class="form-control med-qty" value="10" min="1" style="height:32px;" onchange="checkStockLimit(this)">
                 </td>
                 <td>
-                    <input type="text" class="form-control" value="Uống ngày 2 lần, mỗi lần 1 viên" style="height:32px;">
+                    <input type="text" class="form-control med-instruction" value="Uống ngày 2 lần, mỗi lần 1 viên sau ăn" style="height:32px;">
                 </td>
-                <td class="stock-cell" style="font-weight:700; color:var(--primary);">Còn 350 viên</td>
+                <td class="stock-cell" style="font-weight:700; color:var(--primary);">Còn 0</td>
                 <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
             `;
             tbody.appendChild(newRow);
+            updateStock(newRow.querySelector('.med-select'));
         }
 
         // Xóa dòng
@@ -701,7 +752,9 @@
         function updateStock(selectEl) {
             const stock = selectEl.value;
             const row = selectEl.closest('tr');
-            row.querySelector('.stock-cell').innerText = `Còn ${stock} viên`;
+            const opt = selectEl.options[selectEl.selectedIndex];
+            const unit = opt ? (opt.getAttribute('data-unit') || 'đơn vị') : '';
+            row.querySelector('.stock-cell').innerText = `Còn ${stock} ${unit}`;
             checkStockLimit(row.querySelector('.med-qty'));
         }
 
@@ -709,31 +762,107 @@
         function checkStockLimit(qtyInput) {
             const row = qtyInput.closest('tr');
             const selectEl = row.querySelector('.med-select');
-            const maxStock = parseInt(selectEl.value);
+            const maxStock = parseInt(selectEl.value) || 0;
             const qty = parseInt(qtyInput.value) || 0;
 
-            if (qty > maxStock) {
+            if (qty > maxStock && maxStock > 0) {
                 alert(`Cảnh báo: Số lượng kê (${qty}) vượt quá số lượng tồn kho hiện có (${maxStock})! Vui lòng điều chỉnh.`);
                 qtyInput.value = maxStock;
             }
         }
 
         // Hoàn tất lượt khám
-        function handleFinishExam(e) {
+        async function handleFinishExam(e) {
             e.preventDefault();
             const currentPatient = patientQueue[selectedQueueIdx];
-            const icd = document.getElementById('selICD').value;
+            if (!currentPatient) {
+                alert("Vui lòng chọn một bệnh nhân trong hàng đợi!");
+                return;
+            }
 
-            alert(`Khám bệnh thành công cho bệnh nhân: ${currentPatient.name}!\nChẩn đoán: ${icd}\nPhiếu khám đã được chuyển sang Quầy Thuốc và Bộ phận Viện phí.`);
-            
-            currentPatient.status = "DONE";
-            // Chuyển sang bệnh nhân kế tiếp
-            if (selectedQueueIdx < patientQueue.length - 1) {
-                selectedQueueIdx++;
-                patientQueue[selectedQueueIdx].status = "EXAMINING";
-                selectPatient(selectedQueueIdx);
-            } else {
-                renderQueue();
+            const icd = document.getElementById('selICD').value;
+            const symptoms = document.getElementById('txtSymptoms').value.trim();
+            const advice = document.getElementById('txtDoctorAdvice').value.trim();
+            const pulse = document.getElementById('vMach').value;
+            const temp = document.getElementById('vNhietDo').value;
+            const bp = document.getElementById('vHuyetAp').value;
+            const breathing = document.getElementById('vNhipTho').value;
+
+            // Đơn thuốc
+            const medRows = document.querySelectorAll('#medTableBody tr');
+            const donThuocList = [];
+            medRows.forEach(row => {
+                const sel = row.querySelector('.med-select');
+                const qtyInput = row.querySelector('.med-qty');
+                const insInput = row.querySelector('.med-instruction') || row.querySelector('input[type="text"]');
+                if (sel && qtyInput) {
+                    const opt = sel.options[sel.selectedIndex];
+                    const drugId = opt ? opt.getAttribute('data-id') : 'MED-001';
+                    const unit = opt ? opt.getAttribute('data-unit') : 'Vien';
+                    donThuocList.push({
+                        maThuoc: drugId,
+                        soLuong: parseInt(qtyInput.value) || 1,
+                        donViTinh: unit,
+                        cachDung: insInput ? insInput.value : 'Uống sau ăn',
+                        lieuDung: 'Theo chỉ định'
+                    });
+                }
+            });
+
+            // Chỉ định CLS
+            const clsRows = document.querySelectorAll('#clsTableBody tr');
+            const clsList = [];
+            clsRows.forEach(row => {
+                const sel = row.querySelector('.cls-select') || row.querySelector('select');
+                if (sel && sel.value) clsList.push(sel.value);
+            });
+
+            const payload = {
+                maBenhNhan: currentPatient.id,
+                maBacSi: "NV-DOC01",
+                maKhoa: "KNT",
+                maLichHen: currentPatient.stt.startsWith("LH") ? currentPatient.stt : null,
+                mach: pulse,
+                nhietDo: temp,
+                huyetAp: bp,
+                nhipTho: breathing,
+                trieuChung: symptoms,
+                chanDoan: icd,
+                loiDanBacSi: advice,
+                donThuoc: donThuocList,
+                clsList: clsList
+            };
+
+            try {
+                const res = await fetch('/api/v1/phieukham', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Lỗi khi lưu phiếu khám: " + err);
+                    return;
+                }
+
+                const data = await res.json();
+                alert(`Khám bệnh thành công cho bệnh nhân: ${currentPatient.name}!\n` +
+                      `Mã phiếu khám: ${data.maPhieuKham}\n` +
+                      `Mã hóa đơn viện phí: ${data.maHoaDon}\n` +
+                      `Đã lưu kết quả khám, đơn thuốc và tạo hóa đơn vào CSDL SQL Server!`);
+
+                currentPatient.status = "DONE";
+                if (selectedQueueIdx < patientQueue.length - 1) {
+                    selectedQueueIdx++;
+                    patientQueue[selectedQueueIdx].status = "EXAMINING";
+                    selectPatient(selectedQueueIdx);
+                } else {
+                    renderQueue();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Không thể kết nối đến máy chủ Backend!");
             }
         }
 
@@ -742,9 +871,8 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            renderQueue();
-            selectPatient(0);
+        window.onload = async function() {
+            await loadPatientQueue();
         };
     </script>
 </body>

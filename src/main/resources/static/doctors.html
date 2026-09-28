@@ -649,50 +649,36 @@
 
     <!-- SCRIPT NGHIỆP VỤ BÁC SĨ -->
     <script>
-        let doctors = [
-            {
-                maNV: "NV-DOC01",
-                hoTen: "Trần Văn Hùng",
-                hocVi: "BS. CKI",
-                chuyenKhoa: "Khoa Nội Tổng Hợp",
-                phongKham: "P.204 (Tầng 2)",
-                sdt: "0912348899",
-                cchn: "001234/HCM-CCHN",
-                dangTruc: true
-            },
-            {
-                maNV: "NV-DOC02",
-                hoTen: "Nguyễn Thị Mai",
-                hocVi: "ThS. Bác sĩ",
-                chuyenKhoa: "Khoa Tai Mũi Họng",
-                phongKham: "P.108 (Tầng 1)",
-                sdt: "0988223344",
-                cchn: "005678/HCM-CCHN",
-                dangTruc: true
-            },
-            {
-                maNV: "NV-DOC03",
-                hoTen: "Lê Quốc Dũng",
-                hocVi: "BS. CKI",
-                chuyenKhoa: "Khoa Ngoại Tiêu Hóa",
-                phongKham: "P.301 (Tầng 3)",
-                sdt: "0903114455",
-                cchn: "009988/HCM-CCHN",
-                dangTruc: false
-            },
-            {
-                maNV: "NV-DOC04",
-                hoTen: "Đỗ Minh Quân",
-                hocVi: "Bác sĩ Đa khoa",
-                chuyenKhoa: "Khoa Cấp Cứu",
-                phongKham: "Khu Cấp Cứu A",
-                sdt: "0977112233",
-                cchn: "004321/HCM-CCHN",
-                dangTruc: true
-            }
-        ];
+        let doctors = [];
 
         let isEditDoc = false;
+
+        async function loadDoctors() {
+            try {
+                const response = await fetch('/api/v1/nhanvien');
+                if (!response.ok) throw new Error('Failed to load doctors');
+                const data = await response.json();
+
+                doctors = data.map(item => ({
+                    maNV: item.maNhanVien,
+                    hoTen: item.hoTen,
+                    hocVi: item.trinhDoChuyenMon || 'Bác sĩ CKI',
+                    chuyenKhoa: item.chuyenKhoa || item.vaiTro || 'Chưa xác định',
+                    phongKham: item.diaChi || 'Phòng khám',
+                    sdt: item.soDienThoai || '',
+                    cchn: item.chungChiHanhNghe || '',
+                    dangTruc: (item.trangThai || '').toLowerCase() === 'danglamviec'
+                }));
+
+                renderDoctors();
+            } catch (error) {
+                console.error(error);
+                const tbody = document.getElementById('doctorTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--danger);">Không thể tải dữ liệu nhân viên từ cơ sở dữ liệu.</td></tr>`;
+                }
+            }
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -749,7 +735,7 @@
         function openAddDocModal() {
             isEditDoc = false;
             document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế Mới (UC64)';
-            document.getElementById('dMaNV').value = `NV-DOC0${doctors.length + 1}`;
+            document.getElementById('dMaNV').value = `NV-DOC${String(doctors.length + 1).padStart(2, '0')}`;
             document.getElementById('dHoTen').value = '';
             document.getElementById('dPhongKham').value = '';
             document.getElementById('dSDT').value = '';
@@ -779,7 +765,7 @@
             document.getElementById('doctorModal').style.display = 'none';
         }
 
-        function handleSaveDoctor(e) {
+        async function handleSaveDoctor(e) {
             e.preventDefault();
             const maNV = document.getElementById('dMaNV').value;
             const hoTen = document.getElementById('dHoTen').value.trim();
@@ -790,31 +776,51 @@
             const cchn = document.getElementById('dCCHN').value.trim();
             const dangTruc = document.getElementById('dDangTruc').value === "true";
 
-            if (!isEditDoc) {
-                // Kiểm tra trùng số điện thoại theo quy tắc QLNV
-                if (doctors.some(d => d.sdt === sdt)) {
-                    alert(`Số điện thoại ${sdt} đã được đăng ký cho nhân viên khác!`);
-                    return;
-                }
+            const payload = {
+                maNhanVien: maNV,
+                hoTen: hoTen,
+                trinhDoChuyenMon: hocVi,
+                chuyenKhoa: chuyenKhoa,
+                diaChi: phongKham,
+                soDienThoai: sdt,
+                chungChiHanhNghe: cchn,
+                vaiTro: "BacSi",
+                trangThai: dangTruc ? "DangLamViec" : "DaNghi"
+            };
 
-                doctors.push({ maNV, hoTen, hocVi, chuyenKhoa, phongKham, sdt, cchn, dangTruc });
-                alert(`Thêm bác sĩ ${hoTen} vào hệ thống thành công!`);
-            } else {
-                const target = doctors.find(d => d.maNV === maNV);
-                if (target) {
-                    target.hoTen = hoTen;
-                    target.hocVi = hocVi;
-                    target.chuyenKhoa = chuyenKhoa;
-                    target.phongKham = phongKham;
-                    target.sdt = sdt;
-                    target.cchn = cchn;
-                    target.dangTruc = dangTruc;
+            try {
+                if (!isEditDoc) {
+                    const res = await fetch('/api/v1/nhanvien', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        alert("Lỗi khi thêm bác sĩ: " + err);
+                        return;
+                    }
+                    alert(`Thêm bác sĩ ${hoTen} vào hệ thống thành công!`);
+                } else {
+                    const res = await fetch(`/api/v1/nhanvien/${encodeURIComponent(maNV)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        alert("Lỗi khi cập nhật bác sĩ: " + err);
+                        return;
+                    }
                     alert(`Cập nhật thông tin bác sĩ ${hoTen} thành công!`);
                 }
-            }
 
-            closeDoctorModal();
-            renderDoctors();
+                closeDoctorModal();
+                await loadDoctors();
+            } catch (err) {
+                console.error(err);
+                alert("Không thể kết nối đến máy chủ Backend!");
+            }
         }
 
         function logout() {
@@ -823,7 +829,7 @@
         }
 
         window.onload = function() {
-            renderDoctors();
+            loadDoctors();
         };
     </script>
 </body>

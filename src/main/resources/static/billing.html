@@ -606,39 +606,51 @@
 
     <!-- SCRIPT NGHIỆP VỤ VIỆN PHÍ -->
     <script>
-        // Dữ liệu hóa đơn mẫu tổng hợp từ Khám bệnh, CLS và Thuốc (UC53)
-        let invoices = [
-            {
-                billId: "HD2026-001",
-                patientId: "BN2026000001",
-                patientName: "Nguyễn Văn An",
-                bhytCode: "DN4790880012345 (Hưởng 80%)",
-                date: "21/09/2026",
-                status: "UNPAID",
-                items: [
-                    { name: "Khám bệnh chuyên khoa Nội", type: "Công khám", price: 150000, qty: 1, bhytCover: 0.8 },
-                    { name: "Tổng phân tích tế bào máu", type: "Cận lâm sàng", price: 120000, qty: 1, bhytCover: 0.8 },
-                    { name: "Paracetamol 500mg", type: "Thuốc", price: 1500, qty: 20, bhytCover: 0.8 },
-                    { name: "Phosphalugel", type: "Thuốc", price: 2000, qty: 10, bhytCover: 0.0 }
-                ]
-            },
-            {
-                billId: "HD2026-002",
-                patientId: "BN2026000002",
-                patientName: "Trần Thị Mai",
-                bhytCode: "GD4790950056789 (Hưởng 80%)",
-                date: "21/09/2026",
-                status: "UNPAID",
-                items: [
-                    { name: "Khám bệnh chuyên khoa Nội", type: "Công khám", price: 150000, qty: 1, bhytCover: 0.8 },
-                    { name: "Sinh hóa máu (Glucose)", type: "Cận lâm sàng", price: 80000, qty: 1, bhytCover: 0.8 },
-                    { name: "Berberin 100mg", type: "Thuốc", price: 800, qty: 30, bhytCover: 0.8 }
-                ]
-            }
-        ];
-
+        let invoices = [];
         let selectedInvoiceIdx = 0;
         let selectedPaymentMethod = "CASH";
+
+        async function loadInvoices() {
+            try {
+                const res = await fetch('/api/v1/hoadon');
+                if (res.ok) {
+                    invoices = await res.json();
+                    if (invoices.length > 0) {
+                        if (selectedInvoiceIdx >= invoices.length) selectedInvoiceIdx = 0;
+                        renderInvoiceQueue();
+                        selectInvoice(selectedInvoiceIdx);
+                    } else {
+                        renderEmptyInvoices();
+                    }
+                } else {
+                    console.error("Lỗi khi tải hóa đơn:", res.status);
+                    renderEmptyInvoices();
+                }
+            } catch (err) {
+                console.error("Lỗi kết nối máy chủ:", err);
+                renderEmptyInvoices();
+            }
+        }
+
+        function renderEmptyInvoices() {
+            const container = document.getElementById('invoiceQueueContainer');
+            if (container) container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);"><i class="fa-solid fa-receipt" style="font-size:28px; margin-bottom:8px; display:block;"></i>Chưa có hóa đơn nào trong hệ thống.</div>';
+            document.getElementById('unpaidCount').innerText = '0 hóa đơn';
+            document.getElementById('lblBillCode').innerText = '---';
+            document.getElementById('lblPatientName').innerText = '---';
+            document.getElementById('lblPatientId').innerText = '---';
+            document.getElementById('lblBHYT').innerText = '---';
+            document.getElementById('lblDate').innerText = '---';
+            document.getElementById('billItemsBody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">Không có dịch vụ.</td></tr>';
+            document.getElementById('lblSumTotal').innerText = '0 đ';
+            document.getElementById('lblBhytPay').innerText = '0 đ';
+            document.getElementById('lblPatientPay').innerText = '0 đ';
+            const btnPay = document.getElementById('btnPayNow');
+            if (btnPay) {
+                btnPay.disabled = true;
+                btnPay.style.opacity = '0.5';
+            }
+        }
 
         function renderInvoiceQueue() {
             const container = document.getElementById('invoiceQueueContainer');
@@ -660,8 +672,8 @@
                             <span class="badge-code">${inv.billId}</span>
                             ${badgeHtml}
                         </div>
-                        <div style="font-weight:700; font-size:14px; margin-top:2px;">${inv.patientName}</div>
-                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Mã BN: ${inv.patientId}</div>
+                        <div style="font-weight:700; font-size:14px; margin-top:2px;">${inv.patientName || 'Bệnh nhân'}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Mã BN: ${inv.patientId || ''}</div>
                     </div>
                 `;
             });
@@ -671,14 +683,25 @@
 
         // Tự động tính toán viện phí (UC53)
         function selectInvoice(idx) {
+            if (!invoices[idx]) return;
             selectedInvoiceIdx = idx;
             const inv = invoices[idx];
 
-            document.getElementById('lblBillCode').innerText = inv.billId;
-            document.getElementById('lblPatientName').innerText = inv.patientName;
-            document.getElementById('lblPatientId').innerText = inv.patientId;
-            document.getElementById('lblBHYT').innerText = inv.bhytCode;
-            document.getElementById('lblDate').innerText = inv.date;
+            document.getElementById('lblBillCode').innerText = inv.billId || '';
+            document.getElementById('lblPatientName').innerText = inv.patientName || 'Bệnh nhân';
+            document.getElementById('lblPatientId').innerText = inv.patientId || '';
+            document.getElementById('lblBHYT').innerText = inv.bhytCode || 'Không có BHYT';
+            
+            let formattedDate = inv.date || '';
+            if (inv.date) {
+                try {
+                    const d = new Date(inv.date);
+                    if (!isNaN(d.getTime())) {
+                        formattedDate = d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+                    }
+                } catch(e) {}
+            }
+            document.getElementById('lblDate').innerText = formattedDate;
 
             const badge = document.getElementById('billStatusBadge');
             const btnPay = document.getElementById('btnPayNow');
@@ -700,27 +723,30 @@
             const tbody = document.getElementById('billItemsBody');
             tbody.innerHTML = '';
 
-            let sumTotal = 0;
-            let bhytPay = 0;
+            let sumTotal = inv.total !== undefined ? Number(inv.total) : 0;
+            let bhytPay = inv.bhyt !== undefined ? Number(inv.bhyt) : 0;
+            let patientPay = inv.pay !== undefined ? Number(inv.pay) : (sumTotal - bhytPay);
 
-            inv.items.forEach(item => {
-                const totalItem = item.price * item.qty;
-                sumTotal += totalItem;
-                const itemBhyt = totalItem * item.bhytCover;
-                bhytPay += itemBhyt;
+            const items = inv.items || [];
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">Chi tiết hóa đơn đang được cập nhật...</td></tr>';
+            } else {
+                items.forEach(item => {
+                    const price = Number(item.price || 0);
+                    const qty = Number(item.qty || 1);
+                    const totalItem = item.total !== undefined ? Number(item.total) : (price * qty);
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${item.name}</strong></td>
-                        <td>${item.type}</td>
-                        <td style="text-align:right;">${item.price.toLocaleString('vi-VN')} đ</td>
-                        <td style="text-align:center;">${item.qty}</td>
-                        <td style="text-align:right; font-weight:600;">${totalItem.toLocaleString('vi-VN')} đ</td>
-                    </tr>
-                `;
-            });
-
-            const patientPay = sumTotal - bhytPay;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.type || 'Dịch vụ'}</td>
+                            <td style="text-align:right;">${price.toLocaleString('vi-VN')} đ</td>
+                            <td style="text-align:center;">${qty}</td>
+                            <td style="text-align:right; font-weight:600;">${totalItem.toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                    `;
+                });
+            }
 
             document.getElementById('lblSumTotal').innerText = `${sumTotal.toLocaleString('vi-VN')} đ`;
             document.getElementById('lblBhytPay').innerText = `- ${bhytPay.toLocaleString('vi-VN')} đ`;
@@ -736,52 +762,85 @@
         }
 
         // Thanh toán viện phí (UC52)
-        function handlePayment() {
+        async function handlePayment() {
             const inv = invoices[selectedInvoiceIdx];
-            if (inv.status === 'PAID') return;
+            if (!inv || inv.status === 'PAID') return;
 
+            let methodCode = "TienMat";
             let methodText = "Tiền mặt";
-            if (selectedPaymentMethod === 'QR') methodText = "Chuyển khoản QR ngân hàng";
-            if (selectedPaymentMethod === 'POS') methodText = "Thẻ POS";
+            if (selectedPaymentMethod === 'QR') {
+                methodCode = "ChuyenKhoan";
+                methodText = "Chuyển khoản QR ngân hàng";
+            }
+            if (selectedPaymentMethod === 'POS') {
+                methodCode = "The";
+                methodText = "Thẻ POS";
+            }
 
-            inv.status = 'PAID';
-            alert(`Xác nhận thanh toán thành công cho hóa đơn ${inv.billId}!\nHình thức: ${methodText}\nĐã cập nhật trạng thái viện phí.`);
+            const btn = document.getElementById('btnPayNow');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
-            selectInvoice(selectedInvoiceIdx);
+            try {
+                const res = await fetch(`/api/v1/hoadon/${encodeURIComponent(inv.billId)}/thanhtoan`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: methodCode })
+                });
+
+                if (res.ok) {
+                    alert(`Xác nhận thanh toán thành công cho hóa đơn ${inv.billId}!\nHình thức: ${methodText}\nĐã cập nhật trạng thái viện phí.`);
+                    await loadInvoices();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Lỗi khi thanh toán: " + (err.message || res.statusText));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Xác Nhận Thu Tiền & Đóng Hóa Đơn';
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi xử lý thanh toán viện phí!");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Xác Nhận Thu Tiền & Đóng Hóa Đơn';
+            }
         }
 
         // Mở Modal xem trước để in hóa đơn (UC56)
         function openPrintModal() {
             const inv = invoices[selectedInvoiceIdx];
+            if (!inv) return;
             
-            document.getElementById('prtBillId').innerText = inv.billId;
-            document.getElementById('prtPatientName').innerText = inv.patientName;
-            document.getElementById('prtPatientId').innerText = inv.patientId;
-            document.getElementById('prtBhyt').innerText = inv.bhytCode;
+            document.getElementById('prtBillId').innerText = inv.billId || '';
+            document.getElementById('prtPatientName').innerText = inv.patientName || 'Bệnh nhân';
+            document.getElementById('prtPatientId').innerText = inv.patientId || '';
+            document.getElementById('prtBhyt').innerText = inv.bhytCode || 'Không có BHYT';
 
             const tbody = document.getElementById('prtTableItems');
             tbody.innerHTML = '';
 
-            let sumTotal = 0;
-            let bhytPay = 0;
+            let sumTotal = inv.total !== undefined ? Number(inv.total) : 0;
+            let bhytPay = inv.bhyt !== undefined ? Number(inv.bhyt) : 0;
+            let patientPay = inv.pay !== undefined ? Number(inv.pay) : (sumTotal - bhytPay);
 
-            inv.items.forEach(item => {
-                const totalItem = item.price * item.qty;
-                sumTotal += totalItem;
-                const itemBhyt = totalItem * item.bhytCover;
-                bhytPay += itemBhyt;
+            const items = inv.items || [];
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:12px;">Chưa có danh mục dịch vụ.</td></tr>';
+            } else {
+                items.forEach(item => {
+                    const price = Number(item.price || 0);
+                    const qty = Number(item.qty || 1);
+                    const totalItem = item.total !== undefined ? Number(item.total) : (price * qty);
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${item.name} (${item.type})</td>
-                        <td style="text-align:center;">${item.qty}</td>
-                        <td style="text-align:right;">${item.price.toLocaleString('vi-VN')} đ</td>
-                        <td style="text-align:right; font-weight:600;">${totalItem.toLocaleString('vi-VN')} đ</td>
-                    </tr>
-                `;
-            });
-
-            const patientPay = sumTotal - bhytPay;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.name} (${item.type || 'Dịch vụ'})</td>
+                            <td style="text-align:center;">${qty}</td>
+                            <td style="text-align:right;">${price.toLocaleString('vi-VN')} đ</td>
+                            <td style="text-align:right; font-weight:600;">${totalItem.toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                    `;
+                });
+            }
 
             document.getElementById('prtSum').innerText = `${sumTotal.toLocaleString('vi-VN')} đ`;
             document.getElementById('prtBhytSum').innerText = `- ${bhytPay.toLocaleString('vi-VN')} đ`;
@@ -800,8 +859,17 @@
         }
 
         window.onload = function() {
-            selectInvoice(0);
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const cashierEl = document.querySelector('.invoice-print-view div strong + br + small + br + br + span');
+                    if (cashierEl && user.hoTen) cashierEl.innerText = user.hoTen;
+                } catch(e) {}
+            }
+            loadInvoices();
         };
     </script>
+    <script src="/auth-guard.js"></script>
 </body>
 </html>
