@@ -2,13 +2,16 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.dto.LoginRequest;
 import com.nhom12.hospital.dto.LoginResponse;
-import com.nhom12.hospital.entity.NguoiDung;
-import com.nhom12.hospital.repository.NguoiDungRepository;
+import com.nhom12.hospital.dto.RegisterRequest;
+import com.nhom12.hospital.entity.TaiKhoan;
+import com.nhom12.hospital.repository.TaiKhoanRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -16,63 +19,69 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
-    private final NguoiDungRepository nguoiDungRepository;
+    private final TaiKhoanRepository taiKhoanRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(NguoiDungRepository nguoiDungRepository, PasswordEncoder passwordEncoder) {
-        this.nguoiDungRepository = nguoiDungRepository;
+    public AuthController(TaiKhoanRepository taiKhoanRepository, PasswordEncoder passwordEncoder) {
+        this.taiKhoanRepository = taiKhoanRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-
-
-        Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(request.getUsername());
+        Optional<TaiKhoan> userOpt = taiKhoanRepository.findByTenDangNhap(request.getUsername());
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Tên đăng nhập không tồn tại!", null, null));
         }
 
-        NguoiDung user = userOpt.get();
+        TaiKhoan user = userOpt.get();
 
-        // IN LOG ĐỂ SOI LỖI THỰC TẾ
-        System.out.println("=== KIEM TRA LOGIN ===");
-        System.out.println("Password gui len: [" + request.getPassword() + "]");
-        System.out.println("Mat khau trong DB: [" + user.getMatKhau() + "]");
-        System.out.println("Do dai trong DB : " + (user.getMatKhau() != null ? user.getMatKhau().length() : 0));
-        System.out.println("Ket qua so khop : " + passwordEncoder.matches(request.getPassword(), user.getMatKhau()));
-        System.out.println("======================");
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getMatKhau())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getMatKhauHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Mật khẩu không chính xác!", null, null));
         }
 
         return ResponseEntity.ok(
-                new LoginResponse(true, "Đăng nhập thành công!", user.getHoTen(), user.getVaiTro())
+                new LoginResponse(true, "Đăng nhập thành công!", null, user.getVaiTro())
         );
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest request) {
-        Optional<NguoiDung> existing = nguoiDungRepository.findByTenDangNhap(request.getUsername());
-        NguoiDung user;
-
-        if (existing.isPresent()) {
-            user = existing.get();
-        } else {
-            user = new NguoiDung();
-            user.setTenDangNhap(request.getUsername());
-            user.setHoTen("Quản Trị Viên");
-            user.setVaiTro("ADMIN");
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        // 1. Kiểm tra trường bắt buộc
+        if (request.getTenDangNhap() == null || request.getTenDangNhap().trim().isEmpty() ||
+            request.getMatKhau() == null || request.getMatKhau().trim().isEmpty() ||
+            request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Vui lòng nhập đầy đủ tên đăng nhập, email và mật khẩu!"));
         }
 
-        // Tự động mã hóa mật khẩu bằng BCrypt của Spring Security
-        user.setMatKhau(passwordEncoder.encode(request.getPassword()));
-        nguoiDungRepository.save(user);
+        // 2. Kiểm tra tài khoản trùng lặp
+        Optional<TaiKhoan> existing = taiKhoanRepository.findByTenDangNhap(
+                request.getTenDangNhap().trim()
+        );
 
-        return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
+        if (existing.isPresent()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Tên đăng nhập đã tồn tại!"));
+        }
+
+        // 3. Tạo tài khoản
+        TaiKhoan user = new TaiKhoan();
+        user.setTenDangNhap(request.getTenDangNhap().trim());
+        user.setMatKhauHash(passwordEncoder.encode(request.getMatKhau().trim()));
+        user.setEmail(request.getEmail().trim());
+        user.setVaiTro("BenhNhan");
+        user.setTrangThai(true);
+        user.setNgayTao(LocalDateTime.now());
+
+        taiKhoanRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay."
+        ));
     }
 }
