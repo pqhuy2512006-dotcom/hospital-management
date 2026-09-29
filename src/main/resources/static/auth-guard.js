@@ -6,15 +6,15 @@
     // 1. Ma trận phân quyền các phân hệ (Module Permission Matrix - Chuẩn 11 tác nhân y tế)
     const ROLE_PERMISSIONS = {
         'dashboard.html': ['QuanTri', 'ADMIN', 'GiamDoc', 'DIRECTOR', 'BGD'],
-        'appointments.html': ['QuanTri', 'ADMIN', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
-        'patients.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
-        'doctors.html': ['QuanTri', 'ADMIN', 'NhanSu', 'HR', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST'],
-        'examination.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR'],
-        'laboratory.html': ['QuanTri', 'ADMIN', 'KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
-        'pharmacy.html': ['QuanTri', 'ADMIN', 'DuocSi', 'PHARMACIST'],
-        'inpatient.html': ['QuanTri', 'ADMIN', 'DieuDuong', 'NURSE', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST'],
-        'billing.html': ['QuanTri', 'ADMIN', 'ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN']
+        'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
+        'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
+        'doctors.html': ['NhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
+        'examination.html': ['BacSi', 'DOCTOR'],
+        'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
+        'pharmacy.html': ['DuocSi', 'PHARMACIST'],
+        'inpatient.html': ['DieuDuong', 'NURSE', 'LeTan', 'RECEPTIONIST'],
+        'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
@@ -67,29 +67,9 @@
         'PATIENT': { name: 'Bệnh Nhân (PATIENT)', short: 'Bệnh Nhân', color: '#0284c7', bg: '#e0f2fe', icon: 'fa-hospital-user' }
     };
 
-    // 4. Interceptor tự động gắn thông tin vai trò vào mọi lệnh gọi API fetch
+    // Session cookie được server kiểm tra; role header không được dùng để cấp quyền.
     const originalFetch = window.fetch;
     window.fetch = function (url, options = {}) {
-        options = options || {};
-        options.headers = options.headers || {};
-        const userStr = sessionStorage.getItem('authenticatedUser');
-        if (userStr) {
-            try {
-                const user = JSON.parse(userStr);
-                if (user.vaiTro) {
-                    if (options.headers instanceof Headers) {
-                        options.headers.set('X-User-Role', user.vaiTro);
-                        options.headers.set('X-User-Name', user.username || '');
-                    } else if (Array.isArray(options.headers)) {
-                        options.headers.push(['X-User-Role', user.vaiTro]);
-                        options.headers.push(['X-User-Name', user.username || '']);
-                    } else {
-                        options.headers['X-User-Role'] = user.vaiTro;
-                        options.headers['X-User-Name'] = user.username || '';
-                    }
-                }
-            } catch (e) {}
-        }
         return originalFetch(url, options);
     };
 
@@ -129,6 +109,11 @@
     }
 
     const hasAccess = checkPermission(userRole, allowedRoles);
+
+    if (!hasAccess) {
+        window.location.replace(ROLE_LANDING_PAGES[userRole] || '/login.html');
+        return;
+    }
 
     // Xử lý giao diện khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function () {
@@ -182,7 +167,7 @@
                 // Chèn trước nút Đăng xuất
                 const logoutBtn = header.querySelector('.btn-logout');
                 if (logoutBtn) {
-                    header.insertBefore(badgeContainer, logoutBtn);
+                    logoutBtn.parentElement.insertBefore(badgeContainer, logoutBtn);
                 } else {
                     header.appendChild(badgeContainer);
                 }
@@ -197,125 +182,45 @@
                 const targetPage = href.replace('/', '').split('?')[0];
                 const pageAllowed = ROLE_PERMISSIONS[targetPage];
                 if (pageAllowed && !checkPermission(userRole, pageAllowed)) {
-                    // Ẩn menu không có quyền truy cập
-                    link.parentElement.style.display = 'none';
+                    link.parentElement.remove();
                 }
             }
         });
 
-        // C. Nếu KHÔNG CÓ QUYỀN vào trang hiện tại: Hiển thị màn hình 403 Forbidden
-        if (!hasAccess) {
-            render403Screen(meta);
+        if ((userRole === 'BacSi' || userRole === 'DOCTOR') && currentPage === 'settings.html') {
+            document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
+            document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
+            const title = document.querySelector('.top-header .header-title h2');
+            if (title) title.textContent = 'Thông tin cá nhân';
+            const profileLink = document.querySelector('.sidebar-menu a[href="/settings.html"]');
+            if (profileLink) profileLink.innerHTML = '<i class="fa-solid fa-user-pen"></i> Thông tin cá nhân';
+        }
+
+        if (userRole === 'BacSi' || userRole === 'DOCTOR') {
+            const menuLabels = {
+                '/examination.html': 'Khám bệnh & Đơn thuốc',
+                '/laboratory.html': 'Kết quả Cận lâm sàng (CLS)',
+                '/settings.html': 'Thông tin cá nhân'
+            };
+            Object.entries(menuLabels).forEach(([href, label]) => {
+                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
+                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : href === '/laboratory.html' ? 'fa-solid fa-flask-vial' : 'fa-solid fa-stethoscope'}"></i> ${label}`;
+            });
+
+            if (currentPage === 'patients.html') {
+                document.querySelector('.btn-create-patient')?.remove();
+                document.getElementById('patientModal')?.remove();
+            }
         }
     });
 
-    function render403Screen(meta) {
-        // Ẩn nội dung chính để bảo mật dữ liệu
-        const main = document.querySelector('.main-container') || document.querySelector('.content-body') || document.body;
-        
-        const overlay = document.createElement('div');
-        overlay.id = 'forbiddenOverlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999999;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #ffffff;
-            padding: 20px;
-            box-sizing: border-box;
-        `;
-
-        const homeUrl = ROLE_LANDING_PAGES[userRole] || '/dashboard.html';
-        const allowedNames = (allowedRoles || []).map(r => (ROLE_META[r] ? ROLE_META[r].short : r)).join(', ');
-
-        overlay.innerHTML = `
-            <div style="
-                background: #1e293b;
-                border: 1px solid #334155;
-                border-radius: 16px;
-                max-width: 540px;
-                width: 100%;
-                padding: 36px 30px;
-                text-align: center;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            ">
-                <div style="
-                    width: 72px;
-                    height: 72px;
-                    margin: 0 auto 20px;
-                    border-radius: 50%;
-                    background: rgba(239, 68, 68, 0.15);
-                    color: #ef4444;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 34px;
-                ">
-                    <i class="fa-solid fa-ban"></i>
-                </div>
-
-                <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #f87171;">
-                    TRUY CẬP BỊ GIỚI HẠN (403 FORBIDDEN)
-                </h2>
-
-                <p style="font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px;">
-                    Xin chào <strong>${currentUser.hoTen || currentUser.username}</strong>!<br>
-                    Tài khoản của bạn đang có vai trò là <strong style="color: ${meta.color}; background: ${meta.bg}; padding: 2px 8px; border-radius: 6px;">${meta.name}</strong>.<br>
-                    Bạn <strong>không có quyền truy cập</strong> vào phân hệ này theo chính sách bảo mật và phân quyền y tế (RBAC UC12).
-                </p>
-
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 24px; font-size: 13px; color: #cbd5e1; text-align: left;">
-                    <i class="fa-solid fa-circle-info" style="color: #38bdf8; margin-right: 6px;"></i>
-                    <strong>Phân hệ này chỉ cho phép:</strong> ${allowedNames}
-                </div>
-
-                <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button onclick="window.location.href='${homeUrl}'" style="
-                        background: #0284c7;
-                        color: #ffffff;
-                        border: none;
-                        border-radius: 8px;
-                        padding: 12px 20px;
-                        font-weight: 600;
-                        font-size: 14px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    ">
-                        <i class="fa-solid fa-house-chimney-medical"></i> Về Phân Hệ Làm Việc Của Tôi
-                    </button>
-
-                    <button onclick="logout()" style="
-                        background: transparent;
-                        color: #94a3b8;
-                        border: 1px solid #475569;
-                        border-radius: 8px;
-                        padding: 12px 18px;
-                        font-weight: 600;
-                        font-size: 14px;
-                        cursor: pointer;
-                    ">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-    }
-
     // Định nghĩa hàm logout toàn cục
-    window.logout = function () {
-        sessionStorage.removeItem('authenticatedUser');
-        window.location.href = '/login.html';
+    window.logout = async function () {
+        try {
+            await originalFetch('/api/v1/auth/logout', { method: 'POST' });
+        } finally {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
     };
 })();

@@ -10,4 +10,5 @@ import java.util.List;
 public interface KetQuaCLSRepository extends JpaRepository<KetQuaCLS, String> {
     List<KetQuaCLS> findByMaBenhNhan(String maBenhNhan);
     List<KetQuaCLS> findByMaPhieuKham(String maPhieuKham);
+    List<KetQuaCLS> findByMaBacSiDoc(String maBacSiDoc);
 }

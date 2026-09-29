@@ -426,6 +426,17 @@
                         </button>
                     </div>
                 </form>
+
+                <div id="doctorResultView" style="display:none;">
+                    <div class="form-group">
+                        <label>Kết luận CLS</label>
+                        <p id="doctorResultConclusion" style="white-space:pre-wrap; margin:0;"></p>
+                    </div>
+                    <table>
+                        <thead><tr><th>Chỉ số</th><th>Kết quả</th><th>Đơn vị</th><th>Khoảng tham chiếu</th><th>Đánh giá</th></tr></thead>
+                        <tbody id="doctorResultParameters"></tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
@@ -435,11 +446,25 @@
         let labOrders = [];
         let currentSelectedIndex = 0;
 
+        function isDoctorUser() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+                return user.vaiTro === 'BacSi' || user.vaiTro === 'DOCTOR';
+            } catch (error) {
+                return false;
+            }
+        }
+
         async function loadLabOrders() {
             try {
-                const res = await fetch('/api/v1/cls');
+                const doctorView = isDoctorUser();
+                const res = await fetch(doctorView ? '/api/v1/cls/me' : '/api/v1/cls');
                 if (res.ok) {
                     labOrders = await res.json();
+                    if (doctorView) {
+                        const heading = document.querySelector('.header-title h2');
+                        if (heading) heading.textContent = 'Kết quả cận lâm sàng';
+                    }
                     if (labOrders.length > 0) {
                         document.getElementById('resultFormCard').style.display = 'block';
                         if (currentSelectedIndex >= labOrders.length) currentSelectedIndex = 0;
@@ -511,6 +536,32 @@
             document.getElementById('lblDoctor').innerText = order.doctor || 'Bác sĩ điều trị';
             document.getElementById('lblDept').innerText = order.dept || 'Khoa Xét Nghiệm';
             document.getElementById('lblService').innerText = order.service || 'Xét nghiệm';
+
+            if (isDoctorUser()) {
+                document.getElementById('labResultForm').style.display = 'none';
+                const readOnlyView = document.getElementById('doctorResultView');
+                readOnlyView.style.display = 'block';
+                document.getElementById('orderStatusBadge').innerText = order.status === 'COMPLETED'
+                    ? 'Đã có kết quả' : 'Đang chờ kết quả';
+                document.getElementById('doctorResultConclusion').textContent = order.conclusion || 'Chưa có kết luận.';
+                const body = document.getElementById('doctorResultParameters');
+                body.replaceChildren();
+                if (!order.params || order.params.length === 0) {
+                    const row = body.insertRow();
+                    row.insertCell().colSpan = 5;
+                    row.cells[0].textContent = 'Chưa có chỉ số chi tiết.';
+                } else {
+                    order.params.forEach(parameter => {
+                        const row = body.insertRow();
+                        [parameter.name, parameter.val, parameter.unit, parameter.ref, parameter.eval]
+                            .forEach(value => row.insertCell().textContent = String(value || ''));
+                    });
+                }
+                return;
+            }
+
+            document.getElementById('labResultForm').style.display = 'block';
+            document.getElementById('doctorResultView').style.display = 'none';
 
             const badge = document.getElementById('orderStatusBadge');
             const btn = document.getElementById('btnSaveResult');

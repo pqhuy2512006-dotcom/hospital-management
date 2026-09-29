@@ -382,7 +382,7 @@
             <!-- Tabs chuyển đổi chức năng -->
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('profileTab', this)">
-                    <i class="fa-solid fa-user-gear"></i> Thông Tin Cá Nhân & Đổi Mật Khẩu (UC04, UC05)
+                    <i class="fa-solid fa-key"></i> Đổi Mật Khẩu
                 </button>
                 <button class="tab-btn" onclick="switchTab('usersTab', this)">
                     <i class="fa-solid fa-users-gear"></i> Quản Lý & Cấp Tài Khoản Nhân Viên (UC10)
@@ -390,48 +390,13 @@
                 <button class="tab-btn" onclick="switchTab('rbacTab', this)">
                     <i class="fa-solid fa-shield-halved"></i> Phân Quyền Theo Vai Trò RBAC (UC12)
                 </button>
+                <button class="tab-btn" onclick="switchTab('auditTab', this)">
+                    <i class="fa-solid fa-clipboard-list"></i> Nhật Ký Truy Cập
+                </button>
             </div>
 
-            <!-- TAB 1: THÔNG TIN CÁ NHÂN & ĐỔI MẬT KHẨU (UC04, UC05) -->
+            <!-- TAB 1: ĐỔI MẬT KHẨU -->
             <div id="profileTab" class="tab-content active">
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <h3><i class="fa-regular fa-id-badge" style="color:var(--primary);"></i> Cập Nhật Thông Tin Tài Khoản Đang Đăng Nhập (UC05)</h3>
-                    </div>
-                    <form onsubmit="handleUpdateProfile(event)">
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label>Tên đăng nhập / Mã định danh</label>
-                                <input type="text" id="profUsername" class="form-control" value="admin" readonly style="background:#f1f5f9; font-weight:700;">
-                            </div>
-                            <div class="form-group">
-                                <label>Vai trò làm việc</label>
-                                <input type="text" id="profRole" class="form-control" value="ADMIN (Quản trị viên)" readonly style="background:#f1f5f9; font-weight:700; color:var(--danger);">
-                            </div>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label>Họ và Tên Nhân Viên *</label>
-                                <input type="text" id="profFullName" class="form-control" value="Quản Trị Viên Hệ Thống" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Số Điện Thoại Liên Lạc *</label>
-                                <input type="tel" id="profPhone" class="form-control" value="0901234567" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Địa Chỉ Email Công Vụ</label>
-                            <input type="email" id="profEmail" class="form-control" value="admin@medicare.his.vn">
-                        </div>
-
-                        <button type="submit" class="btn-submit">
-                            <i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Cá Nhân
-                        </button>
-                    </form>
-                </div>
-
                 <div class="panel-card">
                     <div class="panel-header">
                         <h3><i class="fa-solid fa-key" style="color:var(--warning);"></i> Đổi Mật Khẩu Truy Cập (UC04)</h3>
@@ -455,6 +420,42 @@
 
                         <button type="submit" class="btn-submit" style="background:#f59e0b;">
                             <i class="fa-solid fa-lock"></i> Cập Nhật Mật Khẩu Mới
+                        </button>
+                    </form>
+                </div>
+                <div class="panel-card" id="personalProfileCard" style="display:none;">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-user-pen" style="color:var(--primary);"></i> Thông Tin Cá Nhân</h3>
+                    </div>
+                    <form onsubmit="handleProfileUpdate(event)">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Họ và tên</label>
+                                <input id="profileFullName" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Chuyên khoa</label>
+                                <input id="profileSpecialty" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Chứng chỉ hành nghề</label>
+                                <input id="profileLicense" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Số điện thoại *</label>
+                                <input id="profilePhone" class="form-control" type="tel" required maxlength="15">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input id="profileEmail" class="form-control" type="email" maxlength="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Địa chỉ</label>
+                                <input id="profileAddress" class="form-control" maxlength="200">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu thông tin cá nhân
                         </button>
                     </form>
                 </div>
@@ -489,6 +490,29 @@
                 </div>
             </div>
 
+            <!-- TAB NHẬT KÝ TRUY CẬP -->
+            <div id="auditTab" class="tab-content">
+                <div class="panel-card" style="padding:20px;">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-clipboard-list" style="color:var(--primary);"></i> Nhật ký đăng nhập, thay đổi tài khoản và API ghi dữ liệu</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thời điểm</th>
+                                <th>Sự kiện</th>
+                                <th>Tài khoản / Vai trò</th>
+                                <th>Request</th>
+                                <th>Chi tiết</th>
+                                <th>HTTP</th>
+                                <th>Địa chỉ IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditLogTableBody"><tr><td colspan="7">Đang tải nhật ký...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- TAB 3: MA TRẬN PHÂN QUYỀN RBAC (UC12) -->
             <div id="rbacTab" class="tab-content">
                 <div class="panel-card" style="padding: 20px;">
@@ -518,7 +542,7 @@
                         <tbody>
                             <tr>
                                 <td><strong>1. Đặt Lịch & Tiếp Đón (4.1, 4.2)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
@@ -531,7 +555,7 @@
                             </tr>
                             <tr>
                                 <td><strong>2. Hồ Sơ Bệnh Nhân (EMR) (4.2, 4.3, 4.7)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
@@ -544,7 +568,7 @@
                             </tr>
                             <tr>
                                 <td><strong>3. Quản Lý Nhân Sự & Lịch Trực (4.8, 4.3)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Toàn quyền)</td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem lịch)</td>
@@ -557,7 +581,7 @@
                             </tr>
                             <tr>
                                 <td><strong>4. Khám Bệnh & Kê Đơn ICD-10 (4.3)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
@@ -570,7 +594,7 @@
                             </tr>
                             <tr>
                                 <td><strong>5. Xét Nghiệm & CĐHA CLS (4.4, 4.3)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem KQ)</td>
@@ -583,7 +607,7 @@
                             </tr>
                             <tr>
                                 <td><strong>6. Kho Dược & Xuất Thuốc FEFO (4.5)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
@@ -596,7 +620,7 @@
                             </tr>
                             <tr>
                                 <td><strong>7. Quản Lý Giường Nội Trú (4.7, 4.3, 4.2)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Chỉ định)</td>
@@ -609,7 +633,7 @@
                             </tr>
                             <tr>
                                 <td><strong>8. Viện Phí & Hóa Đơn Điện Tử (4.6, 4.1)</strong></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
@@ -681,23 +705,20 @@
                     <div class="form-group">
                         <label>Vai Trò Chức Năng (RBAC) *</label>
                         <select id="nuRole" class="form-control" required>
-                            <option value="QuanTri">Quản Trị Viên (ADMIN)</option>
-                            <option value="GiamDoc">Ban Giám Đốc (EXECUTIVE / DIRECTOR)</option>
-                            <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
                             <option value="BacSi">Bác Sĩ (DOCTOR)</option>
+                            <option value="QuanTri">Quản Trị Viên (ADMIN)</option>
                             <option value="ThuNgan">Thu Ngân (CASHIER)</option>
                             <option value="DuocSi">Dược Sĩ (PHARMACIST)</option>
                             <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
                             <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
                             <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
-                            <option value="BenhNhan">Bệnh Nhân (PATIENT)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Mật Khẩu Ban Đầu *</label>
-                        <input type="password" id="nuPassword" class="form-control" value="123456" minlength="6" required>
-                        <small style="color:var(--text-muted);">Mặc định: 123456 (Nhân viên bắt buộc đổi sau lần đầu đăng nhập)</small>
+                        <input type="password" id="nuPassword" class="form-control" minlength="6" required>
+                        <small style="color:var(--text-muted);">Mật khẩu ban đầu tối thiểu 6 ký tự.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -734,6 +755,13 @@
 
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+            if (tabId === 'auditTab') loadAuditLogs();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
         }
 
         function renderUsers() {
@@ -755,15 +783,21 @@
                 else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
                 else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
 
+                const roles = ['QuanTri', 'BacSi', 'DieuDuong', 'LeTan', 'DuocSi', 'KTV', 'ThuNgan'];
+                const roleOptions = roles.map(role => `<option value="${role}" ${u.role === role ? 'selected' : ''}>${role}</option>`).join('');
+                const isCurrentUser = (() => {
+                    try { return JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').username === u.username; }
+                    catch (error) { return false; }
+                })();
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${u.username}</strong></td>
-                        <td>${u.fullName || u.username}</td>
-                        <td><span class="role-badge ${badgeClass}">${u.role}</span></td>
-                        <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status || 'Hoạt động'}</span></td>
+                        <td><strong>${escapeHtml(u.username)}</strong></td>
+                        <td>${escapeHtml(u.fullName || u.username)}</td>
+                        <td><select onchange="updateAccount(${u.id}, this.value, ${u.enabled})" ${isCurrentUser ? 'disabled' : ''}>${roleOptions}</select></td>
+                        <td><span style="color:${u.enabled ? '#10b981' : '#ef4444'}; font-weight:600;">${u.enabled ? 'Hoạt động' : 'Bị khóa'}</span></td>
                         <td>
-                            <button type="button" style="padding:4px 8px; border:1px solid #fee2e2; background:#ffffff; color:#ef4444; border-radius:4px; cursor:pointer; font-size:12px;" onclick="resetUserPass(${u.id}, '${u.username}')">
-                                <i class="fa-solid fa-rotate-left"></i> Đặt lại mật khẩu
+                            <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
+                                ${u.enabled ? 'Khóa' : 'Mở khóa'}
                             </button>
                         </td>
                     </tr>
@@ -771,39 +805,48 @@
             });
         }
 
-        function initProfile() {
-            const userStr = sessionStorage.getItem('authenticatedUser');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    if (user.tenDangNhap) document.getElementById('profUsername').value = user.tenDangNhap;
-                    if (user.vaiTro) document.getElementById('profRole').value = user.vaiTro;
-                    if (user.hoTen) document.getElementById('profFullName').value = user.hoTen;
-                    if (user.soDienThoai) document.getElementById('profPhone').value = user.soDienThoai;
-                    if (user.email) document.getElementById('profEmail').value = user.email;
-                } catch(e) {}
+        async function updateAccount(id, role, enabled) {
+            const response = await fetch(`/api/v1/taikhoan/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role, enabled })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || 'Không thể cập nhật tài khoản.');
+                await loadUsers();
+                return;
             }
+            await loadUsers();
         }
 
-        // Cập nhật thông tin cá nhân (UC05)
-        function handleUpdateProfile(e) {
-            e.preventDefault();
-            const fullName = document.getElementById('profFullName').value.trim();
-            const phone = document.getElementById('profPhone').value.trim();
-            const email = document.getElementById('profEmail').value.trim();
-
-            const userStr = sessionStorage.getItem('authenticatedUser');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    user.hoTen = fullName;
-                    user.soDienThoai = phone;
-                    user.email = email;
-                    sessionStorage.setItem('authenticatedUser', JSON.stringify(user));
-                } catch(err) {}
+        async function loadAuditLogs() {
+            const tbody = document.getElementById('auditLogTableBody');
+            try {
+                const response = await fetch('/api/v1/admin/audit-logs');
+                if (!response.ok) throw new Error('Không thể tải nhật ký.');
+                const entries = await response.json();
+                tbody.replaceChildren();
+                if (entries.length === 0) {
+                    const row = tbody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 7;
+                    cell.textContent = 'Chưa có nhật ký truy cập.';
+                    return;
+                }
+                entries.forEach(entry => {
+                    const row = tbody.insertRow();
+                    [entry.occurredAt, entry.eventType, `${entry.username || 'Ẩn danh'} / ${entry.userRole || '-'}`,
+                        `${entry.httpMethod} ${entry.requestPath}`, entry.details || '-', entry.httpStatus, entry.remoteAddress || '-']
+                        .forEach(value => row.insertCell().textContent = String(value ?? ''));
+                });
+            } catch (error) {
+                tbody.replaceChildren();
+                const row = tbody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 7;
+                cell.textContent = error.message;
             }
-
-            alert(`Cập nhật thông tin tài khoản cá nhân thành công!\nHọ tên: ${fullName}\nSĐT: ${phone}\nEmail: ${email}`);
         }
 
         // Đổi mật khẩu (UC04)
@@ -818,14 +861,11 @@
                 return;
             }
 
-            const username = document.getElementById('profUsername').value || 'admin';
-
             try {
                 const res = await fetch('/api/v1/taikhoan/change-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        username: username,
                         oldPassword: oldP,
                         newPassword: newP
                     })
@@ -842,6 +882,38 @@
                 console.error("Lỗi:", err);
                 alert("Lỗi kết nối máy chủ khi đổi mật khẩu!");
             }
+        }
+
+        async function loadMyProfile() {
+            const response = await fetch('/api/v1/nhanvien/me');
+            if (!response.ok) throw new Error('Không thể tải hồ sơ cá nhân.');
+            const profile = await response.json();
+            document.getElementById('profileFullName').value = profile.hoTen || '';
+            document.getElementById('profileSpecialty').value = profile.chuyenKhoa || '';
+            document.getElementById('profileLicense').value = profile.chungChiHanhNghe || '';
+            document.getElementById('profilePhone').value = profile.soDienThoai || '';
+            document.getElementById('profileEmail').value = profile.email || '';
+            document.getElementById('profileAddress').value = profile.diaChi || '';
+            document.getElementById('personalProfileCard').style.display = 'block';
+        }
+
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+            const response = await fetch('/api/v1/nhanvien/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    soDienThoai: document.getElementById('profilePhone').value,
+                    email: document.getElementById('profileEmail').value,
+                    diaChi: document.getElementById('profileAddress').value
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || 'Không thể cập nhật thông tin cá nhân.');
+                return;
+            }
+            alert('Đã cập nhật thông tin cá nhân.');
         }
 
         // Modal cấp tài khoản (UC10)
@@ -888,33 +960,24 @@
             }
         }
 
-        async function resetUserPass(id, username) {
-            if (confirm(`Bạn có chắc muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456)?`)) {
-                try {
-                    const res = await fetch(`/api/v1/taikhoan/${id}/reset-password`, {
-                        method: 'POST'
-                    });
-
-                    if (res.ok) {
-                        alert(`Đã đặt lại mật khẩu cho tài khoản "${username}" thành công về mặc định (123456)!`);
-                    } else {
-                        const err = await res.json().catch(() => ({}));
-                        alert("Lỗi khi đặt lại mật khẩu: " + (err.message || res.statusText));
-                    }
-                } catch (err) {
-                    console.error("Lỗi:", err);
-                    alert("Lỗi kết nối máy chủ khi đặt lại mật khẩu!");
-                }
-            }
-        }
-
         function logout() {
             sessionStorage.removeItem('authenticatedUser');
             window.location.href = '/login.html';
         }
 
         window.onload = async function() {
-            initProfile();
+            let currentUser = {};
+            try { currentUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}'); }
+            catch (error) { currentUser = {}; }
+
+            if (currentUser.vaiTro === 'BacSi' || currentUser.vaiTro === 'DOCTOR') {
+                try {
+                    await loadMyProfile();
+                } catch (error) {
+                    alert(error.message);
+                }
+                return;
+            }
             await loadUsers();
         };
     </script>

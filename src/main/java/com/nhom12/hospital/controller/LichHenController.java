@@ -2,9 +2,15 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.BenhNhan;
 import com.nhom12.hospital.entity.LichHen;
+import com.nhom12.hospital.entity.NhanVien;
+import com.nhom12.hospital.entity.TaiKhoan;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.BenhNhanRepository;
 import com.nhom12.hospital.repository.KhoaRepository;
 import com.nhom12.hospital.repository.LichHenRepository;
+import com.nhom12.hospital.repository.NhanVienRepository;
+import com.nhom12.hospital.repository.TaiKhoanRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,25 +27,70 @@ public class LichHenController {
     private final LichHenRepository lichHenRepository;
     private final BenhNhanRepository benhNhanRepository;
     private final KhoaRepository khoaRepository;
+    private final NhanVienRepository nhanVienRepository;
+    private final TaiKhoanRepository taiKhoanRepository;
 
     public LichHenController(LichHenRepository lichHenRepository,
                              BenhNhanRepository benhNhanRepository,
-                             KhoaRepository khoaRepository) {
+                             KhoaRepository khoaRepository,
+                             NhanVienRepository nhanVienRepository,
+                             TaiKhoanRepository taiKhoanRepository) {
         this.lichHenRepository = lichHenRepository;
         this.benhNhanRepository = benhNhanRepository;
         this.khoaRepository = khoaRepository;
+        this.nhanVienRepository = nhanVienRepository;
+        this.taiKhoanRepository = taiKhoanRepository;
     }
 
     @GetMapping
-    public List<LichHen> getAll() {
+    public List<LichHen> getAll(HttpServletRequest request) {
+        if (isDoctor(request)) {
+            return findCurrentDoctor(request)
+                    .map(doctor -> lichHenRepository.findByMaBacSi(doctor.getMaNhanVien()))
+                    .orElseGet(List::of);
+        }
         return lichHenRepository.findAll();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyAppointments(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        Optional<NhanVien> doctor = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()));
+        if (doctor.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không tìm thấy hồ sơ bác sĩ."));
+        }
+        return ResponseEntity.ok(lichHenRepository.findByMaBacSi(doctor.get().getMaNhanVien()));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<LichHen> getById(@PathVariable String id) {
-        return lichHenRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<LichHen> getById(@PathVariable String id, HttpServletRequest request) {
+        Optional<LichHen> appointment = lichHenRepository.findById(id);
+        if (appointment.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (isDoctor(request) && findCurrentDoctor(request)
+                .filter(doctor -> doctor.getMaNhanVien().equals(appointment.get().getMaBacSi())).isEmpty()) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(appointment.get());
+    }
+
+    private Optional<NhanVien> findCurrentDoctor(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        return accountId == null ? Optional.empty() : nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()));
+    }
+
+    private boolean isDoctor(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        return accountId != null && taiKhoanRepository.findById(accountId)
+                .map(TaiKhoan::getVaiTro)
+                .filter("BacSi"::equalsIgnoreCase)
+                .isPresent();
     }
 
     @PostMapping

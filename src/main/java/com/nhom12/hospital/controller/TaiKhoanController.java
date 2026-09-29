@@ -2,12 +2,14 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.NhanVien;
 import com.nhom12.hospital.entity.TaiKhoan;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.TaiKhoanRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -16,6 +18,9 @@ import java.util.*;
 @RequestMapping("/api/v1/taikhoan")
 @CrossOrigin(origins = "*")
 public class TaiKhoanController {
+
+    private static final Set<String> STAFF_ROLES = Set.of(
+            "QuanTri", "BacSi", "DieuDuong", "LeTan", "DuocSi", "KTV", "ThuNgan");
 
     private final TaiKhoanRepository taiKhoanRepository;
     private final NhanVienRepository nhanVienRepository;
@@ -29,34 +34,22 @@ public class TaiKhoanController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    private String normalizeRole(String rawRole) {
-        if (rawRole == null || rawRole.trim().isEmpty()) return "BacSi";
-        String r = rawRole.trim().toUpperCase();
-        if (r.contains("GIAMDOC") || r.contains("BGD") || r.contains("DIRECTOR") || r.contains("EXECUTIVE")) return "GiamDoc";
-        if (r.contains("NHANSU") || r.contains("HR")) return "NhanSu";
-        if (r.contains("ADMIN") || r.contains("QUANTRI")) return "QuanTri";
-        if (r.contains("DOC") || r.contains("BACSI")) return "BacSi";
-        if (r.contains("CASHIER") || r.contains("THUNGAN")) return "ThuNgan";
-        if (r.contains("PHARM") || r.contains("DUOC")) return "DuocSi";
-        if (r.contains("RECEPT") || r.contains("LETAN") || r.contains("TIEPDON")) return "LeTan";
-        if (r.contains("TECH") || r.contains("KTV") || r.contains("KYTHUAT")) return "KTV";
-        if (r.contains("NURSE") || r.contains("DIEUDUONG")) return "DieuDuong";
-        if (r.contains("BENHNHAN") || r.contains("PATIENT")) return "BenhNhan";
-        return "BacSi";
-    }
-
     @GetMapping
     public List<Map<String, Object>> getAll() {
         List<TaiKhoan> list = taiKhoanRepository.findAll();
         List<Map<String, Object>> res = new ArrayList<>();
 
         for (TaiKhoan tk : list) {
+            if ("BenhNhan".equals(tk.getVaiTro())) {
+                continue;
+            }
             Map<String, Object> map = new HashMap<>();
             map.put("id", tk.getMaTaiKhoan());
             map.put("username", tk.getTenDangNhap());
             map.put("email", tk.getEmail());
             map.put("role", tk.getVaiTro());
-            map.put("status", tk.getTrangThai() ? "Hoạt động" : "Bị khóa");
+            map.put("enabled", Boolean.TRUE.equals(tk.getTrangThai()));
+            map.put("status", Boolean.TRUE.equals(tk.getTrangThai()) ? "Hoạt động" : "Bị khóa");
 
             // Tìm nhân viên liên kết
             Optional<NhanVien> nvOpt = nhanVienRepository.findAll().stream()
@@ -72,7 +65,7 @@ public class TaiKhoanController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> create(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> create(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         try {
             String username = (String) payload.get("username");
             if (username == null || username.trim().isEmpty()) {
@@ -84,9 +77,14 @@ public class TaiKhoanController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên đăng nhập \"" + username + "\" đã tồn tại!"));
             }
 
-            String password = (String) payload.getOrDefault("password", "123456");
-            String rawRole = (String) payload.getOrDefault("role", "BacSi");
-            String dbRole = normalizeRole(rawRole);
+            String password = (String) payload.get("password");
+            if (password == null || password.length() < 6) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu ban đầu phải có ít nhất 6 ký tự."));
+            }
+            String dbRole = (String) payload.getOrDefault("role", "BacSi");
+            if (!STAFF_ROLES.contains(dbRole)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Vai trò nhân viên không hợp lệ."));
+            }
             String fullName = (String) payload.getOrDefault("fullName", username);
             String email = (String) payload.get("email");
 
@@ -112,6 +110,7 @@ public class TaiKhoanController {
                 nv.setTrangThai("DangLamViec");
                 nhanVienRepository.save(nv);
             }
+            request.setAttribute(SessionAttributes.AUDIT_DETAIL, "Cấp tài khoản " + username + "; role=" + dbRole);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -126,11 +125,59 @@ public class TaiKhoanController {
         }
     }
 
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> updateAccount(@PathVariable Long id,
+                                           @RequestBody Map<String, Object> payload,
+                                           HttpServletRequest request) {
+        Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(id);
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Long currentAccountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        TaiKhoan account = accountOpt.get();
+        if ("BenhNhan".equals(account.getVaiTro())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Chỉ được quản lý tài khoản nhân viên."));
+        }
+        Object roleValue = payload.get("role");
+        Object enabledValue = payload.get("enabled");
+        String role = roleValue instanceof String value ? value : account.getVaiTro();
+        boolean enabled = enabledValue instanceof Boolean value ? value : Boolean.TRUE.equals(account.getTrangThai());
+
+        if (!STAFF_ROLES.contains(role)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Vai trò nhân viên không hợp lệ."));
+        }
+        if (Objects.equals(currentAccountId, id) && (!enabled || !"QuanTri".equals(role))) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không thể tự khóa hoặc tự thu hồi quyền Admin."));
+        }
+
+        account.setVaiTro(role);
+        account.setTrangThai(enabled);
+        taiKhoanRepository.save(account);
+        request.setAttribute(SessionAttributes.AUDIT_DETAIL,
+            "Cập nhật tài khoản " + account.getTenDangNhap() + "; role=" + role + "; enabled=" + enabled);
+
+        nhanVienRepository.findAll().stream()
+                .filter(staff -> id.equals(staff.getMaTaiKhoan()))
+                .findFirst()
+                .ifPresent(staff -> {
+                    staff.setVaiTro(role);
+                    nhanVienRepository.save(staff);
+                });
+
+        return ResponseEntity.ok(Map.of("success", true, "role", role, "enabled", enabled));
+    }
+
     @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> req) {
-        String username = req.get("username");
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> req, HttpServletRequest request) {
+        String username = (String) request.getAttribute(SessionAttributes.USERNAME);
         String oldPassword = req.get("oldPassword");
         String newPassword = req.get("newPassword");
+
+        if (oldPassword == null || newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Cần nhập mật khẩu hiện tại và mật khẩu mới tối thiểu 6 ký tự."));
+        }
 
         Optional<TaiKhoan> userOpt = taiKhoanRepository.findByTenDangNhap(username);
         if (userOpt.isEmpty()) {
@@ -138,7 +185,7 @@ public class TaiKhoanController {
         }
 
         TaiKhoan user = userOpt.get();
-        if (oldPassword != null && !passwordEncoder.matches(oldPassword, user.getMatKhauHash())) {
+        if (!passwordEncoder.matches(oldPassword, user.getMatKhauHash())) {
             return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu cũ không chính xác!"));
         }
 
@@ -147,12 +194,4 @@ public class TaiKhoanController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Đổi mật khẩu thành công!"));
     }
 
-    @PostMapping("/{id}/reset-password")
-    public ResponseEntity<?> resetPassword(@PathVariable Long id) {
-        return taiKhoanRepository.findById(id).map(user -> {
-            user.setMatKhauHash(passwordEncoder.encode("123456"));
-            taiKhoanRepository.save(user);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã đặt lại mật khẩu về mặc định (123456)!"));
-        }).orElse(ResponseEntity.notFound().build());
-    }
 }

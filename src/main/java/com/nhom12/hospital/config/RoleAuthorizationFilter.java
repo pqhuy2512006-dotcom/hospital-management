@@ -4,14 +4,26 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import com.nhom12.hospital.entity.TaiKhoan;
+import com.nhom12.hospital.repository.TaiKhoanRepository;
+import com.nhom12.hospital.service.AuditLogService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Optional;
 
 @Component
 public class RoleAuthorizationFilter extends OncePerRequestFilter {
+
+    private final TaiKhoanRepository taiKhoanRepository;
+    private final AuditLogService auditLogService;
+
+    public RoleAuthorizationFilter(TaiKhoanRepository taiKhoanRepository, AuditLogService auditLogService) {
+        this.taiKhoanRepository = taiKhoanRepository;
+        this.auditLogService = auditLogService;
+    }
 
     private String normalizeRole(String rawRole) {
         if (rawRole == null || rawRole.trim().isEmpty()) return "";
@@ -36,19 +48,93 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String method = request.getMethod().toUpperCase();
+        boolean auditMutation = path.startsWith("/api/v1/")
+                && !"GET".equals(method) && !"HEAD".equals(method) && !"OPTIONS".equals(method)
+                && !"/api/v1/auth/login".equals(path);
+        String actor = null;
+        String actorRole = null;
 
-        // Bỏ qua các endpoint công khai và GET dữ liệu
-        if (path.startsWith("/api/v1/auth") || method.equals("GET") || method.equals("OPTIONS")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        try {
+            if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
+                    || !path.startsWith("/api/v1/")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        String rawRole = request.getHeader("X-User-Role");
-        if (rawRole != null && !rawRole.trim().isEmpty()) {
-            String role = normalizeRole(rawRole);
+            HttpSession session = request.getSession(false);
+            Object accountId = session == null ? null : session.getAttribute(SessionAttributes.ACCOUNT_ID);
+            if (!(accountId instanceof Long id)) {
+                writeForbidden(response, "Yêu cầu đăng nhập.");
+                return;
+            }
 
-            // 4.9 Quản trị viên hệ thống có toàn quyền mọi endpoint
+            Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(id);
+            if (accountOpt.isEmpty() || !Boolean.TRUE.equals(accountOpt.get().getTrangThai())) {
+                if (session != null) {
+                    session.invalidate();
+                }
+                writeForbidden(response, "Tài khoản không tồn tại hoặc đã bị khóa.");
+                return;
+            }
+
+            TaiKhoan account = accountOpt.get();
+            actor = account.getTenDangNhap();
+            actorRole = account.getVaiTro();
+            String role = normalizeRole(actorRole);
+            request.setAttribute(SessionAttributes.USERNAME, actor);
+            request.setAttribute(SessionAttributes.ACCOUNT_ID, account.getMaTaiKhoan());
+
+            if ("/api/v1/auth/logout".equals(path)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (path.startsWith("/api/v1/admin/audit-logs") && !"QuanTri".equals(role)) {
+                writeForbidden(response, "Chỉ Admin được xem nhật ký truy cập.");
+                return;
+            }
+
+            if (path.startsWith("/api/v1/dashboard/")
+                    && !"QuanTri".equals(role) && !"GiamDoc".equals(role)) {
+                writeForbidden(response, "Không có quyền xem báo cáo điều hành.");
+                return;
+            }
+
+            if (path.startsWith("/api/v1/auth/")) {
+                writeForbidden(response, "Endpoint xác thực không hợp lệ.");
+                return;
+            }
+
+            if (path.startsWith("/api/v1/taikhoan")) {
+                if (path.equals("/api/v1/taikhoan/change-password")) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                if (!"QuanTri".equals(role)) {
+                    writeForbidden(response, "Chỉ Admin được quản lý tài khoản và vai trò.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if ("QuanTri".equals(role)) {
+                boolean allowed = "/api/v1/dashboard/stats".equals(path)
+                        || "/api/v1/dashboard/report".equals(path)
+                        || path.startsWith("/api/v1/admin/audit-logs");
+                if (!allowed) {
+                    writeForbidden(response, "Admin không có quyền truy cập phân hệ nghiệp vụ này.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if ("BacSi".equals(role)) {
+                if (!isDoctorRequestAllowed(path, method)) {
+                    writeForbidden(response, "Bác sĩ không có quyền thực hiện thao tác này.");
+                    return;
+                }
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -106,25 +192,49 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 }
             }
             // 8. Phân hệ Cấu hình hệ thống & Cấp tài khoản nhân sự (4.9 Quản trị viên)
-            else if (path.startsWith("/api/v1/taikhoan") && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
-                // Cho phép đổi mật khẩu cá nhân
-                if (!path.endsWith("/change-password")) {
-                    isAllowed = false;
-                    requiredRoleDesc = "Quản Trị Viên Hệ Thống (ADMIN)";
-                }
-            }
-
             if (!isAllowed) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write(String.format(
-                        "{\"success\": false, \"status\": 403, \"message\": \"Truy cập bị từ chối (403 Forbidden): Vai trò '%s' không có thẩm quyền thực hiện nghiệp vụ này. Yêu cầu vai trò: %s.\"}",
-                        rawRole, requiredRoleDesc
-                ));
+                writeForbidden(response, "Vai trò " + role + " không có quyền thực hiện nghiệp vụ này. Yêu cầu: " + requiredRoleDesc);
                 return;
             }
+
+            filterChain.doFilter(request, response);
+        } finally {
+            if (auditMutation) {
+                String eventType = "/api/v1/auth/logout".equals(path) ? "LOGOUT"
+                        : path.startsWith("/api/v1/taikhoan") ? "ACCOUNT_CHANGE" : "API_WRITE";
+                auditLogService.record(eventType, actor, actorRole, method, path,
+                    response.getStatus(), request.getRemoteAddr(),
+                    (String) request.getAttribute(SessionAttributes.AUDIT_DETAIL));
+            }
+        }
+    }
+
+    private void writeForbidden(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"success\":false,\"status\":403,\"message\":\"" + message + "\"}");
+    }
+
+    private boolean isDoctorRequestAllowed(String path, String method) {
+        if ("GET".equals(method)) {
+            return isPathOrChild(path, "/api/v1/benhnhan")
+                    || isPathOrChild(path, "/api/v1/lichhen")
+                    || "/api/v1/phieukham/me".equals(path)
+                    || isPathOrChild(path, "/api/v1/thuoc")
+                    || "/api/v1/dichvucls".equals(path)
+                    || "/api/v1/cls/me".equals(path)
+                    || "/api/v1/khoa".equals(path)
+                    || "/api/v1/nhanvien/me".equals(path)
+                    || "/api/v1/nhanvien/doctors".equals(path)
+                    || "/api/v1/chuyenkhoa/me".equals(path);
         }
 
-        filterChain.doFilter(request, response);
+        return ("POST".equals(method) && ("/api/v1/phieukham".equals(path)
+                    || "/api/v1/chuyenkhoa".equals(path)))
+                || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
+    }
+
+    private boolean isPathOrChild(String path, String basePath) {
+        return path.equals(basePath) || path.startsWith(basePath + "/");
     }
 }

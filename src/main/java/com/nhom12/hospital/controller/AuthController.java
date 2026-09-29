@@ -2,14 +2,19 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.dto.LoginRequest;
 import com.nhom12.hospital.dto.LoginResponse;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.entity.TaiKhoan;
+import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.TaiKhoanRepository;
+import com.nhom12.hospital.service.AuditLogService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -18,18 +23,26 @@ import java.util.Optional;
 public class AuthController {
 
     private final TaiKhoanRepository taiKhoanRepository;
+        private final NhanVienRepository nhanVienRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
-    public AuthController(TaiKhoanRepository taiKhoanRepository, PasswordEncoder passwordEncoder) {
+        public AuthController(TaiKhoanRepository taiKhoanRepository, NhanVienRepository nhanVienRepository,
+                                                  PasswordEncoder passwordEncoder,
+                          AuditLogService auditLogService) {
         this.taiKhoanRepository = taiKhoanRepository;
+                this.nhanVienRepository = nhanVienRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         Optional<TaiKhoan> userOpt = taiKhoanRepository.findByTenDangNhap(request.getUsername());
 
         if (userOpt.isEmpty()) {
+            auditLogService.record("LOGIN_FAILED", request.getUsername(), null, "POST",
+                    "/api/v1/auth/login", HttpStatus.UNAUTHORIZED.value(), httpRequest.getRemoteAddr(), null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Tên đăng nhập không tồn tại!", null, null));
         }
@@ -37,66 +50,37 @@ public class AuthController {
         TaiKhoan user = userOpt.get();
 
         if (!user.getTrangThai()) {
+            auditLogService.record("LOGIN_FAILED", user.getTenDangNhap(), user.getVaiTro(), "POST",
+                    "/api/v1/auth/login", HttpStatus.UNAUTHORIZED.value(), httpRequest.getRemoteAddr(), null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Tài khoản đã bị khóa!", null, null));
         }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getMatKhauHash())) {
+        if (request.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getMatKhauHash())) {
+            auditLogService.record("LOGIN_FAILED", user.getTenDangNhap(), user.getVaiTro(), "POST",
+                    "/api/v1/auth/login", HttpStatus.UNAUTHORIZED.value(), httpRequest.getRemoteAddr(), null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Mật khẩu không chính xác!", null, null));
         }
 
-        return ResponseEntity.ok(
-                new LoginResponse(true, "Đăng nhập thành công!", user.getTenDangNhap(), user.getVaiTro())
-        );
+        HttpSession session = httpRequest.getSession(true);
+        httpRequest.changeSessionId();
+        session.setAttribute(SessionAttributes.ACCOUNT_ID, user.getMaTaiKhoan());
+        auditLogService.record("LOGIN", user.getTenDangNhap(), user.getVaiTro(), "POST",
+                "/api/v1/auth/login", HttpStatus.OK.value(), httpRequest.getRemoteAddr(), null);
+
+        String displayName = nhanVienRepository.findByMaTaiKhoan(user.getMaTaiKhoan())
+                .map(employee -> employee.getHoTen())
+                .orElse(user.getTenDangNhap());
+        return ResponseEntity.ok(new LoginResponse(true, "Đăng nhập thành công!", displayName, user.getVaiTro()));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest request) {
-        Optional<TaiKhoan> existing = taiKhoanRepository.findByTenDangNhap(request.getUsername());
-        TaiKhoan user;
-
-        if (existing.isPresent()) {
-            user = existing.get();
-        } else {
-            user = new TaiKhoan();
-            user.setTenDangNhap(request.getUsername());
-            user.setVaiTro("QuanTri");
-            user.setTrangThai(true);
-            user.setNgayTao(LocalDateTime.now());
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
         }
-
-        user.setMatKhauHash(passwordEncoder.encode(request.getPassword()));
-        taiKhoanRepository.save(user);
-
-        return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
+        return ResponseEntity.ok(Map.of("success", true, "message", "Đăng xuất thành công."));
     }
 
-    @PostMapping("/reset-admin")
-    public ResponseEntity<?> resetAdmin(@RequestBody LoginRequest request) {
-        String username = request.getUsername() == null ? "admin" : request.getUsername().trim();
-        String password = request.getPassword() == null ? "admin123" : request.getPassword().trim();
-
-        if (password.isEmpty()) {
-            password = "admin123";
-        }
-
-        TaiKhoan user = taiKhoanRepository.findByTenDangNhap(username)
-                .orElseGet(() -> {
-                    TaiKhoan newUser = new TaiKhoan();
-                    newUser.setTenDangNhap(username);
-                    newUser.setVaiTro("QuanTri");
-                    newUser.setTrangThai(true);
-                    newUser.setNgayTao(LocalDateTime.now());
-                    return newUser;
-                });
-
-        user.setMatKhauHash(passwordEncoder.encode(password));
-        user.setVaiTro("QuanTri");
-        user.setTrangThai(true);
-        user.setNgayTao(user.getNgayTao() == null ? LocalDateTime.now() : user.getNgayTao());
-        taiKhoanRepository.save(user);
-
-        return ResponseEntity.ok("Đã reset tài khoản admin thành công. Tài khoản: admin / Mật khẩu: " + password);
-    }
 }
