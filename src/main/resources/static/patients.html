@@ -558,7 +558,7 @@
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Số CCCD / Định Danh (Khóa khi sửa) *</label>
+                            <label>Số CCCD / Định Danh *</label>
                             <input type="text" id="fCCCD" class="form-control" placeholder="12 chữ số" required maxlength="12">
                         </div>
                         <div class="form-group">
@@ -584,6 +584,17 @@
                         </div>
                     </div>
 
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="fEmail" class="form-control" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Nghề nghiệp</label>
+                            <input type="text" id="fNgheNghiep" class="form-control" placeholder="Nghề nghiệp hiện tại">
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Địa Chỉ Thường Trú</label>
                         <input type="text" id="fDiaChi" class="form-control" placeholder="Số nhà, Phường/Xã, Quận/Huyện, Tỉnh/TP">
@@ -595,14 +606,22 @@
                             <input type="text" id="fNguoiThan" class="form-control" placeholder="Họ tên thân nhân / Mối quan hệ">
                         </div>
                         <div class="form-group">
+                            <label>Quan hệ với người liên hệ</label>
+                            <input type="text" id="fQuanHe" class="form-control" placeholder="Ví dụ: Bố, mẹ, vợ/chồng">
+                        </div>
+                        <div class="form-group">
                             <label>SĐT Người Thân Khẩn Cấp</label>
                             <input type="tel" id="fSDTThan" class="form-control" placeholder="SĐT liên hệ khẩn cấp">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Tiền Sử Bệnh Nền / Dị Ứng Thuốc (Rất quan trọng khi kê đơn)</label>
-                        <input type="text" id="fDiUng" class="form-control" placeholder="Ví dụ: Dị ứng Penicillin, Tiền sử tăng huyết áp...">
+                        <label>Tiền sử bệnh nền</label>
+                        <textarea id="fBenhNen" class="form-control" maxlength="500" placeholder="Thông tin bệnh nền"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Tiền sử dị ứng</label>
+                        <textarea id="fDiUng" class="form-control" maxlength="500" placeholder="Thông tin dị ứng"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -653,6 +672,17 @@
         let doctorAppointments = [];
         let doctorExaminations = [];
         let doctorPatientView = 'current';
+        let patientProfileMissing = false;
+
+        function isPatientUser() {
+            try {
+                return ['BenhNhan', 'PATIENT'].includes(
+                    JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').vaiTro
+                );
+            } catch (error) {
+                return false;
+            }
+        }
 
         function isDoctorUser() {
             try {
@@ -665,6 +695,28 @@
 
         async function loadPatients() {
             try {
+                if (isPatientUser()) {
+                    document.querySelector('.search-box').style.display = 'none';
+                    document.getElementById('doctorRecordTabs').style.display = 'none';
+                    const response = await fetch('/api/v1/benhnhan/me');
+                    if (response.status === 404) {
+                        patients = [];
+                        patientProfileMissing = true;
+                    } else if (!response.ok) {
+                        throw new Error('Không thể tải hồ sơ cá nhân.');
+                    } else {
+                        const item = await response.json();
+                        patientProfileMissing = false;
+                        patients = [mapPatient(item)];
+                    }
+                    document.querySelector('.btn-create-patient').innerHTML = patientProfileMissing
+                        ? '<i class="fa-solid fa-user-plus"></i> Tạo hồ sơ cá nhân'
+                        : '<i class="fa-solid fa-user-pen"></i> Cập nhật hồ sơ cá nhân';
+                    document.querySelector('.btn-create-patient').style.display = 'inline-flex';
+                    renderPatients();
+                    return;
+                }
+
                 const requests = [fetch('/api/v1/benhnhan')];
                 if (isDoctorUser()) {
                     requests.push(fetch('/api/v1/lichhen/me'), fetch('/api/v1/phieukham/me'));
@@ -688,21 +740,7 @@
                     document.getElementById('patientSearchInput').placeholder = 'Tìm theo CCCD, mã BHYT, tên hoặc số điện thoại';
                 }
 
-                patients = data.map(item => ({
-                    maBN: item.maBenhNhan,
-                    hoTen: item.hoTen,
-                    ngaySinh: item.ngaySinh,
-                    gioiTinh: item.gioiTinh,
-                    cccd: item.soCCCD || '',
-                    sdt: item.soDienThoai || '',
-                    maBHYT: item.maBHYT || '',
-                    nhomMau: item.nhomMau || 'Chưa xác định',
-                    diaChi: item.diaChi || '',
-                    nguoiThan: item.nguoiLienHeKhanCap || '',
-                    sdtThan: item.sdtNguoiLienHe || '',
-                    diUng: item.tienSuDiUng || 'Không có',
-                    history: []
-                }));
+                patients = data.map(mapPatient);
 
                 if (isDoctorUser()) {
                     const patientsById = new Map(patients.map(patient => [patient.maBN, patient]));
@@ -727,6 +765,28 @@
                     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--danger);">Không thể tải dữ liệu bệnh nhân từ cơ sở dữ liệu.</td></tr>`;
                 }
             }
+        }
+
+        function mapPatient(item) {
+            return {
+                maBN: item.maBenhNhan,
+                hoTen: item.hoTen,
+                ngaySinh: item.ngaySinh,
+                gioiTinh: item.gioiTinh,
+                cccd: item.soCCCD || '',
+                sdt: item.soDienThoai || '',
+                maBHYT: item.maBHYT || '',
+                nhomMau: item.nhomMau || 'Chưa xác định',
+                diaChi: item.diaChi || '',
+                email: item.email || '',
+                ngheNghiep: item.ngheNghiep || '',
+                nguoiThan: item.nguoiLienHeKhanCap || '',
+                quanHe: item.quanHeNguoiLienHe || '',
+                sdtThan: item.sdtNguoiLienHe || '',
+                benhNen: item.tienSuBenhNen || '',
+                diUng: item.tienSuDiUng || '',
+                history: []
+            };
         }
 
         // Tự sinh mã bệnh nhân: BN + 2026 + 6 số thứ tự (UC25)
@@ -754,7 +814,9 @@
             tbody.innerHTML = '';
 
             if (dataList.length === 0) {
-                const emptyMessage = isDoctorUser() && doctorPatientView === 'current'
+                const emptyMessage = isPatientUser()
+                    ? 'Bạn chưa có hồ sơ bệnh nhân. Hãy tạo hồ sơ cá nhân để tiếp tục.'
+                    : isDoctorUser() && doctorPatientView === 'current'
                     ? 'Không có bệnh nhân đang chờ hoặc đang khám.'
                     : (isDoctorUser() ? 'Chưa có bệnh nhân nào trong lịch sử khám của bạn.' : 'Không tìm thấy hồ sơ bệnh nhân phù hợp');
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">${emptyMessage}</td></tr>`;
@@ -830,10 +892,16 @@
         // Mở Modal tạo mới (UC24)
         function openCreateModal() {
             if (isDoctorUser()) return;
+            if (isPatientUser() && !patientProfileMissing) {
+                openEditModal(patients[0]?.maBN);
+                return;
+            }
             isEditMode = false;
             document.getElementById('patientForm').reset();
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân Mới (Mẫu QLBN_BM1)';
-            document.getElementById('fMaBN').value = generatePatientId();
+            document.getElementById('modalTitle').innerHTML = isPatientUser()
+                ? '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo hồ sơ cá nhân'
+                : '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân Mới (Mẫu QLBN_BM1)';
+            document.getElementById('fMaBN').value = isPatientUser() ? '' : generatePatientId();
             
             // Mở khóa ô CCCD và BHYT
             const cccdInput = document.getElementById('fCCCD');
@@ -873,9 +941,20 @@
             document.getElementById('fSDT').value = p.sdt;
             document.getElementById('fNhomMau').value = p.nhomMau || 'Chưa xác định';
             document.getElementById('fDiaChi').value = p.diaChi || '';
+            document.getElementById('fEmail').value = p.email || '';
+            document.getElementById('fNgheNghiep').value = p.ngheNghiep || '';
             document.getElementById('fNguoiThan').value = p.nguoiThan || '';
+            document.getElementById('fQuanHe').value = p.quanHe || '';
             document.getElementById('fSDTThan').value = p.sdtThan || '';
+            document.getElementById('fBenhNen').value = p.benhNen || '';
             document.getElementById('fDiUng').value = p.diUng || '';
+
+            if (isPatientUser()) {
+                [cccdInput, bhytInput].forEach(input => {
+                    input.readOnly = false;
+                    input.style.backgroundColor = '#ffffff';
+                });
+            }
 
             document.getElementById('patientModal').style.display = 'flex';
         }
@@ -897,9 +976,13 @@
             const maBHYT = document.getElementById('fMaBHYT').value.trim();
             const nhomMau = document.getElementById('fNhomMau').value;
             const diaChi = document.getElementById('fDiaChi').value.trim();
+            const email = document.getElementById('fEmail').value.trim();
+            const ngheNghiep = document.getElementById('fNgheNghiep').value.trim();
             const nguoiThan = document.getElementById('fNguoiThan').value.trim();
+            const quanHe = document.getElementById('fQuanHe').value.trim();
             const sdtThan = document.getElementById('fSDTThan').value.trim();
-            const diUng = document.getElementById('fDiUng').value.trim() || 'Không có';
+            const benhNen = document.getElementById('fBenhNen').value.trim();
+            const diUng = document.getElementById('fDiUng').value.trim();
 
             const payload = {
                 maBenhNhan: maBN,
@@ -911,13 +994,28 @@
                 maBHYT: maBHYT,
                 nhomMau: nhomMau,
                 diaChi: diaChi,
+                email: email,
+                ngheNghiep: ngheNghiep,
                 nguoiLienHeKhanCap: nguoiThan,
+                quanHeNguoiLienHe: quanHe,
                 sdtNguoiLienHe: sdtThan,
+                tienSuBenhNen: benhNen,
                 tienSuDiUng: diUng
             };
 
             try {
-                if (!isEditMode) {
+                if (isPatientUser()) {
+                    const res = await fetch('/api/v1/benhnhan/me', {
+                        method: isEditMode ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        alert("Không thể lưu hồ sơ cá nhân: " + err);
+                        return;
+                    }
+                } else if (!isEditMode) {
                     const res = await fetch('/api/v1/benhnhan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -967,7 +1065,10 @@
             document.getElementById('emrModal').style.display = 'flex';
 
             try {
-                const res = await fetch(`/api/v1/benhnhan/${encodeURIComponent(maBN)}/history`);
+                const historyUrl = isPatientUser()
+                    ? '/api/v1/benhnhan/me/history'
+                    : `/api/v1/benhnhan/${encodeURIComponent(maBN)}/history`;
+                const res = await fetch(historyUrl);
                 const historyList = res.ok ? await res.json() : [];
 
                 histContainer.innerHTML = '';

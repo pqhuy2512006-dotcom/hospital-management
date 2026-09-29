@@ -5,7 +5,9 @@ import com.nhom12.hospital.entity.ChiTietKetQuaCLS;
 import com.nhom12.hospital.entity.DonThuoc;
 import com.nhom12.hospital.entity.KetQuaCLS;
 import com.nhom12.hospital.entity.PhieuKham;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +46,69 @@ public class BenhNhanController {
     @GetMapping
     public List<BenhNhan> getAll() {
         return benhNhanRepository.findAll();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(HttpServletRequest request) {
+        Long accountId = getAccountId(request);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        Optional<BenhNhan> profile = benhNhanRepository.findByMaTaiKhoan(accountId);
+        return profile.<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/me")
+    public ResponseEntity<?> createMyProfile(@RequestBody BenhNhan profile, HttpServletRequest request) {
+        Long accountId = getAccountId(request);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        if (benhNhanRepository.findByMaTaiKhoan(accountId).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Hồ sơ bệnh nhân đã được tạo."));
+        }
+        if (!hasRequiredProfileFields(profile)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng nhập họ tên, ngày sinh, giới tính và số điện thoại."));
+        }
+        profile.setMaBenhNhan("BN2026" + String.format("%06d", benhNhanRepository.count() + 1));
+        profile.setMaTaiKhoan(accountId);
+        if (profile.getNgayTaoHoSo() == null) {
+            profile.setNgayTaoHoSo(LocalDateTime.now());
+        }
+        return ResponseEntity.ok(benhNhanRepository.save(profile));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMyProfile(@RequestBody BenhNhan updated, HttpServletRequest request) {
+        Long accountId = getAccountId(request);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        if (!hasRequiredProfileFields(updated)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng nhập họ tên, ngày sinh, giới tính và số điện thoại."));
+        }
+        Optional<BenhNhan> existing = benhNhanRepository.findByMaTaiKhoan(accountId);
+        if (existing.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        BenhNhan profile = existing.get();
+        profile.setHoTen(updated.getHoTen());
+        profile.setNgaySinh(updated.getNgaySinh());
+        profile.setGioiTinh(updated.getGioiTinh());
+        profile.setSoCCCD(updated.getSoCCCD());
+        profile.setMaBHYT(updated.getMaBHYT());
+        profile.setSoDienThoai(updated.getSoDienThoai());
+        profile.setNhomMau(updated.getNhomMau());
+        profile.setDiaChi(updated.getDiaChi());
+        profile.setEmail(updated.getEmail());
+        profile.setNgheNghiep(updated.getNgheNghiep());
+        profile.setNguoiLienHeKhanCap(updated.getNguoiLienHeKhanCap());
+        profile.setQuanHeNguoiLienHe(updated.getQuanHeNguoiLienHe());
+        profile.setSdtNguoiLienHe(updated.getSdtNguoiLienHe());
+        profile.setTienSuBenhNen(updated.getTienSuBenhNen());
+        profile.setTienSuDiUng(updated.getTienSuDiUng());
+        return ResponseEntity.ok(benhNhanRepository.save(profile));
     }
 
     @GetMapping("/{id}")
@@ -93,6 +158,23 @@ public class BenhNhanController {
 
     @GetMapping("/{id}/history")
     public List<Map<String, Object>> getHistory(@PathVariable String id) {
+        return buildHistory(id);
+    }
+
+    @GetMapping("/me/history")
+    public ResponseEntity<?> getMyHistory(HttpServletRequest request) {
+        Long accountId = getAccountId(request);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        Optional<BenhNhan> profile = benhNhanRepository.findByMaTaiKhoan(accountId);
+        if (profile.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(buildHistory(profile.get().getMaBenhNhan()));
+    }
+
+    private List<Map<String, Object>> buildHistory(String id) {
         List<PhieuKham> list = phieuKhamRepository.findByMaBenhNhan(id);
         List<Map<String, Object>> res = new ArrayList<>();
 
@@ -131,5 +213,16 @@ public class BenhNhanController {
         }
 
         return res;
+    }
+
+    private Long getAccountId(HttpServletRequest request) {
+        return (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+    }
+
+    private boolean hasRequiredProfileFields(BenhNhan profile) {
+        return profile.getHoTen() != null && !profile.getHoTen().trim().isEmpty()
+                && profile.getNgaySinh() != null
+                && profile.getGioiTinh() != null && !profile.getGioiTinh().trim().isEmpty()
+                && profile.getSoDienThoai() != null && !profile.getSoDienThoai().trim().isEmpty();
     }
 }

@@ -196,6 +196,25 @@
             if (profileLink) profileLink.innerHTML = '<i class="fa-solid fa-user-pen"></i> Thông tin cá nhân';
         }
 
+        if (userRole === 'BenhNhan' || userRole === 'PATIENT') {
+            const patientMenuLabels = {
+                '/appointments.html': 'Lịch khám của tôi',
+                '/patients.html': 'Hồ sơ cá nhân',
+                '/billing.html': 'Hóa đơn của tôi'
+            };
+            Object.entries(patientMenuLabels).forEach(([href, label]) => {
+                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
+                if (link) link.innerHTML = `<i class="${href === '/appointments.html' ? 'fa-solid fa-calendar-check' : href === '/patients.html' ? 'fa-solid fa-id-card' : 'fa-solid fa-file-invoice-dollar'}"></i> ${label}`;
+            });
+            const titles = {
+                'appointments.html': 'Đặt lịch khám trực tuyến',
+                'patients.html': 'Hồ sơ cá nhân',
+                'billing.html': 'Hóa đơn viện phí của tôi'
+            };
+            const title = document.querySelector('.top-header .header-title h2');
+            if (title && titles[currentPage]) title.textContent = titles[currentPage];
+        }
+
         if (userRole === 'BacSi' || userRole === 'DOCTOR') {
             const menuLabels = {
                 '/examination.html': 'Khám bệnh & Đơn thuốc',

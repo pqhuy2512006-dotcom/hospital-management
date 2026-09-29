@@ -2,9 +2,13 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.ChiTietHoaDon;
 import com.nhom12.hospital.entity.HoaDon;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.BenhNhanRepository;
 import com.nhom12.hospital.repository.ChiTietHoaDonRepository;
 import com.nhom12.hospital.repository.HoaDonRepository;
+import com.nhom12.hospital.repository.TaiKhoanRepository;
+import com.nhom12.hospital.entity.TaiKhoan;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,18 +23,28 @@ public class HoaDonController {
     private final HoaDonRepository hoaDonRepository;
     private final ChiTietHoaDonRepository chiTietHoaDonRepository;
     private final BenhNhanRepository benhNhanRepository;
+    private final TaiKhoanRepository taiKhoanRepository;
 
     public HoaDonController(HoaDonRepository hoaDonRepository,
                              ChiTietHoaDonRepository chiTietHoaDonRepository,
-                             BenhNhanRepository benhNhanRepository) {
+                             BenhNhanRepository benhNhanRepository,
+                             TaiKhoanRepository taiKhoanRepository) {
         this.hoaDonRepository = hoaDonRepository;
         this.chiTietHoaDonRepository = chiTietHoaDonRepository;
         this.benhNhanRepository = benhNhanRepository;
+        this.taiKhoanRepository = taiKhoanRepository;
     }
 
     @GetMapping
-    public List<Map<String, Object>> getAll() {
-        List<HoaDon> list = hoaDonRepository.findAll();
+    public List<Map<String, Object>> getAll(HttpServletRequest request) {
+        List<HoaDon> list;
+        if (isPatientAccount(request)) {
+            list = findCurrentPatient(request)
+                    .map(patient -> hoaDonRepository.findByMaBenhNhan(patient.getMaBenhNhan()))
+                    .orElseGet(List::of);
+        } else {
+            list = hoaDonRepository.findAll();
+        }
         List<Map<String, Object>> res = new ArrayList<>();
 
         for (HoaDon hd : list) {
@@ -68,14 +82,40 @@ public class HoaDonController {
     }
 
     @PutMapping("/{id}/thanhtoan")
-    public ResponseEntity<?> thanhToan(@PathVariable String id, @RequestBody(required = false) Map<String, Object> req) {
+    public ResponseEntity<?> thanhToan(@PathVariable String id,
+                                       @RequestBody(required = false) Map<String, Object> req,
+                                       HttpServletRequest request) {
         String method = req != null && req.containsKey("method") ? (String) req.get("method") : "TienMat";
-        return hoaDonRepository.findById(id).map(hd -> {
-            hd.setTrangThaiTT("DaThanhToan");
-            hd.setHinhThucThanhToan(method);
-            hd.setNgayThanhToan(LocalDateTime.now());
-            hoaDonRepository.save(hd);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Xác nhận thanh toán hóa đơn thành công!"));
-        }).orElse(ResponseEntity.notFound().build());
+        Optional<HoaDon> invoice = hoaDonRepository.findById(id);
+        if (invoice.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Optional<com.nhom12.hospital.entity.BenhNhan> patient = findCurrentPatient(request);
+        if (isPatientAccount(request) && (patient.isEmpty()
+                || !patient.get().getMaBenhNhan().equals(invoice.get().getMaBenhNhan()))) {
+            return ResponseEntity.notFound().build();
+        }
+        HoaDon bill = invoice.get();
+        bill.setTrangThaiTT("DaThanhToan");
+        bill.setHinhThucThanhToan(method);
+        bill.setNgayThanhToan(LocalDateTime.now());
+        hoaDonRepository.save(bill);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Xác nhận thanh toán hóa đơn thành công!"));
+    }
+
+    private Optional<com.nhom12.hospital.entity.BenhNhan> findCurrentPatient(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        if (accountId == null || !isPatientAccount(request)) {
+            return Optional.empty();
+        }
+        return benhNhanRepository.findByMaTaiKhoan(accountId);
+    }
+
+    private boolean isPatientAccount(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        return accountId != null && taiKhoanRepository.findById(accountId)
+                .map(TaiKhoan::getVaiTro)
+                .filter("BenhNhan"::equalsIgnoreCase)
+                .isPresent();
     }
 }

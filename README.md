@@ -79,6 +79,8 @@ Mở file:
 
 Chạy toàn bộ script trong SSMS để tạo database `QuanLyBenhVien`.
 
+Nếu database đã được tạo trước đó, chạy thêm [database/AppointmentDuration.sql](database/AppointmentDuration.sql) để bổ sung thời lượng dự kiến cho lịch hẹn hiện có. Script tự gán 45 phút cho khám dịch vụ và 30 phút cho khám thường/tái khám.
+
 Sau khi tạo schema cơ sở, chạy thêm [database/DoctorReferral.sql](database/DoctorReferral.sql) để tạo bảng lưu yêu cầu chuyển khoa/hội chẩn của bác sĩ.
 
 Sau đó chạy thêm script tạo bảng nhật ký truy cập:

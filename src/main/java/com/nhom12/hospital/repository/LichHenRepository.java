@@ -41,6 +41,23 @@ public class LichHenRepository {
         );
     }
 
+    public List<LichHen> findByMaBacSiAndNgayKham(String maBacSi, java.time.LocalDate ngayKham) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_LichHen WHERE MaBacSi = ? AND NgayKham = ? ORDER BY GioKham",
+                ROW_MAPPER,
+                maBacSi,
+                ngayKham
+        );
+    }
+
+    public List<LichHen> findByMaBenhNhan(String maBenhNhan) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_LichHen WHERE MaBenhNhan = ? ORDER BY NgayKham DESC, GioKham DESC",
+                ROW_MAPPER,
+                maBenhNhan
+        );
+    }
+
     public long count() {
         Long count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM dbo.vw_LichHen",
@@ -75,6 +92,7 @@ public class LichHenRepository {
         json.append("\"NgayKham\":").append(toJsonValue(entity.getNgayKham())).append(',');
         json.append("\"GioKham\":").append(toJsonValue(entity.getGioKham())).append(',');
         json.append("\"LoaiKham\":").append(toJsonValue(entity.getLoaiKham())).append(',');
+        json.append("\"ThoiGianKhamDuKien\":").append(toJsonValue(entity.getThoiGianKhamDuKien())).append(',');
         json.append("\"HinhThucDat\":").append(toJsonValue(entity.getHinhThucDat())).append(',');
         json.append("\"LyDoKham\":").append(toJsonValue(entity.getLyDoKham())).append(',');
         json.append("\"GhiChu\":").append(toJsonValue(entity.getGhiChu())).append(',');

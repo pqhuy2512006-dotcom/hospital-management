@@ -120,6 +120,25 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("BenhNhan".equals(role)) {
+                boolean allowed = ("GET".equals(method) && "/api/v1/khoa".equals(path))
+                        || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
+                        || ("GET".equals(method) && "/api/v1/hoadon".equals(path))
+                        || ("PUT".equals(method) && path.matches("/api/v1/hoadon/[^/]+/thanhtoan"))
+                        || ("POST".equals(method) && "/api/v1/lichhen".equals(path))
+                        || ("GET".equals(method) && "/api/v1/lichhen/me".equals(path))
+                        || ("PUT".equals(method) && path.matches("/api/v1/lichhen/[^/]+/(cancel|reschedule)"))
+                        || ("GET".equals(method) || "POST".equals(method) || "PUT".equals(method))
+                            && ("/api/v1/benhnhan/me".equals(path)
+                                || "/api/v1/benhnhan/me/history".equals(path));
+                if (!allowed) {
+                    writeForbidden(response, "Bệnh nhân chỉ được truy cập hồ sơ, lịch hẹn và hóa đơn của mình.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if ("QuanTri".equals(role)) {
                 boolean allowed = "/api/v1/dashboard/stats".equals(path)
                         || "/api/v1/dashboard/report".equals(path)

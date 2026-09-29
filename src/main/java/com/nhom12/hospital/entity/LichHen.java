@@ -41,6 +41,9 @@ public class LichHen {
     @Column(name = "LoaiKham", nullable = false, length = 20)
     private String loaiKham;
 
+    @Column(name = "ThoiGianKhamDuKien", nullable = false)
+    private Integer thoiGianKhamDuKien;
+
     @Column(name = "HinhThucDat", nullable = false, length = 20)
     private String hinhThucDat;
 

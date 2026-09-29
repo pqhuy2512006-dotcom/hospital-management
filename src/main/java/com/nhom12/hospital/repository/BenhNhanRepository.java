@@ -33,6 +33,15 @@ public class BenhNhanRepository {
         return rows.stream().findFirst();
     }
 
+    public Optional<BenhNhan> findByMaTaiKhoan(Long maTaiKhoan) {
+        List<BenhNhan> rows = jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_BenhNhan WHERE MaTaiKhoan = ?",
+                ROW_MAPPER,
+                maTaiKhoan
+        );
+        return rows.stream().findFirst();
+    }
+
     public long count() {
         Long count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM dbo.vw_BenhNhan",
