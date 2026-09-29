@@ -382,20 +382,19 @@
             <!-- Tabs chuyển đổi chức năng -->
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('profileTab', this)">
-                    <i class="fa-solid fa-user-gear"></i>
-                    <span id="profileTabTitle">Thông Tin Cá Nhân & Đổi Mật Khẩu (UC04, UC05)</span>
+                    <i class="fa-solid fa-user-gear"></i> Thông Tin Cá Nhân & Đổi Mật Khẩu (UC04, UC05)
                 </button>
-                <button class="tab-btn" data-admin-only="true" onclick="switchTab('usersTab', this)">
+                <button class="tab-btn" onclick="switchTab('usersTab', this)">
                     <i class="fa-solid fa-users-gear"></i> Quản Lý & Cấp Tài Khoản Nhân Viên (UC10)
                 </button>
-                <button class="tab-btn" data-admin-only="true" onclick="switchTab('rbacTab', this)">
+                <button class="tab-btn" onclick="switchTab('rbacTab', this)">
                     <i class="fa-solid fa-shield-halved"></i> Phân Quyền Theo Vai Trò RBAC (UC12)
                 </button>
             </div>
 
             <!-- TAB 1: THÔNG TIN CÁ NHÂN & ĐỔI MẬT KHẨU (UC04, UC05) -->
             <div id="profileTab" class="tab-content active">
-                <div class="panel-card" data-profile-update="true">
+                <div class="panel-card">
                     <div class="panel-header">
                         <h3><i class="fa-regular fa-id-badge" style="color:var(--primary);"></i> Cập Nhật Thông Tin Tài Khoản Đang Đăng Nhập (UC05)</h3>
                     </div>
@@ -462,7 +461,7 @@
             </div>
 
             <!-- TAB 2: QUẢN LÝ & CẤP TÀI KHOẢN NHÂN VIÊN (UC10) -->
-            <div id="usersTab" class="tab-content" data-admin-only="true">
+            <div id="usersTab" class="tab-content">
                 <div class="panel-card" style="padding: 20px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <h3 style="font-size: 16px; font-weight: 700;">
@@ -476,11 +475,8 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Mã Nhân Viên</th>
                                 <th>Tên Đăng Nhập</th>
                                 <th>Họ Và Tên</th>
-                                <th>Số Điện Thoại</th>
-                                <th>Email</th>
                                 <th>Vai Trò Chức Vụ</th>
                                 <th>Trạng Thái</th>
                                 <th>Thao Tác</th>
@@ -494,7 +490,7 @@
             </div>
 
             <!-- TAB 3: MA TRẬN PHÂN QUYỀN RBAC (UC12) -->
-            <div id="rbacTab" class="tab-content" data-admin-only="true">
+            <div id="rbacTab" class="tab-content">
                 <div class="panel-card" style="padding: 20px;">
                     <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-table-list" style="color:var(--primary);"></i> Ma Trận Phân Quyền Chức Năng Theo Vai Trò (RBAC Matrix)
@@ -503,25 +499,159 @@
                         Đảm bảo nguyên tắc bảo mật y tế: Bác sĩ không thể sửa viện phí, Thu ngân không thể sửa chẩn đoán, Dược sĩ phụ trách xuất kho thuốc[cite: 1].
                     </p>
 
-                    <table class="matrix-table">
+                    <table class="matrix-table" style="font-size: 12.5px;">
                         <thead>
                             <tr>
-                                <th>Vai Trò</th>
-                                <th>Quyền Chức Năng</th>
+                                <th>Phân Hệ Chức Năng (4.1 - 4.11)</th>
+                                <th style="text-align:center;">Quản Trị<br><small>(Admin)</small></th>
+                                <th style="text-align:center;">Giám Đốc<br><small>(Director)</small></th>
+                                <th style="text-align:center;">Nhân Sự<br><small>(HR)</small></th>
+                                <th style="text-align:center;">Bác Sĩ<br><small>(Doctor)</small></th>
+                                <th style="text-align:center;">KTV CLS<br><small>(Tech)</small></th>
+                                <th style="text-align:center;">Dược Sĩ<br><small>(Pharm)</small></th>
+                                <th style="text-align:center;">Thu Ngân<br><small>(Cashier)</small></th>
+                                <th style="text-align:center;">Điều Dưỡng<br><small>(Nurse)</small></th>
+                                <th style="text-align:center;">Lễ Tân<br><small>(Recept)</small></th>
+                                <th style="text-align:center;">Bệnh Nhân<br><small>(Patient)</small></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td><strong>Bệnh nhân</strong></td><td>Đăng ký, xác thực, đổi/đặt lại mật khẩu, cập nhật hồ sơ, liên kết VNeID; đặt/hủy/đổi lịch, xem hàng đợi và hồ sơ của chính mình, thanh toán online, nhận thông báo.</td></tr>
-                            <tr><td><strong>Lễ tân / Tiếp đón</strong></td><td>Hồ sơ bệnh nhân; đăng ký walk-in; quản lý hàng đợi và lịch hẹn; xem khoa/phòng và trạng thái giường.</td></tr>
-                            <tr><td><strong>Bác sĩ</strong></td><td>Tra cứu hồ sơ/lịch sử; ghi triệu chứng, chẩn đoán ICD-10, kê đơn, chỉ định CLS, chuyển khoa/hội chẩn và xem kết quả.</td></tr>
-                            <tr><td><strong>Kỹ thuật viên CLS</strong></td><td>Tiếp nhận chỉ định; nhập và trả kết quả xét nghiệm/chẩn đoán hình ảnh.</td></tr>
-                            <tr><td><strong>Dược sĩ / Kho thuốc</strong></td><td>Xem thuốc; xuất theo đơn và FEFO; nhập kho; quản lý nhà cung cấp.</td></tr>
-                            <tr><td><strong>Thu ngân</strong></td><td>Tính viện phí, áp dụng BHYT, thu tiền đa phương thức, xuất hóa đơn/biên lai và lập phiếu hoàn ứng.</td></tr>
-                            <tr><td><strong>Điều dưỡng</strong></td><td>Xem khoa/phòng và giường; xếp giường; theo dõi nội trú, chuyển khoa và xuất viện.</td></tr>
-                            <tr><td><strong>Quản lý nhân sự</strong></td><td>Xem, thêm, cập nhật, tìm kiếm, khóa hồ sơ nhân viên và phân công lịch trực.</td></tr>
-                            <tr><td><strong>Quản trị viên</strong></td><td>Đăng nhập/đăng xuất, đổi mật khẩu; cấp/thu hồi/khóa tài khoản nhân viên; RBAC; nhật ký truy cập; thống kê lượt khám, doanh thu, bệnh phổ biến; xuất báo cáo.</td></tr>
-                            <tr><td><strong>Ban giám đốc</strong></td><td>Cập nhật hồ sơ cá nhân; xem thống kê lượt khám, doanh thu, bệnh phổ biến; xuất PDF/Excel.</td></tr>
-                            <tr><td><strong>Hệ thống (tự động)</strong></td><td>Không đăng nhập: kiểm tra slot/sức chứa lịch hẹn; cảnh báo dị ứng, CLS bất thường, tồn kho/hạn dùng; gửi nhắc lịch, kết quả CLS và thông báo lịch trực.</td></tr>
+                            <tr>
+                                <td><strong>1. Đặt Lịch & Tiếp Đón (4.1, 4.2)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. Hồ Sơ Bệnh Nhân (EMR) (4.2, 4.3, 4.7)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. Quản Lý Nhân Sự & Lịch Trực (4.8, 4.3)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Toàn quyền)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem lịch)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem lịch)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>4. Khám Bệnh & Kê Đơn ICD-10 (4.3)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>5. Xét Nghiệm & CĐHA CLS (4.4, 4.3)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem KQ)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Nhập KQ)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>6. Kho Dược & Xuất Thuốc FEFO (4.5)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>7. Quản Lý Giường Nội Trú (4.7, 4.3, 4.2)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Chỉ định)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Chăm sóc)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Xem trạng thái)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>8. Viện Phí & Hóa Đơn Điện Tử (4.6, 4.1)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Thu ngân)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Online)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>9. Báo Cáo Điều Hành & Thống Kê (4.10)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (BGD)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>10. Cấu Hình & Cấp Quyền Tài Khoản (4.9)</strong></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>11. Cảnh Báo Tự Động & Nhắc Hẹn (4.11)</strong></td>
+                                <td colspan="10" style="text-align:left; background:#f0fdf4; color:#166534; font-weight:600; padding:10px 14px;">
+                                    <i class="fa-solid fa-robot" style="margin-right:6px; color:#16a34a;"></i> <strong>Hệ Thống Tự Động (4.11):</strong> Tự động gửi SMS/Email nhắc lịch hẹn; Cảnh báo tồn kho thuốc chạm ngưỡng tối thiểu; Cảnh báo quá tải lịch khám; Cảnh báo kết quả cận lâm sàng bất thường đến bác sĩ điều trị.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -540,32 +670,35 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Tên Đăng Nhập *</label>
-                        <input type="text" id="nuUsername" class="form-control" maxlength="50" placeholder="Ví dụ: bs_hung hoặc tn_nga" required>
+                        <input type="text" id="nuUsername" class="form-control" placeholder="Ví dụ: bs_hung hoặc tn_nga" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" id="nuEmail" class="form-control" maxlength="100" required>
+                        <label>Họ và Tên Nhân Viên *</label>
+                        <input type="text" id="nuFullName" class="form-control" placeholder="Nhập tên nhân sự" required>
                     </div>
 
                     <div class="form-group">
                         <label>Vai Trò Chức Năng (RBAC) *</label>
                         <select id="nuRole" class="form-control" required>
-                            <option value="BacSi">Bác Sĩ</option>
-                            <option value="ThuNgan">Thu Ngân</option>
-                            <option value="DuocSi">Dược Sĩ</option>
-                            <option value="LeTan">Tiếp Đón / Lễ Tân</option>
-                            <option value="KTV">Kỹ Thuật Viên Xét Nghiệm</option>
-                            <option value="DieuDuong">Điều Dưỡng Nội Trú</option>
+                            <option value="QuanTri">Quản Trị Viên (ADMIN)</option>
+                            <option value="GiamDoc">Ban Giám Đốc (EXECUTIVE / DIRECTOR)</option>
+                            <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
+                            <option value="BacSi">Bác Sĩ (DOCTOR)</option>
+                            <option value="ThuNgan">Thu Ngân (CASHIER)</option>
+                            <option value="DuocSi">Dược Sĩ (PHARMACIST)</option>
+                            <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
+                            <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
+                            <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
+                            <option value="BenhNhan">Bệnh Nhân (PATIENT)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Mật Khẩu Khởi Tạo *</label>
-                        <input type="password" id="nuPassword" class="form-control" autocomplete="new-password" minlength="8" maxlength="72" required>
-                        <small style="color:var(--text-muted);">Tối thiểu 8 ký tự.</small>
+                        <label>Mật Khẩu Ban Đầu *</label>
+                        <input type="password" id="nuPassword" class="form-control" value="123456" minlength="6" required>
+                        <small style="color:var(--text-muted);">Mặc định: 123456 (Nhân viên bắt buộc đổi sau lần đầu đăng nhập)</small>
                     </div>
-                    <p style="font-size:13px;color:var(--warning);">Tài khoản sẽ ở trạng thái BI_KHOA cho đến khi được liên kết với hồ sơ nhân viên.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-logout" style="background:#ffffff; color:#64748b; border:1px solid #cbd5e1;" onclick="closeCreateUserModal()">Hủy</button>
@@ -579,16 +712,21 @@
 
     <!-- SCRIPT LOGIC CẤU HÌNH & TÀI KHOẢN -->
     <script>
-        let nextSampleAccountId = 8;
-        let users = [
-            { id: 1, employeeId: 'NV0001', username: 'bacsi', fullName: 'BS. CKI. Trần Văn Hùng', phone: '0903112233', email: 'bacsi@medicare.vn', role: 'BacSi', status: 'HOAT_DONG' },
-            { id: 2, employeeId: 'NV0002', username: 'thungan', fullName: 'Nguyễn Thu Ngân', phone: '0903112234', email: 'thungan@medicare.vn', role: 'ThuNgan', status: 'HOAT_DONG' },
-            { id: 3, employeeId: 'NV0003', username: 'duocsi', fullName: 'Dược sĩ Lê Thị Lan', phone: '0903112235', email: 'duocsi@medicare.vn', role: 'DuocSi', status: 'HOAT_DONG' },
-            { id: 4, employeeId: 'NV0004', username: 'letan', fullName: 'Nhân viên tiếp đón Mai', phone: '0903112236', email: 'letan@medicare.vn', role: 'LeTan', status: 'HOAT_DONG' },
-            { id: 5, employeeId: 'NV0005', username: 'ktv_cls', fullName: 'KTV. Phạm Quốc Huy', phone: '0903112237', email: 'ktv@medicare.vn', role: 'KTV', status: 'HOAT_DONG' },
-            { id: 6, employeeId: 'NV0006', username: 'dieuduong', fullName: 'ĐD. Huỳnh Thị Thảo', phone: '0903112238', email: 'dieuduong@medicare.vn', role: 'DieuDuong', status: 'HOAT_DONG' },
-            { id: 7, employeeId: '', username: 'bs_moi', fullName: 'Chưa có hồ sơ nhân viên', phone: '---', email: 'bs.moi@medicare.vn', role: 'BacSi', status: 'BI_KHOA' }
-        ];
+        let users = [];
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/v1/taikhoan');
+                if (response.ok) {
+                    users = await response.json();
+                    renderUsers();
+                } else {
+                    console.error("Lỗi khi tải tài khoản:", response.status);
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối API tài khoản:", error);
+            }
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -603,34 +741,29 @@
             tbody.innerHTML = '';
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">Chưa có tài khoản nhân viên.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">Chưa có tài khoản nhân viên nào.</td></tr>';
                 return;
             }
 
             users.forEach(u => {
-                const isActive = u.status === 'HOAT_DONG';
-                const statusColor = isActive ? '#059669' : '#dc2626';
-                const roleClasses = {
-                    BacSi: 'role-doc',
-                    ThuNgan: 'role-cashier',
-                    DuocSi: 'role-pharmacy',
-                    DieuDuong: 'role-nurse',
-                    KTV: 'role-lab',
-                    LeTan: 'role-doc'
-                };
+                let badgeClass = 'role-admin';
+                const r = (u.role || '').toUpperCase();
+                if (r.includes('DOC') || r.includes('BACSI')) badgeClass = 'role-doc';
+                else if (r.includes('CASHIER') || r.includes('THUNGAN')) badgeClass = 'role-cashier';
+                else if (r.includes('PHARM') || r.includes('DUOC')) badgeClass = 'role-pharmacy';
+                else if (r.includes('NURSE') || r.includes('DIEUDUONG')) badgeClass = 'role-nurse';
+                else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
+                else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${escapeHtml(u.employeeId || '---')}</td>
-                        <td><strong>${escapeHtml(u.username)}</strong></td>
-                        <td>${escapeHtml(u.fullName || '---')}</td>
-                        <td>${escapeHtml(u.phone || '---')}</td>
-                        <td>${escapeHtml(u.email || '---')}</td>
-                        <td><span class="role-badge ${roleClasses[u.role] || 'role-doc'}">${escapeHtml(u.role)}</span></td>
-                        <td><span style="color:${statusColor};font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status}</span></td>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.fullName || u.username}</td>
+                        <td><span class="role-badge ${badgeClass}">${u.role}</span></td>
+                        <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> ${u.status || 'Hoạt động'}</span></td>
                         <td>
-                            <button type="button" style="padding:4px 8px;border:1px solid #fde68a;background:#ffffff;color:#b45309;border-radius:4px;cursor:pointer;font-size:12px;" onclick="resetUserPassword('${escapeHtml(u.username)}')">
-                                <i class="fa-solid fa-key"></i> Reset mật khẩu
+                            <button type="button" style="padding:4px 8px; border:1px solid #fee2e2; background:#ffffff; color:#ef4444; border-radius:4px; cursor:pointer; font-size:12px;" onclick="resetUserPass(${u.id}, '${u.username}')">
+                                <i class="fa-solid fa-rotate-left"></i> Đặt lại mật khẩu
                             </button>
                         </td>
                     </tr>
@@ -638,37 +771,18 @@
             });
         }
 
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, character => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            })[character]);
-        }
-
-        async function adminRequest(url, options = {}) {
-            const csrfResponse = await fetch('/api/v1/auth/csrf');
-            if (!csrfResponse.ok) throw new Error('Không lấy được mã bảo mật CSRF.');
-            const csrfToken = (await csrfResponse.json()).token;
-            const response = await fetch(url, {
-                ...options,
-                headers: {
-                    ...options.headers,
-                    'X-XSRF-TOKEN': csrfToken
-                }
-            });
-            if (!response.ok) {
-                const errorBody = await response.json().catch(() => ({}));
-                throw new Error(errorBody.detail || errorBody.message || 'Máy chủ không cập nhật được tài khoản.');
+        function initProfile() {
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.tenDangNhap) document.getElementById('profUsername').value = user.tenDangNhap;
+                    if (user.vaiTro) document.getElementById('profRole').value = user.vaiTro;
+                    if (user.hoTen) document.getElementById('profFullName').value = user.hoTen;
+                    if (user.soDienThoai) document.getElementById('profPhone').value = user.soDienThoai;
+                    if (user.email) document.getElementById('profEmail').value = user.email;
+                } catch(e) {}
             }
-            return response;
-        }
-
-        function resetUserPassword(username) {
-            if (!confirm(`Đặt lại mật khẩu của ${username} về 123456?`)) return;
-            alert(`Đã reset tài khoản mẫu ${username}. Mật khẩu tạm thời: 123456`);
         }
 
         // Cập nhật thông tin cá nhân (UC05)
@@ -678,13 +792,23 @@
             const phone = document.getElementById('profPhone').value.trim();
             const email = document.getElementById('profEmail').value.trim();
 
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    user.hoTen = fullName;
+                    user.soDienThoai = phone;
+                    user.email = email;
+                    sessionStorage.setItem('authenticatedUser', JSON.stringify(user));
+                } catch(err) {}
+            }
+
             alert(`Cập nhật thông tin tài khoản cá nhân thành công!\nHọ tên: ${fullName}\nSĐT: ${phone}\nEmail: ${email}`);
         }
 
         // Đổi mật khẩu (UC04)
         async function handleChangePassword(e) {
             e.preventDefault();
-            const form = e.currentTarget;
             const oldP = document.getElementById('oldPass').value;
             const newP = document.getElementById('newPass').value;
             const confirmP = document.getElementById('confirmPass').value;
@@ -694,17 +818,29 @@
                 return;
             }
 
+            const username = document.getElementById('profUsername').value || 'admin';
+
             try {
-                const response = await adminRequest('/api/v1/auth/password/change', {
+                const res = await fetch('/api/v1/taikhoan/change-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentPassword: oldP, newPassword: newP })
+                    body: JSON.stringify({
+                        username: username,
+                        oldPassword: oldP,
+                        newPassword: newP
+                    })
                 });
-                const result = await response.json();
-                alert(result.message);
-                form.reset();
-            } catch (error) {
-                alert(error.message);
+
+                if (res.ok) {
+                    alert("Đổi mật khẩu tài khoản thành công! Vui lòng ghi nhớ mật khẩu mới cho các phiên làm việc tiếp theo.");
+                    e.target.reset();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Lỗi đổi mật khẩu: " + (err.message || res.statusText));
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi đổi mật khẩu!");
             }
         }
 
@@ -717,33 +853,59 @@
             document.getElementById('createUserModal').style.display = 'none';
         }
 
-        function handleCreateUser(e) {
+        async function handleCreateUser(e) {
             e.preventDefault();
-            const form = e.currentTarget;
             const username = document.getElementById('nuUsername').value.trim();
-            const email = document.getElementById('nuEmail').value.trim();
+            const fullName = document.getElementById('nuFullName').value.trim();
             const role = document.getElementById('nuRole').value;
             const password = document.getElementById('nuPassword').value;
 
-            if (users.some(user => user.username.toLowerCase() === username.toLowerCase())) {
-                alert('Tên đăng nhập đã tồn tại trong danh sách mẫu.');
-                return;
-            }
+            try {
+                const res = await fetch('/api/v1/taikhoan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: role,
+                        fullName: fullName,
+                        email: username + "@hospital.com"
+                    })
+                });
 
-            users.unshift({
-                id: nextSampleAccountId++,
-                employeeId: '',
-                username,
-                fullName: 'Chưa có hồ sơ nhân viên',
-                phone: '---',
-                email,
-                role,
-                status: 'BI_KHOA'
-            });
-            form.reset();
-            closeCreateUserModal();
-            renderUsers();
-            alert(`Đã thêm tài khoản mẫu ${username}. Mật khẩu tạm thời: ${password}. Tài khoản đang BI_KHOA chờ hồ sơ nhân viên.`);
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert(`Cấp tài khoản nhân sự thành công!\nTài khoản: ${username}\nVai trò: ${role}\nMật khẩu ban đầu: ${password}`);
+                    closeCreateUserModal();
+                    e.target.reset();
+                    await loadUsers();
+                } else {
+                    alert("Lỗi cấp tài khoản: " + (data.message || res.statusText || ("Mã lỗi HTTP: " + res.status)));
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi cấp tài khoản mới: " + err.message);
+            }
+        }
+
+        async function resetUserPass(id, username) {
+            if (confirm(`Bạn có chắc muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456)?`)) {
+                try {
+                    const res = await fetch(`/api/v1/taikhoan/${id}/reset-password`, {
+                        method: 'POST'
+                    });
+
+                    if (res.ok) {
+                        alert(`Đã đặt lại mật khẩu cho tài khoản "${username}" thành công về mặc định (123456)!`);
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert("Lỗi khi đặt lại mật khẩu: " + (err.message || res.statusText));
+                    }
+                } catch (err) {
+                    console.error("Lỗi:", err);
+                    alert("Lỗi kết nối máy chủ khi đặt lại mật khẩu!");
+                }
+            }
         }
 
         function logout() {
@@ -751,8 +913,9 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            renderUsers();
+        window.onload = async function() {
+            initProfile();
+            await loadUsers();
         };
     </script>
     <script src="/auth-guard.js"></script>

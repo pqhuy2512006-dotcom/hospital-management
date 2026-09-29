@@ -621,74 +621,41 @@
 
     <!-- SCRIPT NGHIỆP VỤ BỆNH NHÂN -->
     <script>
-        // Dữ liệu bệnh nhân mẫu theo đúng cấu trúc CSDL
-        let patients = [
-            {
-                maBN: "BN2026000001",
-                hoTen: "Nguyễn Văn An",
-                ngaySinh: "1988-04-12",
-                gioiTinh: "Nam",
-                cccd: "079088001234",
-                sdt: "0912345678",
-                maBHYT: "DN4790880012345",
-                nhomMau: "O+",
-                diaChi: "Quận 1, TP. Hồ Chí Minh",
-                nguoiThan: "Nguyễn Văn Ba (Bố)",
-                sdtThan: "0903112233",
-                diUng: "Dị ứng kháng sinh Penicillin",
-                history: [
-                    {
-                        ngayKham: "18/09/2026 09:30",
-                        bacSi: "BS. CKI. Trần Văn Hùng",
-                        khoa: "Khoa Nội Tổng Hợp",
-                        chanDoan: "K29.7 - Viêm dạ dày mạn tính, trào ngược dạ dày thực quản",
-                        cls: "Nội soi thực quản dạ dày (Kèm HP âm tính)",
-                        donThuoc: "Esomeprazole 40mg (28 viên), Phosphalugel (30 gói)"
-                    }
-                ]
-            },
-            {
-                maBN: "BN2026000002",
-                hoTen: "Trần Thị Mai",
-                ngaySinh: "1995-10-25",
-                gioiTinh: "Nữ",
-                cccd: "079095005678",
-                sdt: "0987654321",
-                maBHYT: "GD4790950056789",
-                nhomMau: "A+",
-                diaChi: "Quận 3, TP. Hồ Chí Minh",
-                nguoiThan: "Lê Văn Tự (Chồng)",
-                sdtThan: "0988776655",
-                diUng: "Không có",
-                history: [
-                    {
-                        ngayKham: "19/09/2026 14:15",
-                        bacSi: "BS. CKI. Trần Văn Hùng",
-                        khoa: "Khoa Nội Tổng Hợp",
-                        chanDoan: "A90 - Sốt xuất huyết Dengue ngày thứ 3",
-                        cls: "Công thức máu: Bạch cầu giảm nhẹ, Tiểu cầu 165 G/L",
-                        donThuoc: "Paracetamol 500mg (20 viên), Oresol 245 (10 gói)"
-                    }
-                ]
-            },
-            {
-                maBN: "BN2026000003",
-                hoTen: "Lê Hoàng Long",
-                ngaySinh: "2001-01-15",
-                gioiTinh: "Nam",
-                cccd: "079201009988",
-                sdt: "0903112233",
-                maBHYT: "",
-                nhomMau: "B+",
-                diaChi: "Bình Thạnh, TP. Hồ Chí Minh",
-                nguoiThan: "Hoàng Thị Cúc (Mẹ)",
-                sdtThan: "0909112233",
-                diUng: "Dị ứng Aspirin",
-                history: []
-            }
-        ];
+        let patients = [];
 
         let isEditMode = false;
+
+        async function loadPatients() {
+            try {
+                const response = await fetch('/api/v1/benhnhan');
+                if (!response.ok) throw new Error('Failed to load patients');
+                const data = await response.json();
+
+                patients = data.map(item => ({
+                    maBN: item.maBenhNhan,
+                    hoTen: item.hoTen,
+                    ngaySinh: item.ngaySinh,
+                    gioiTinh: item.gioiTinh,
+                    cccd: item.soCCCD || '',
+                    sdt: item.soDienThoai || '',
+                    maBHYT: item.maBHYT || '',
+                    nhomMau: item.nhomMau || 'Chưa xác định',
+                    diaChi: item.diaChi || '',
+                    nguoiThan: item.nguoiLienHeKhanCap || '',
+                    sdtThan: item.sdtNguoiLienHe || '',
+                    diUng: item.tienSuDiUng || 'Không có',
+                    history: []
+                }));
+
+                renderPatients();
+            } catch (error) {
+                console.error(error);
+                const tbody = document.getElementById('patientTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--danger);">Không thể tải dữ liệu bệnh nhân từ cơ sở dữ liệu.</td></tr>`;
+                }
+            }
+        }
 
         // Tự sinh mã bệnh nhân: BN + 2026 + 6 số thứ tự (UC25)
         function generatePatientId() {
@@ -818,7 +785,7 @@
         }
 
         // Lưu hồ sơ bệnh nhân (Tạo mới hoặc Sửa)
-        function handleSavePatient(e) {
+        async function handleSavePatient(e) {
             e.preventDefault();
             const maBN = document.getElementById('fMaBN').value;
             const hoTen = document.getElementById('fHoTen').value.trim();
@@ -833,76 +800,100 @@
             const sdtThan = document.getElementById('fSDTThan').value.trim();
             const diUng = document.getElementById('fDiUng').value.trim() || 'Không có';
 
-            if (!isEditMode) {
-                // Kiểm tra trùng CCCD (Ràng buộc toàn vẹn số 7)
-                const isDuplicate = patients.some(p => p.cccd === cccd);
-                if (isDuplicate) {
-                    alert(`Lỗi: Số CCCD (${cccd}) đã tồn tại trong hệ thống! Không thể tạo trùng hồ sơ.`);
-                    return;
-                }
+            const payload = {
+                maBenhNhan: maBN,
+                hoTen: hoTen,
+                ngaySinh: ngaySinh,
+                gioiTinh: gioiTinh,
+                soCCCD: cccd,
+                soDienThoai: sdt,
+                maBHYT: maBHYT,
+                nhomMau: nhomMau,
+                diaChi: diaChi,
+                nguoiLienHeKhanCap: nguoiThan,
+                sdtNguoiLienHe: sdtThan,
+                tienSuDiUng: diUng
+            };
 
-                const newPatient = {
-                    maBN, hoTen, ngaySinh, gioiTinh, cccd, sdt, maBHYT, nhomMau, diaChi, nguoiThan, sdtThan, diUng,
-                    history: []
-                };
-                patients.unshift(newPatient);
-                alert(`Tạo thành công hồ sơ bệnh nhân mới: ${hoTen} (Mã: ${maBN})!`);
-            } else {
-                // Cập nhật thông tin bệnh nhân
-                const target = patients.find(p => p.maBN === maBN);
-                if (target) {
-                    target.hoTen = hoTen;
-                    target.ngaySinh = ngaySinh;
-                    target.gioiTinh = gioiTinh;
-                    target.sdt = sdt;
-                    target.nhomMau = nhomMau;
-                    target.diaChi = diaChi;
-                    target.nguoiThan = nguoiThan;
-                    target.sdtThan = sdtThan;
-                    target.diUng = diUng;
+            try {
+                if (!isEditMode) {
+                    const res = await fetch('/api/v1/benhnhan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        alert("Lỗi khi thêm bệnh nhân: " + err);
+                        return;
+                    }
+                    alert(`Tạo thành công hồ sơ bệnh nhân mới: ${hoTen} (Mã: ${maBN})!`);
+                } else {
+                    const res = await fetch(`/api/v1/benhnhan/${encodeURIComponent(maBN)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        alert("Lỗi khi cập nhật bệnh nhân: " + err);
+                        return;
+                    }
                     alert(`Cập nhật thông tin bệnh nhân ${hoTen} thành công!`);
                 }
-            }
 
-            closePatientModal();
-            renderPatients();
+                closePatientModal();
+                await loadPatients();
+            } catch (err) {
+                console.error(err);
+                alert("Không thể lưu bệnh nhân vào máy chủ!");
+            }
         }
 
         // Xem lịch sử khám bệnh và hồ sơ bệnh án (UC28 & UC29)
-        function viewPatientEMR(maBN) {
+        async function viewPatientEMR(maBN) {
             const p = patients.find(item => item.maBN === maBN);
             if (!p) return;
 
             document.getElementById('emrMaBN').innerText = p.maBN;
             document.getElementById('emrHoTen').innerText = p.hoTen;
-            document.getElementById('emrCCCD').innerText = p.cccd;
+            document.getElementById('emrCCCD').innerText = p.cccd || 'Chưa cung cấp';
             document.getElementById('emrBHYT').innerText = p.maBHYT || 'Không có (Khám dịch vụ)';
             document.getElementById('emrDiUng').innerText = p.diUng;
 
             const histContainer = document.getElementById('emrHistoryList');
-            histContainer.innerHTML = '';
-
-            if (p.history.length === 0) {
-                histContainer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Bệnh nhân chưa có lịch sử khám bệnh trước đây.</div>`;
-            } else {
-                p.history.forEach((h, idx) => {
-                    histContainer.innerHTML += `
-                        <div class="emr-item">
-                            <div class="emr-item-top">
-                                <span><i class="fa-solid fa-calendar-day"></i> Lần khám ngày: <strong>${h.ngayKham}</strong></span>
-                                <span><i class="fa-solid fa-user-doctor"></i> ${h.bacSi} (${h.khoa})</span>
-                            </div>
-                            <div style="font-size: 13.5px; line-height: 1.6;">
-                                <div>Chẩn đoán lâm sàng: <strong style="color:var(--primary);">${h.chanDoan}</strong></div>
-                                <div>Chỉ định & Kết quả CLS: <span>${h.cls}</span></div>
-                                <div>Đơn thuốc đã kê: <span style="color:#059669; font-weight:600;">${h.donThuoc}</span></div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
+            histContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải hồ sơ bệnh án...</div>';
             document.getElementById('emrModal').style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/v1/benhnhan/${encodeURIComponent(maBN)}/history`);
+                const historyList = res.ok ? await res.json() : [];
+
+                histContainer.innerHTML = '';
+                if (historyList.length === 0) {
+                    histContainer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Bệnh nhân chưa có lịch sử khám bệnh trước đây.</div>`;
+                } else {
+                    historyList.forEach((h, idx) => {
+                        const dateStr = h.ngayKham ? new Date(h.ngayKham).toLocaleString('vi-VN') : 'Gần đây';
+                        histContainer.innerHTML += `
+                            <div class="emr-item">
+                                <div class="emr-item-top">
+                                    <span><i class="fa-solid fa-calendar-day"></i> Lần khám: <strong>${dateStr}</strong></span>
+                                    <span><i class="fa-solid fa-user-doctor"></i> ${h.bacSi || 'Bác sĩ điều trị'} (${h.khoa || 'Phòng khám'})</span>
+                                </div>
+                                <div style="font-size: 13.5px; line-height: 1.6;">
+                                    <div>Chẩn đoán: <strong style="color:var(--primary);">${h.chanDoan || 'Đang theo dõi'}</strong></div>
+                                    <div>Chỉ định & Kết quả CLS: <span>${h.cls || 'Không có'}</span></div>
+                                    <div>Đơn thuốc đã kê: <span style="color:#059669; font-weight:600;">${h.donThuoc || 'Không kê đơn'}</span></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                histContainer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger);">Lỗi khi tải lịch sử khám bệnh từ CSDL.</div>`;
+            }
         }
 
         function closeEmrModal() {
@@ -915,7 +906,7 @@
         }
 
         window.onload = function() {
-            renderPatients();
+            loadPatients();
         };
     </script>
     <script src="/auth-guard.js"></script>

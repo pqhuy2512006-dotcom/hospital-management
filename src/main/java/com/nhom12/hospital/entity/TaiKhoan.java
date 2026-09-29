@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "TaiKhoan", schema = "dbo")
+@Table(name = "TaiKhoan")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,7 +25,7 @@ public class TaiKhoan {
     @Column(name = "MatKhauHash", nullable = false, length = 255)
     private String matKhauHash;
 
-    @Column(name = "Email", unique = true, length = 100)
+    @Column(name = "Email", length = 100)
     private String email;
 
     @Column(name = "VaiTro", nullable = false, length = 20)

@@ -529,21 +529,88 @@
 
     <!-- Script Xuất file & Đăng xuất -->
     <script>
+        let currentStats = null;
+
+        async function loadDashboardStats() {
+            try {
+                const [statsRes, drugsRes] = await Promise.all([
+                    fetch('/api/v1/dashboard/stats'),
+                    fetch('/api/v1/thuoc')
+                ]);
+
+                if (!statsRes.ok) return;
+
+                const stats = await statsRes.json();
+                currentStats = stats;
+
+                const drugs = drugsRes.ok ? await drugsRes.json() : [];
+                const lowStockCount = drugs.filter(d => d.tonKhoHienTai <= d.nguongCanhBao).length;
+
+                // Cập nhật các thẻ KPI
+                const valVisits = document.getElementById('valVisits');
+                if (valVisits) valVisits.innerText = stats.totalAppointments || stats.totalPatients || 0;
+
+                const valRevenue = document.getElementById('valRevenue');
+                if (valRevenue) valRevenue.innerText = (stats.totalRevenue || 0).toLocaleString('vi-VN') + ' đ';
+
+                const valInpatients = document.getElementById('valInpatients');
+                if (valInpatients) valInpatients.innerText = `${stats.totalInpatients || 0} / ${stats.totalBeds || 0}`;
+
+                const valStockAlert = document.getElementById('valStockAlert');
+                if (valStockAlert) valStockAlert.innerText = `${lowStockCount} Loại`;
+
+                // Cập nhật bảng doanh thu dịch vụ nếu có
+                const tbl = document.querySelector('.report-card table tbody');
+                if (tbl) {
+                    const totalAll = (stats.revKham || 0) + (stats.revCLS || 0) + (stats.revThuoc || 0) + (stats.revGiuong || 0);
+                    tbl.innerHTML = `
+                        <tr>
+                            <td><i class="fa-solid fa-user-doctor" style="color: var(--primary); width: 20px;"></i> Công Khám Bệnh</td>
+                            <td style="text-align: center; font-weight: 600;">--</td>
+                            <td style="text-align: right; font-weight: 700;">${(stats.revKham || 0).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-flask-vial" style="color: #6366f1; width: 20px;"></i> Xét Nghiệm & CĐHA</td>
+                            <td style="text-align: center; font-weight: 600;">--</td>
+                            <td style="text-align: right; font-weight: 700;">${(stats.revCLS || 0).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-pills" style="color: #059669; width: 20px;"></i> Dược Phẩm / Thuốc</td>
+                            <td style="text-align: center; font-weight: 600;">--</td>
+                            <td style="text-align: right; font-weight: 700;">${(stats.revThuoc || 0).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-bed" style="color: #f59e0b; width: 20px;"></i> Tiền Giường Nội Trú</td>
+                            <td style="text-align: center; font-weight: 600;">${stats.totalInpatients || 0}</td>
+                            <td style="text-align: right; font-weight: 700;">${(stats.revGiuong || 0).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                        <tr style="background: #f8fafc; font-weight: 800;">
+                            <td colspan="2">Tổng Doanh Thu Hóa Đơn:</td>
+                            <td style="text-align: right; color: #059669; font-size: 15px;">${(stats.totalRevenue || totalAll).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error("Lỗi tải dashboard stats:", error);
+            }
+        }
+
         // Hàm xuất file Excel (CSV có định dạng UTF-8 chuẩn cho Excel)
         function exportExcelReport() {
+            const stats = currentStats || {};
             const rows = [
                 ["BÁO CÁO THỐNG KÊ DOANH THU BỆNH VIỆN MEDICARE HIS"],
                 ["Ngày xuất:", new Date().toLocaleDateString('vi-VN')],
                 [],
-                ["Loại Dịch Vụ", "Số Lượng Thực Hiện", "Doanh Thu (VNĐ)"],
-                ["Công Khám Bệnh", "128", "19200000"],
-                ["Xét Nghiệm & CĐHA", "54", "11350000"],
-                ["Dược Phẩm / Thuốc", "96", "6100000"],
-                ["Tiền Giường Nội Trú", "11", "1800000"],
-                ["TỔNG CỘNG", "", "38450000"]
+                ["Loại Dịch Vụ", "Doanh Thu (VNĐ)"],
+                ["Công Khám Bệnh", (stats.revKham || 0).toString()],
+                ["Xét Nghiệm & CĐHA", (stats.revCLS || 0).toString()],
+                ["Dược Phẩm / Thuốc", (stats.revThuoc || 0).toString()],
+                ["Tiền Giường Nội Trú", (stats.revGiuong || 0).toString()],
+                ["TỔNG CỘNG", (stats.totalRevenue || 0).toString()]
             ];
 
-            let csvContent = "\uFEFF"; // Byte Order Mark để mở Excel tiếng Việt không bị lỗi font
+            let csvContent = "\uFEFF";
             rows.forEach(row => {
                 csvContent += row.join(",") + "\r\n";
             });
@@ -562,6 +629,10 @@
             sessionStorage.removeItem('authenticatedUser');
             window.location.href = '/login.html';
         }
+
+        window.onload = async function() {
+            await loadDashboardStats();
+        };
     </script>
     <script src="/auth-guard.js"></script>
 </body>

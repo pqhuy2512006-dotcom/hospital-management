@@ -615,66 +615,91 @@
 
     <!-- SCRIPT LOGIC GIƯỜNG BỆNH -->
     <script>
-        // Dữ liệu mẫu danh sách phòng và giường (theo bảng GIUONGBENH & NOITRU trong CSDL)
-        let departmentsData = [
-            {
-                deptName: "Khoa Nội Tổng Hợp",
-                rooms: [
-                    {
-                        roomId: "P201",
-                        roomName: "Phòng 201 (Nội Tổng Hợp - 4 Giường)",
-                        beds: [
-                            { bedId: "GB-201-1", status: "OCCUPIED", patientId: "BN20260001", patientName: "Nguyễn Văn An", inDate: "2026-09-18 09:30", diag: "Viêm loét dạ dày tá tràng" },
-                            { bedId: "GB-201-2", status: "OCCUPIED", patientId: "BN20260002", patientName: "Trần Thị Mai", inDate: "2026-09-19 14:15", diag: "Theo dõi sốt xuất huyết Dengue" },
-                            { bedId: "GB-201-3", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null },
-                            { bedId: "GB-201-4", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
-                        ]
-                    },
-                    {
-                        roomId: "P202",
-                        roomName: "Phòng 202 (Nội Tim Mạch - 3 Giường)",
-                        beds: [
-                            { bedId: "GB-202-1", status: "OCCUPIED", patientId: "BN20260003", patientName: "Lê Hoàng Long", inDate: "2026-09-20 08:00", diag: "Tăng huyết áp độ 2" },
-                            { bedId: "GB-202-2", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null },
-                            { bedId: "GB-202-3", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
-                        ]
-                    }
-                ]
-            },
-            {
-                deptName: "Khoa Ngoại Tiêu Hóa",
-                rooms: [
-                    {
-                        roomId: "P301",
-                        roomName: "Phòng 301 (Hậu Phẫu Ngoại - 4 Giường)",
-                        beds: [
-                            { bedId: "GB-301-1", status: "OCCUPIED", patientId: "BN20260004", patientName: "Võ Văn Kiệt", inDate: "2026-09-17 11:20", diag: "Hậu phẫu cắt ruột thừa ngày 3" },
-                            { bedId: "GB-301-2", status: "OCCUPIED", patientId: "BN20260005", patientName: "Đỗ Thị Bích", inDate: "2026-09-19 16:40", diag: "Sỏi túi mật có triệu chứng" },
-                            { bedId: "GB-301-3", status: "OCCUPIED", patientId: "BN20260006", patientName: "Phạm Hữu Tài", inDate: "2026-09-20 10:00", diag: "Viêm tụy cấp nhẹ" },
-                            { bedId: "GB-301-4", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
-                        ]
-                    }
-                ]
-            },
-            {
-                deptName: "Khoa Cấp Cứu",
-                rooms: [
-                    {
-                        roomId: "P101",
-                        roomName: "Phòng 101 (Lưu Bệnh Cấp Cứu - 5 Giường)",
-                        beds: [
-                            { bedId: "GB-101-1", status: "OCCUPIED", patientId: "BN20260007", patientName: "Huỳnh Quốc Đạt", inDate: "2026-09-21 02:30", diag: "Đa chấn thương phần mềm" },
-                            { bedId: "GB-101-2", status: "OCCUPIED", patientId: "BN20260008", patientName: "Nguyễn Minh Tân", inDate: "2026-09-21 05:15", diag: "Ngộ độc thực phẩm" },
-                            { bedId: "GB-101-3", status: "OCCUPIED", patientId: "BN20260009", patientName: "Lý Gia Hân", inDate: "2026-09-21 07:00", diag: "Cơn hen phế quản cấp" },
-                            { bedId: "GB-101-4", status: "OCCUPIED", patientId: "BN20260010", patientName: "Bùi Văn Nam", inDate: "2026-09-21 07:45", diag: "Chóng mặt kịch phát" },
-                            { bedId: "GB-101-5", status: "AVAILABLE", patientId: null, patientName: null, inDate: null, diag: null }
-                        ]
-                    }
-                ]
-            }
-        ];
-
+        let departmentsData = [];
         let selectedTargetBed = null;
+        let activeInpatients = [];
+
+        async function loadInpatientData() {
+            try {
+                const [deptsRes, bedsRes, noiTruRes] = await Promise.all([
+                    fetch('/api/v1/khoa'),
+                    fetch('/api/v1/giuongbenh'),
+                    fetch('/api/v1/noitru')
+                ]);
+
+                const depts = deptsRes.ok ? await deptsRes.json() : [];
+                const beds = bedsRes.ok ? await bedsRes.json() : [];
+                activeInpatients = noiTruRes.ok ? await noiTruRes.json() : [];
+
+                const inpatientMap = new Map();
+                activeInpatients.forEach(nt => {
+                    if (nt.trangThai === 'DangNam') {
+                        inpatientMap.set(nt.maGiuong, nt);
+                    }
+                });
+
+                // Cập nhật bộ lọc Khoa
+                const selDept = document.getElementById('selDept');
+                if (selDept) {
+                    let optHtml = '<option value="ALL">Tất cả các khoa điều trị</option>';
+                    depts.forEach(d => {
+                        optHtml += `<option value="${d.tenKhoa}">${d.tenKhoa}</option>`;
+                    });
+                    selDept.innerHTML = optHtml;
+                }
+
+                // Nhóm theo Khoa và Phòng
+                const deptMap = new Map();
+                depts.forEach(d => {
+                    deptMap.set(d.maKhoa, {
+                        deptId: d.maKhoa,
+                        deptName: d.tenKhoa,
+                        rooms: []
+                    });
+                });
+
+                beds.forEach(b => {
+                    let deptObj = deptMap.get(b.maKhoa);
+                    if (!deptObj) {
+                        deptObj = { deptId: b.maKhoa, deptName: b.maKhoa, rooms: [] };
+                        deptMap.set(b.maKhoa, deptObj);
+                    }
+
+                    // Tách tên phòng từ số giường: ví dụ "P301-G1" -> "Phòng 301"
+                    let roomName = "Phòng Điều Trị";
+                    if (b.soGiuong && b.soGiuong.startsWith('P')) {
+                        const parts = b.soGiuong.split('-');
+                        roomName = "Phòng " + parts[0].substring(1);
+                    } else if (b.soGiuong) {
+                        roomName = b.soGiuong;
+                    }
+
+                    let roomObj = deptObj.rooms.find(r => r.roomName === roomName);
+                    if (!roomObj) {
+                        roomObj = { roomName: roomName, beds: [] };
+                        deptObj.rooms.push(roomObj);
+                    }
+
+                    const nt = inpatientMap.get(b.maGiuong);
+                    const isOccupied = b.trangThai === 'DangSuDung' || nt !== undefined;
+
+                    roomObj.beds.push({
+                        bedId: b.maGiuong,
+                        status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
+                        patientId: nt ? nt.maBenhNhan : null,
+                        patientName: nt ? (nt.tenBenhNhan || nt.maBenhNhan) : null,
+                        diag: nt ? 'Đang điều trị nội trú' : null,
+                        inDate: nt ? (nt.ngayNhapVien ? new Date(nt.ngayNhapVien).toLocaleString('vi-VN') : 'Mới nhập viện') : null,
+                        noiTruId: nt ? nt.maNoiTru : null
+                    });
+                });
+
+                departmentsData = Array.from(deptMap.values()).filter(d => d.rooms.length > 0);
+                renderRooms();
+            } catch (err) {
+                console.error("Lỗi tải dữ liệu nội trú:", err);
+            }
+        }
 
         function renderRooms() {
             const filterDept = document.getElementById('selDept').value;
@@ -705,10 +730,10 @@
                                 <div class="bed-patient-info">
                                     <div>Bệnh nhân: <strong>${bed.patientName}</strong></div>
                                     <div>Mã BN: <strong>${bed.patientId}</strong></div>
-                                    <div>Chẩn đoán: ${bed.diag}</div>
-                                    <div>Vào viện: <small>${bed.inDate}</small></div>
+                                    <div>Chẩn đoán: ${bed.diag || 'Đang theo dõi'}</div>
+                                    <div>Vào viện: <small>${bed.inDate || 'Gần đây'}</small></div>
                                 </div>
-                                <button class="btn-action-bed btn-release" onclick="releaseBed('${bed.bedId}')">
+                                <button class="btn-action-bed btn-release" onclick="releaseBed('${bed.bedId}', '${bed.noiTruId}')">
                                     <i class="fa-solid fa-person-walking-arrow-right"></i> Trả Giường / Xuất Viện
                                 </button>
                             `
@@ -750,10 +775,15 @@
             const availableBeds = totalBeds - occupiedBeds;
             const rate = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : 0;
 
-            document.getElementById('lblTotalBeds').innerText = totalBeds;
-            document.getElementById('lblOccupiedBeds').innerText = occupiedBeds;
-            document.getElementById('lblAvailableBeds').innerText = availableBeds;
-            document.getElementById('lblOccupancyRate').innerText = `${rate}%`;
+            const elTotal = document.getElementById('lblTotalBeds');
+            const elOccupied = document.getElementById('lblOccupiedBeds');
+            const elAvailable = document.getElementById('lblAvailableBeds');
+            const elRate = document.getElementById('lblOccupancyRate');
+
+            if (elTotal) elTotal.innerText = totalBeds;
+            if (elOccupied) elOccupied.innerText = occupiedBeds;
+            if (elAvailable) elAvailable.innerText = availableBeds;
+            if (elRate) elRate.innerText = `${rate}%`;
         }
 
         // Mở Modal xếp giường
@@ -762,7 +792,6 @@
             document.getElementById('modalBedId').innerText = bedId;
             document.getElementById('modalRoomName').innerText = roomName;
             
-            // Tự điền ngày giờ hiện tại
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('assignDate').value = now.toISOString().slice(0, 16);
@@ -774,50 +803,73 @@
             document.getElementById('assignModal').style.display = 'none';
         }
 
-        // Xác nhận gán bệnh nhân vào giường
-        function confirmAssignBed(e) {
+        // Xác nhận gán bệnh nhân vào giường lên SQL Server
+        async function confirmAssignBed(e) {
             e.preventDefault();
             const pid = document.getElementById('assignPatientId').value.trim();
-            const pname = document.getElementById('assignPatientName').value.trim();
-            const diag = document.getElementById('assignDiagnosis').value.trim() || 'Theo dõi điều trị nội trú';
-            const indate = document.getElementById('assignDate').value.replace('T', ' ');
+            const indate = document.getElementById('assignDate').value;
 
-            // Tìm và cập nhật giường
-            departmentsData.forEach(dept => {
-                dept.rooms.forEach(room => {
-                    const bed = room.beds.find(b => b.bedId === selectedTargetBed);
-                    if (bed) {
-                        bed.status = 'OCCUPIED';
-                        bed.patientId = pid;
-                        bed.patientName = pname;
-                        bed.diag = diag;
-                        bed.inDate = indate;
-                    }
+            const payload = {
+                maBenhNhan: pid,
+                maGiuong: selectedTargetBed,
+                ngayNhapVien: indate ? indate + ":00" : new Date().toISOString()
+            };
+
+            try {
+                const res = await fetch('/api/v1/noitru', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-            });
 
-            closeAssignModal();
-            renderRooms();
-            alert(`Đã xếp bệnh nhân ${pname} (${pid}) vào giường ${selectedTargetBed} thành công!`);
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Lỗi khi xếp giường: " + err);
+                    return;
+                }
+
+                alert(`Đã xếp bệnh nhân (${pid}) vào giường ${selectedTargetBed} thành công!\nTrạng thái giường đã cập nhật trong CSDL SQL Server.`);
+                closeAssignModal();
+                await loadInpatientData();
+            } catch (err) {
+                console.error(err);
+                alert("Không thể kết nối đến máy chủ Backend!");
+            }
         }
 
         // Trả giường / Xuất viện
-        function releaseBed(bedId) {
+        async function releaseBed(bedId, noiTruId) {
             if (confirm(`Bạn có chắc chắn muốn làm thủ tục xuất viện và giải phóng giường ${bedId}?`)) {
-                departmentsData.forEach(dept => {
-                    dept.rooms.forEach(room => {
-                        const bed = room.beds.find(b => b.bedId === bedId);
-                        if (bed) {
-                            bed.status = 'AVAILABLE';
-                            bed.patientId = null;
-                            bed.patientName = null;
-                            bed.diag = null;
-                            bed.inDate = null;
+                try {
+                    let targetNoiTruId = noiTruId;
+                    if (!targetNoiTruId || targetNoiTruId === 'null') {
+                        const nt = activeInpatients.find(n => n.maGiuong === bedId && n.trangThai === 'DangNam');
+                        if (nt) targetNoiTruId = nt.maNoiTru;
+                    }
+
+                    if (targetNoiTruId && targetNoiTruId !== 'null') {
+                        const res = await fetch(`/api/v1/noitru/${encodeURIComponent(targetNoiTruId)}/xuatvien`, {
+                            method: 'PUT'
+                        });
+                        if (!res.ok) {
+                            alert("Không thể cập nhật xuất viện trên hệ thống!");
+                            return;
                         }
-                    });
-                });
-                renderRooms();
-                alert(`Giường ${bedId} đã được trả và chuyển sang trạng thái Sẵn sàng tiếp nhận!`);
+                    } else {
+                        // Cập nhật trạng thái giường về 'Trong'
+                        await fetch(`/api/v1/giuongbenh/${encodeURIComponent(bedId)}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ soGiuong: bedId, trangThai: "Trong", donGiaNgay: 250000, maKhoa: "KNT" })
+                        });
+                    }
+
+                    alert(`Giường ${bedId} đã được xuất viện và chuyển sang trạng thái Trống sẵn sàng!`);
+                    await loadInpatientData();
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi kết nối khi xuất viện!");
+                }
             }
         }
 
@@ -826,8 +878,8 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            renderRooms();
+        window.onload = async function() {
+            await loadInpatientData();
         };
     </script>
     <script src="/auth-guard.js"></script>

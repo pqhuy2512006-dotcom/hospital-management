@@ -432,56 +432,39 @@
 
     <!-- SCRIPT NGHIỆP VỤ CẬN LÂM SÀNG -->
     <script>
-        // Dữ liệu chỉ định mẫu chuyển từ phòng khám qua
-        let labOrders = [
-            {
-                id: "CLS2026-001",
-                patientId: "BN20260001",
-                patientName: "Nguyễn Văn An",
-                doctor: "BS. CKI. Trần Văn Hùng",
-                dept: "Khoa Nội Tổng Hợp",
-                service: "Tổng phân tích tế bào máu (Huyết học)",
-                status: "PENDING",
-                params: [
-                    { name: "Số lượng hồng cầu (RBC)", val: "", unit: "T/L", refMin: 4.2, refMax: 5.4 },
-                    { name: "Huyết sắc tố (Hb)", val: "", unit: "g/L", refMin: 130, refMax: 160 },
-                    { name: "Số lượng bạch cầu (WBC)", val: "", unit: "G/L", refMin: 4.0, refMax: 10.0 },
-                    { name: "Số lượng tiểu cầu (PLT)", val: "", unit: "G/L", refMin: 150, refMax: 400 }
-                ],
-                conclusion: ""
-            },
-            {
-                id: "CLS2026-002",
-                patientId: "BN20260002",
-                patientName: "Trần Thị Mai",
-                doctor: "BS. CKI. Trần Văn Hùng",
-                dept: "Khoa Nội Tổng Hợp",
-                service: "Sinh hóa máu (Đường huyết Glucose)",
-                status: "PENDING",
-                params: [
-                    { name: "Glucose lúc đói", val: "", unit: "mmol/L", refMin: 3.9, refMax: 6.4 },
-                    { name: "Ure máu", val: "", unit: "mmol/L", refMin: 2.5, refMax: 7.5 },
-                    { name: "Creatinine", val: "", unit: "µmol/L", refMin: 62, refMax: 115 }
-                ],
-                conclusion: ""
-            },
-            {
-                id: "CLS2026-003",
-                patientId: "BN20260003",
-                patientName: "Lê Hoàng Long",
-                doctor: "ThS. Nguyễn Thị Mai",
-                dept: "Khoa Tai Mũi Họng",
-                service: "X-Quang tim phổi thẳng",
-                status: "COMPLETED",
-                params: [
-                    { name: "Hình ảnh nhu mô phổi", val: "Bình thường", unit: "---", refMin: null, refMax: null },
-                    { name: "Bóng tim", val: "Không to", unit: "---", refMin: null, refMax: null }
-                ],
-                conclusion: "Hình ảnh tim phổi thẳng hiện tại chưa thấy tổn thương rõ rệt."
-            }
-        ];
-
+        let labOrders = [];
         let currentSelectedIndex = 0;
+
+        async function loadLabOrders() {
+            try {
+                const res = await fetch('/api/v1/cls');
+                if (res.ok) {
+                    labOrders = await res.json();
+                    if (labOrders.length > 0) {
+                        document.getElementById('resultFormCard').style.display = 'block';
+                        if (currentSelectedIndex >= labOrders.length) currentSelectedIndex = 0;
+                        renderOrderList();
+                        loadOrderForm(labOrders[currentSelectedIndex]);
+                    } else {
+                        renderEmpty();
+                    }
+                } else {
+                    console.error("Lỗi khi lấy dữ liệu CLS:", res.status);
+                    renderEmpty();
+                }
+            } catch (err) {
+                console.error("Lỗi kết nối API CLS:", err);
+                renderEmpty();
+            }
+        }
+
+        function renderEmpty() {
+            const container = document.getElementById('orderContainer');
+            container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 8px; display:block;"></i>Hiện không có chỉ định cận lâm sàng nào trong hàng đợi.</div>';
+            document.getElementById('pendingCount').innerText = '0 yêu cầu';
+            const card = document.getElementById('resultFormCard');
+            if (card) card.style.display = 'none';
+        }
 
         function renderOrderList() {
             const container = document.getElementById('orderContainer');
@@ -503,9 +486,9 @@
                             <strong>${order.id}</strong>
                             ${badgeStatus}
                         </div>
-                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${order.patientName} (${order.patientId})</div>
-                        <div style="font-size: 12.5px; color: var(--text-muted);"><i class="fa-solid fa-stethoscope"></i> ${order.service}</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Chỉ định: ${order.doctor}</div>
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${order.patientName || 'Bệnh nhân'} (${order.patientId || ''})</div>
+                        <div style="font-size: 12.5px; color: var(--text-muted);"><i class="fa-solid fa-stethoscope"></i> ${order.service || 'Xét nghiệm'}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Chỉ định: ${order.doctor || 'Bác sĩ điều trị'}</div>
                     </div>
                 `;
             });
@@ -520,12 +503,14 @@
         }
 
         function loadOrderForm(order) {
-            document.getElementById('lblOrderCode').innerText = order.id;
-            document.getElementById('lblPatientName').innerText = order.patientName;
-            document.getElementById('lblPatientId').innerText = order.patientId;
-            document.getElementById('lblDoctor').innerText = order.doctor;
-            document.getElementById('lblDept').innerText = order.dept;
-            document.getElementById('lblService').innerText = order.service;
+            if (!order) return;
+            document.getElementById('resultFormCard').style.display = 'block';
+            document.getElementById('lblOrderCode').innerText = order.id || '';
+            document.getElementById('lblPatientName').innerText = order.patientName || 'Bệnh nhân';
+            document.getElementById('lblPatientId').innerText = order.patientId || '';
+            document.getElementById('lblDoctor').innerText = order.doctor || 'Bác sĩ điều trị';
+            document.getElementById('lblDept').innerText = order.dept || 'Khoa Xét Nghiệm';
+            document.getElementById('lblService').innerText = order.service || 'Xét nghiệm';
 
             const badge = document.getElementById('orderStatusBadge');
             const btn = document.getElementById('btnSaveResult');
@@ -551,33 +536,39 @@
             const tbody = document.getElementById('testParametersBody');
             tbody.innerHTML = '';
 
-            order.params.forEach((param, pIdx) => {
-                const refText = param.refMin !== null ? `${param.refMin} - ${param.refMax}` : 'Bình thường';
-                const isCompleted = order.status === 'COMPLETED';
+            const params = order.params || [];
+            if (params.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">Chưa có danh mục chỉ số đo cho dịch vụ này. Vui lòng ghi kết luận tổng thể vào ô bên dưới.</td></tr>`;
+            } else {
+                params.forEach((param, pIdx) => {
+                    const refText = param.ref || (param.refMin !== null && param.refMin !== undefined ? `${param.refMin} - ${param.refMax}` : 'Bình thường');
+                    const isCompleted = order.status === 'COMPLETED';
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${param.name}</strong></td>
-                        <td>
-                            <input type="text" class="input-val" id="param_val_${pIdx}" 
-                                value="${param.val}" 
-                                ${isCompleted ? 'readonly' : ''} 
-                                onkeyup="checkAbnormal(${pIdx})"
-                                placeholder="Nhập kết quả...">
-                        </td>
-                        <td>${param.unit}</td>
-                        <td>${refText}</td>
-                        <td id="eval_${pIdx}">
-                            <!-- Đánh giá hiển thị tự động -->
-                        </td>
-                    </tr>
-                `;
-                checkAbnormal(pIdx);
-            });
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${param.name}</strong></td>
+                            <td>
+                                <input type="text" class="input-val" id="param_val_${pIdx}" 
+                                    value="${param.val || ''}" 
+                                    ${isCompleted ? 'readonly' : ''} 
+                                    onkeyup="checkAbnormal(${pIdx})"
+                                    placeholder="Nhập kết quả...">
+                            </td>
+                            <td>${param.unit || ''}</td>
+                            <td>${refText}</td>
+                            <td id="eval_${pIdx}">
+                                <!-- Đánh giá hiển thị tự động -->
+                            </td>
+                        </tr>
+                    `;
+                    checkAbnormal(pIdx);
+                });
+            }
         }
 
         function checkAbnormal(pIdx) {
             const order = labOrders[currentSelectedIndex];
+            if (!order || !order.params || !order.params[pIdx]) return;
             const param = order.params[pIdx];
             const input = document.getElementById(`param_val_${pIdx}`);
             const evalTd = document.getElementById(`eval_${pIdx}`);
@@ -586,7 +577,7 @@
 
             const val = parseFloat(input.value);
 
-            if (isNaN(val) || param.refMin === null) {
+            if (isNaN(val) || param.refMin === null || param.refMin === undefined) {
                 input.classList.remove('abnormal');
                 evalTd.innerHTML = input.value ? '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Đạt</span>' : '';
                 return;
@@ -604,9 +595,10 @@
             }
         }
 
-        function handleSaveResult(e) {
+        async function handleSaveResult(e) {
             e.preventDefault();
             const order = labOrders[currentSelectedIndex];
+            if (!order) return;
             const conclusion = document.getElementById('labConclusion').value.trim();
 
             if (!conclusion) {
@@ -614,18 +606,49 @@
                 return;
             }
 
-            // Lưu các giá trị đo được
-            order.params.forEach((param, pIdx) => {
-                const input = document.getElementById(`param_val_${pIdx}`);
-                if (input) param.val = input.value;
-            });
+            // Cập nhật các giá trị đo được
+            if (order.params && order.params.length > 0) {
+                order.params.forEach((param, pIdx) => {
+                    const input = document.getElementById(`param_val_${pIdx}`);
+                    if (input) param.val = input.value;
+                    const evalTd = document.getElementById(`eval_${pIdx}`);
+                    if (evalTd) {
+                        if (evalTd.innerText.includes('Tăng')) param.eval = 'Tang';
+                        else if (evalTd.innerText.includes('Giảm')) param.eval = 'Giam';
+                        else if (evalTd.innerText.includes('Đạt') || evalTd.innerText.includes('Bình thường')) param.eval = 'BinhThuong';
+                    }
+                });
+            }
 
-            order.conclusion = conclusion;
-            order.status = 'COMPLETED';
+            const btn = document.getElementById('btnSaveResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
-            alert(`Lưu và trả kết quả chỉ định ${order.id} về hồ sơ bệnh án thành công! Bác sĩ đã có thể xem được ngay.`);
-            renderOrderList();
-            loadOrderForm(order);
+            try {
+                const res = await fetch(`/api/v1/cls/${encodeURIComponent(order.id)}/ketqua`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        conclusion: conclusion,
+                        params: order.params || []
+                    })
+                });
+
+                if (res.ok) {
+                    alert(`Lưu và trả kết quả chỉ định ${order.id} về hồ sơ bệnh án thành công! Bác sĩ đã có thể xem được ngay.`);
+                    await loadLabOrders();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Lỗi khi lưu kết quả: " + (err.message || res.statusText));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Lưu & Trả Kết Quả Về Bác Sĩ';
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi kết nối máy chủ khi lưu kết quả cận lâm sàng!");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Lưu & Trả Kết Quả Về Bác Sĩ';
+            }
         }
 
         function logout() {
@@ -634,10 +657,17 @@
         }
 
         window.onload = function() {
-            renderOrderList();
-            loadOrderForm(labOrders[0]);
+            const userStr = sessionStorage.getItem('authenticatedUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const techEl = document.querySelector('.panel-card .form-group ~ div strong');
+                    if (techEl && user.hoTen) techEl.innerText = user.hoTen;
+                } catch(e) {}
+            }
+            loadLabOrders();
         };
     </script>
-   <script src="/auth-guard.js"></script>
+    <script src="/auth-guard.js"></script>
 </body>
 </html>
