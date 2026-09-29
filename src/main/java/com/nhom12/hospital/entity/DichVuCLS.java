@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "DichVuCLS")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_DichVuCLS")
 @Getter
 @Setter
 @NoArgsConstructor

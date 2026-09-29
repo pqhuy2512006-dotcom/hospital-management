@@ -10,7 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "PhieuNhapKho")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_PhieuNhapKho")
 @Getter
 @Setter
 @NoArgsConstructor

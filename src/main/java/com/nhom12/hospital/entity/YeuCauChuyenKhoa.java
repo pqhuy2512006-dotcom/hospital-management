@@ -12,7 +12,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "YeuCauChuyenKhoa")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_YeuCauChuyenKhoa")
 @Getter
 @Setter
 @NoArgsConstructor

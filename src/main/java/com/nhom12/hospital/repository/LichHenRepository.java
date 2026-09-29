@@ -1,12 +1,109 @@
 package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.LichHen;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface LichHenRepository extends JpaRepository<LichHen, String> {
-	List<LichHen> findByMaBacSi(String maBacSi);
+public class LichHenRepository {
+
+    private static final BeanPropertyRowMapper<LichHen> ROW_MAPPER =
+            BeanPropertyRowMapper.newInstance(LichHen.class);
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public LichHenRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public List<LichHen> findAll() {
+        return jdbcTemplate.query("SELECT * FROM dbo.vw_LichHen", ROW_MAPPER);
+    }
+
+    public Optional<LichHen> findById(String id) {
+        List<LichHen> rows = jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_LichHen WHERE MaLichHen = ?",
+                ROW_MAPPER,
+                id
+        );
+        return rows.stream().findFirst();
+    }
+
+    public List<LichHen> findByMaBacSi(String maBacSi) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_LichHen WHERE MaBacSi = ? ORDER BY NgayKham DESC, GioKham DESC",
+                ROW_MAPPER,
+                maBacSi
+        );
+    }
+
+    public long count() {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dbo.vw_LichHen",
+                Long.class
+        );
+        return count == null ? 0L : count;
+    }
+
+    public LichHen save(LichHen entity) {
+        jdbcTemplate.update(
+                "EXEC dbo.usp_Entity_Save @EntityName = ?, @Payload = ?",
+                "LichHen",
+                serializeEntity(entity)
+        );
+        return entity;
+    }
+
+    public void deleteById(String id) {
+        jdbcTemplate.update(
+                "EXEC dbo.usp_Entity_Delete @EntityName = ?, @IdValue = ?",
+                "LichHen",
+                id
+        );
+    }
+
+    private String serializeEntity(LichHen entity) {
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"MaLichHen\":").append(toJsonValue(entity.getMaLichHen())).append(',');
+        json.append("\"MaBenhNhan\":").append(toJsonValue(entity.getMaBenhNhan())).append(',');
+        json.append("\"MaKhoa\":").append(toJsonValue(entity.getMaKhoa())).append(',');
+        json.append("\"MaBacSi\":").append(toJsonValue(entity.getMaBacSi())).append(',');
+        json.append("\"NgayKham\":").append(toJsonValue(entity.getNgayKham())).append(',');
+        json.append("\"GioKham\":").append(toJsonValue(entity.getGioKham())).append(',');
+        json.append("\"LoaiKham\":").append(toJsonValue(entity.getLoaiKham())).append(',');
+        json.append("\"HinhThucDat\":").append(toJsonValue(entity.getHinhThucDat())).append(',');
+        json.append("\"LyDoKham\":").append(toJsonValue(entity.getLyDoKham())).append(',');
+        json.append("\"GhiChu\":").append(toJsonValue(entity.getGhiChu())).append(',');
+        json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
+        json.append("\"NgayDatLich\":").append(toJsonValue(entity.getNgayDatLich()));
+        return json.append('}').toString();
+    }
+
+    private String toJsonValue(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        if (value instanceof Number || value instanceof Boolean) {
+            return value.toString();
+        }
+        if (value instanceof java.time.LocalDate date) {
+            return '"' + date.toString() + '"';
+        }
+        if (value instanceof java.time.LocalTime time) {
+            return '"' + time.toString() + '"';
+        }
+        if (value instanceof java.time.LocalDateTime dateTime) {
+            return '"' + dateTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")) + '"';
+        }
+        return '"' + value.toString()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t") + '"';
+    }
 }

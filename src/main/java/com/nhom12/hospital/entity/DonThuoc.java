@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DonThuoc")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_DonThuoc")
 @Getter
 @Setter
 @NoArgsConstructor

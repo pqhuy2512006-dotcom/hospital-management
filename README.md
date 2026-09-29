@@ -87,6 +87,14 @@ Sau đó chạy thêm script tạo bảng nhật ký truy cập:
 
 Script này chỉ bổ sung bảng `AuditLog`, không xóa dữ liệu nghiệp vụ.
 
+Để ứng dụng dùng database views cho thao tác đọc và stored procedures cho thao tác ghi, chạy tiếp theo thứ tự:
+
+1. [database/AccountDatabaseObjects.sql](database/AccountDatabaseObjects.sql)
+2. [database/EntityViews.sql](database/EntityViews.sql)
+3. [database/EntityWriteProcedures.sql](database/EntityWriteProcedures.sql)
+
+Các script trên dùng `CREATE OR ALTER` và không xóa dữ liệu bảng nghiệp vụ.
+
 ## Tài khoản mặc định của ứng dụng
 
 Tài khoản ứng dụng để đăng nhập vào hệ thống qua giao diện web:
