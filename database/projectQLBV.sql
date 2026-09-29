@@ -37,6 +37,7 @@ CREATE TABLE TaiKhoan (
     TenDangNhap     VARCHAR(50)          NOT NULL UNIQUE,
     MatKhauHash     VARCHAR(255)         NOT NULL,
     Email           VARCHAR(100)         NULL UNIQUE,
+    SoDienThoai     VARCHAR(15)          NOT NULL,
     VaiTro          VARCHAR(20)          NOT NULL 
                     CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','BenhNhan')),
     TrangThai       BIT                  NOT NULL DEFAULT 1,

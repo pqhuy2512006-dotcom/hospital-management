@@ -703,6 +703,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label>Số Điện Thoại *</label>
+                        <input type="tel" id="nuPhone" class="form-control" maxlength="15" autocomplete="tel" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="nuEmail" class="form-control" maxlength="100" autocomplete="email" required>
+                    </div>
+
+                    <div class="form-group">
                         <label>Vai Trò Chức Năng (RBAC) *</label>
                         <select id="nuRole" class="form-control" required>
                             <option value="BacSi">Bác Sĩ (DOCTOR)</option>
@@ -929,6 +939,8 @@
             e.preventDefault();
             const username = document.getElementById('nuUsername').value.trim();
             const fullName = document.getElementById('nuFullName').value.trim();
+            const phone = document.getElementById('nuPhone').value.trim();
+            const email = document.getElementById('nuEmail').value.trim();
             const role = document.getElementById('nuRole').value;
             const password = document.getElementById('nuPassword').value;
 
@@ -941,7 +953,8 @@
                         password: password,
                         role: role,
                         fullName: fullName,
-                        email: username + "@hospital.com"
+                        phone: phone,
+                        email: email
                     })
                 });
 

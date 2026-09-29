@@ -86,12 +86,26 @@ public class TaiKhoanController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Vai trò nhân viên không hợp lệ."));
             }
             String fullName = (String) payload.getOrDefault("fullName", username);
-            String email = (String) payload.get("email");
+            String email = payload.get("email") instanceof String value ? value.trim() : "";
+            String phone = payload.get("phone") instanceof String value ? value.trim() : "";
+            if (email.isEmpty() || email.length() > 100 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email nhân viên không hợp lệ."));
+            }
+            if (phone.isEmpty() || phone.length() > 15) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại là bắt buộc và tối đa 15 ký tự."));
+            }
+            if (taiKhoanRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email đã được sử dụng."));
+            }
+            if (nhanVienRepository.existsBySoDienThoai(phone)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại đã được nhân viên khác sử dụng."));
+            }
 
             TaiKhoan tk = new TaiKhoan();
             tk.setTenDangNhap(username);
             tk.setMatKhauHash(passwordEncoder.encode(password));
-            tk.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : username.toLowerCase() + "@hospital.com");
+            tk.setEmail(email);
+            tk.setSoDienThoai(phone);
             tk.setVaiTro(dbRole);
             tk.setTrangThai(true);
             tk.setNgayTao(LocalDateTime.now());
@@ -103,8 +117,8 @@ public class TaiKhoanController {
                 nv.setMaNhanVien("NV" + (System.currentTimeMillis() % 10000000));
                 nv.setMaTaiKhoan(saved.getMaTaiKhoan());
                 nv.setHoTen(fullName != null && !fullName.trim().isEmpty() ? fullName.trim() : username);
-                nv.setSoDienThoai("09" + (int)(Math.random() * 90000000 + 10000000));
-                nv.setEmail(tk.getEmail());
+                nv.setSoDienThoai(phone);
+                nv.setEmail(email);
                 nv.setGioiTinh("Nam");
                 nv.setVaiTro(dbRole);
                 nv.setTrangThai("DangLamViec");

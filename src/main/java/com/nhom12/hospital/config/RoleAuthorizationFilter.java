@@ -50,12 +50,14 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         String method = request.getMethod().toUpperCase();
         boolean auditMutation = path.startsWith("/api/v1/")
                 && !"GET".equals(method) && !"HEAD".equals(method) && !"OPTIONS".equals(method)
-                && !"/api/v1/auth/login".equals(path);
+            && !"/api/v1/auth/login".equals(path)
+            && !"/api/v1/auth/register".equals(path);
         String actor = null;
         String actorRole = null;
 
         try {
-            if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
+                if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
+                    || "/api/v1/auth/register".equals(path)
                     || !path.startsWith("/api/v1/")) {
                 filterChain.doFilter(request, response);
                 return;

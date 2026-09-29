@@ -2,6 +2,7 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.dto.LoginRequest;
 import com.nhom12.hospital.dto.LoginResponse;
+import com.nhom12.hospital.dto.PatientRegistrationRequest;
 import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.entity.TaiKhoan;
 import com.nhom12.hospital.repository.NhanVienRepository;
@@ -9,6 +10,7 @@ import com.nhom12.hospital.repository.TaiKhoanRepository;
 import com.nhom12.hospital.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -72,6 +74,51 @@ public class AuthController {
                 .map(employee -> employee.getHoTen())
                 .orElse(user.getTenDangNhap());
         return ResponseEntity.ok(new LoginResponse(true, "Đăng nhập thành công!", displayName, user.getVaiTro()));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerPatient(@Valid @RequestBody PatientRegistrationRequest request) {
+        String username = request.getUsername().trim();
+        String phone = request.getSoDienThoai() == null ? "" : request.getSoDienThoai().trim();
+        String password = request.getPassword().trim();
+        String confirmPassword = request.getConfirmPassword().trim();
+        String email = request.getEmail() == null || request.getEmail().trim().isEmpty()
+                ? null : request.getEmail().trim();
+
+        if (phone.isEmpty() || phone.length() > 15) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại là bắt buộc và tối đa 15 ký tự."));
+        }
+        if (password.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu phải có ít nhất 6 ký tự."));
+        }
+        if (!password.equals(confirmPassword)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu xác nhận không khớp."));
+        }
+        if (taiKhoanRepository.findByTenDangNhap(username).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Tên đăng nhập đã được sử dụng."));
+        }
+        if (email != null && taiKhoanRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Email đã được sử dụng."));
+        }
+
+        TaiKhoan account = new TaiKhoan();
+        account.setTenDangNhap(username);
+        account.setMatKhauHash(passwordEncoder.encode(password));
+        account.setEmail(email);
+        account.setSoDienThoai(phone);
+        account.setVaiTro("BenhNhan");
+        account.setTrangThai(true);
+        account.setNgayTao(java.time.LocalDateTime.now());
+        taiKhoanRepository.save(account);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "success", true,
+                "message", "Đăng ký thành công. Bạn có thể đăng nhập ngay.",
+                "username", username,
+                "vaiTro", "BenhNhan"
+        ));
     }
 
     @PostMapping("/logout")

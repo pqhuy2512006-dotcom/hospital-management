@@ -20,15 +20,15 @@ GO
 DECLARE @Hash VARCHAR(255) = '$2a$10$MhcIw3ha3SWQrvmNnDzurO2NOEzBnB2BiKG43ZfsUoPhK21olvCDq';
 
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = 'bs_hung')
-INSERT INTO TaiKhoan (TenDangNhap, MatKhauHash, Email, VaiTro, TrangThai) VALUES
-('bs_hung', @Hash, 'hung.tran@hospital.com', 'BacSi', 1),
-('bs_quan', @Hash, 'quan.do@hospital.com', 'BacSi', 1),
-('bs_mai', @Hash, 'mai.nguyen@hospital.com', 'BacSi', 1),
-('ds_lan', @Hash, 'lan.duoc@hospital.com', 'DuocSi', 1),
-('tn_nga', @Hash, 'nga.thungan@hospital.com', 'ThuNgan', 1),
-('ktv_huy', @Hash, 'huy.ktv@hospital.com', 'KTV', 1),
-('lt_minh', @Hash, 'minh.letan@hospital.com', 'LeTan', 1),
-('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', 'DieuDuong', 1);
+INSERT INTO TaiKhoan (TenDangNhap, MatKhauHash, Email, SoDienThoai, VaiTro, TrangThai) VALUES
+('bs_hung', @Hash, 'hung.tran@hospital.com', '0912345001', 'BacSi', 1),
+('bs_quan', @Hash, 'quan.do@hospital.com', '0912345002', 'BacSi', 1),
+('bs_mai', @Hash, 'mai.nguyen@hospital.com', '0912345003', 'BacSi', 1),
+('ds_lan', @Hash, 'lan.duoc@hospital.com', '0912345004', 'DuocSi', 1),
+('tn_nga', @Hash, 'nga.thungan@hospital.com', '0912345005', 'ThuNgan', 1),
+('ktv_huy', @Hash, 'huy.ktv@hospital.com', '0912345006', 'KTV', 1),
+('lt_minh', @Hash, 'minh.letan@hospital.com', '0912345007', 'LeTan', 1),
+('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', '0912345008', 'DieuDuong', 1);
 GO
 
 -- 3. NHAN VIEN

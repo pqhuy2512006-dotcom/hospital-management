@@ -33,6 +33,18 @@ class RoleAuthorizationFilterTest {
     }
 
     @Test
+    void allowsPatientRegistrationWithoutAnExistingSession() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/auth/register");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainInvoked = new AtomicBoolean();
+
+        filter.doFilter(request, response, (req, res) -> chainInvoked.set(true));
+
+        assertTrue(chainInvoked.get());
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
     void adminCannotReadOperationalPatientApi() throws Exception {
         TaiKhoan admin = account(1L, "admin", "QuanTri", true);
         when(taiKhoanRepository.findById(1L)).thenReturn(Optional.of(admin));
