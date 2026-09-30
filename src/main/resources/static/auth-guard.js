@@ -13,8 +13,8 @@
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
         'inpatient.html': ['DieuDuong', 'NURSE', 'LeTan', 'RECEPTIONIST'],
-        'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR']
+        'billing.html': ['ThuNgan', 'CASHIER', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'ThuNgan', 'CASHIER', 'DieuDuong', 'NURSE', 'NhanSu', 'HR', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'LeTan', 'RECEPTIONIST']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
@@ -187,11 +187,12 @@
             }
         });
 
-        if ((userRole === 'BacSi' || userRole === 'DOCTOR') && currentPage === 'settings.html') {
+        const isAdmin = ['QUANTRi', 'ADMIN'].includes(userRole.toUpperCase());
+        if (!isAdmin && currentPage === 'settings.html') {
             document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
             document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
             const title = document.querySelector('.top-header .header-title h2');
-            if (title) title.textContent = 'Thông tin cá nhân';
+            if (title) title.textContent = 'Thông tin cá nhân & Đổi mật khẩu';
             const profileLink = document.querySelector('.sidebar-menu a[href="/settings.html"]');
             if (profileLink) profileLink.innerHTML = '<i class="fa-solid fa-user-pen"></i> Thông tin cá nhân';
         }
@@ -230,6 +231,41 @@
                 document.querySelector('.btn-create-patient')?.remove();
                 document.getElementById('patientModal')?.remove();
             }
+        }
+
+        if (userRole === 'ThuNgan' || userRole === 'CASHIER') {
+            const menuLabels = {
+                '/billing.html': 'Quản lý Viện phí & Hóa đơn',
+                '/settings.html': 'Thông tin cá nhân'
+            };
+            Object.entries(menuLabels).forEach(([href, label]) => {
+                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
+                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : 'fa-solid fa-cash-register'}"></i> ${label}`;
+            });
+        }
+
+        if (userRole === 'DieuDuong' || userRole === 'NURSE') {
+            const menuLabels = {
+                '/inpatient.html': 'Quản lý Giường & Nội trú',
+                '/patients.html': 'Hồ sơ Bệnh nhân',
+                '/billing.html': 'Tra cứu Viện phí',
+                '/settings.html': 'Thông tin cá nhân'
+            };
+            Object.entries(menuLabels).forEach(([href, label]) => {
+                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
+                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : href === '/billing.html' ? 'fa-solid fa-file-invoice-dollar' : href === '/inpatient.html' ? 'fa-solid fa-bed-pulse' : 'fa-solid fa-hospital-user'}"></i> ${label}`;
+            });
+        }
+
+        if (userRole === 'NhanSu' || userRole === 'HR') {
+            const menuLabels = {
+                '/doctors.html': 'Quản lý Nhân sự & Bác sĩ',
+                '/settings.html': 'Thông tin cá nhân'
+            };
+            Object.entries(menuLabels).forEach(([href, label]) => {
+                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
+                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : 'fa-solid fa-users-gear'}"></i> ${label}`;
+            });
         }
     });
 

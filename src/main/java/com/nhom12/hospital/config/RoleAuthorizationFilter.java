@@ -107,6 +107,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("/api/v1/nhanvien/me".equals(path) && ("GET".equals(method) || "PUT".equals(method))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if (path.startsWith("/api/v1/taikhoan")) {
                 if (path.equals("/api/v1/taikhoan/change-password")) {
                     filterChain.doFilter(request, response);
@@ -177,11 +182,26 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     requiredRoleDesc = "Dược Sĩ Kho Dược (PHARMACIST)";
                 }
             }
-            // 3. Phân hệ Viện phí: Thu tiền & Đóng hóa đơn (4.6 Thu ngân, 4.1 Bệnh nhân thanh toán online)
-            else if (path.startsWith("/api/v1/hoadon") && path.endsWith("/thanhtoan") && method.equals("PUT")) {
-                if (!"ThuNgan".equals(role) && !"BenhNhan".equals(role)) {
+            // 3. Phân hệ Viện phí: Thu ngân toàn quyền; Điều dưỡng chỉ xem; Nhân sự & các role khác bị từ chối
+            else if (path.startsWith("/api/v1/hoadon")) {
+                if ("GET".equals(method)) {
+                    if (!"ThuNgan".equals(role) && !"DieuDuong".equals(role) && !"GiamDoc".equals(role)) {
+                        isAllowed = false;
+                        requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Điều Dưỡng (NURSE)";
+                    }
+                } else if (path.endsWith("/thanhtoan") && "PUT".equals(method)) {
+                    if (!"ThuNgan".equals(role)) {
+                        isAllowed = false;
+                        requiredRoleDesc = "Thu Ngân (CASHIER)";
+                    }
+                } else if ((path.endsWith("/tinh-tu-dong") || path.endsWith("/ap-dung-bhyt") || path.endsWith("/hoan-ung")) && "POST".equals(method)) {
+                    if (!"ThuNgan".equals(role)) {
+                        isAllowed = false;
+                        requiredRoleDesc = "Thu Ngân (CASHIER)";
+                    }
+                } else if (!"ThuNgan".equals(role)) {
                     isAllowed = false;
-                    requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Bệnh Nhân (Online)";
+                    requiredRoleDesc = "Thu Ngân (CASHIER)";
                 }
             }
             // 4. Phân hệ Cận lâm sàng: Nhập & trả kết quả xét nghiệm (4.4 KTV)

@@ -722,6 +722,7 @@
                             <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
                             <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
                             <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
+                            <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
                         </select>
                     </div>
 
@@ -792,8 +793,9 @@
                 else if (r.includes('NURSE') || r.includes('DIEUDUONG')) badgeClass = 'role-nurse';
                 else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
                 else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
+                else if (r.includes('NHANSU') || r.includes('HR')) badgeClass = 'role-pharmacy';
 
-                const roles = ['QuanTri', 'BacSi', 'DieuDuong', 'LeTan', 'DuocSi', 'KTV', 'ThuNgan'];
+                const roles = ['QuanTri', 'BacSi', 'DieuDuong', 'LeTan', 'DuocSi', 'KTV', 'ThuNgan', 'NhanSu'];
                 const roleOptions = roles.map(role => `<option value="${role}" ${u.role === role ? 'selected' : ''}>${role}</option>`).join('');
                 const isCurrentUser = (() => {
                     try { return JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').username === u.username; }
@@ -983,11 +985,14 @@
             try { currentUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}'); }
             catch (error) { currentUser = {}; }
 
-            if (currentUser.vaiTro === 'BacSi' || currentUser.vaiTro === 'DOCTOR') {
+            const role = (currentUser.vaiTro || '').toUpperCase();
+            const isAdmin = role === 'QUANTRI' || role === 'ADMIN';
+
+            if (!isAdmin) {
                 try {
                     await loadMyProfile();
                 } catch (error) {
-                    alert(error.message);
+                    console.error("Không thể tải hồ sơ cá nhân:", error);
                 }
                 return;
             }

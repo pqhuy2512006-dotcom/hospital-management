@@ -20,7 +20,7 @@ import java.util.*;
 public class TaiKhoanController {
 
     private static final Set<String> STAFF_ROLES = Set.of(
-            "QuanTri", "BacSi", "DieuDuong", "LeTan", "DuocSi", "KTV", "ThuNgan");
+            "QuanTri", "BacSi", "DieuDuong", "LeTan", "DuocSi", "KTV", "ThuNgan", "NhanSu");
 
     private final TaiKhoanRepository taiKhoanRepository;
     private final NhanVienRepository nhanVienRepository;

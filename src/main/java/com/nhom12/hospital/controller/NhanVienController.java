@@ -43,9 +43,26 @@ public class NhanVienController {
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile(HttpServletRequest request) {
-        return findCurrentEmployee(request)
-                .map(employee -> ResponseEntity.ok(profileView(employee)))
-                .orElse(ResponseEntity.notFound().build());
+        Optional<NhanVien> employeeOpt = findCurrentEmployee(request);
+        if (employeeOpt.isPresent()) {
+            return ResponseEntity.ok(profileView(employeeOpt.get()));
+        }
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        if (accountId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return taiKhoanRepository.findById(accountId).map(account -> {
+            Map<String, Object> profile = new LinkedHashMap<>();
+            profile.put("maNhanVien", "NV" + account.getMaTaiKhoan());
+            profile.put("hoTen", account.getTenDangNhap());
+            profile.put("vaiTro", account.getVaiTro());
+            profile.put("chuyenKhoa", "");
+            profile.put("chungChiHanhNghe", "");
+            profile.put("soDienThoai", account.getSoDienThoai());
+            profile.put("email", account.getEmail());
+            profile.put("diaChi", "");
+            return ResponseEntity.ok(profile);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/doctors")
@@ -66,25 +83,35 @@ public class NhanVienController {
     @PutMapping("/me")
     @Transactional
     public ResponseEntity<?> updateMyProfile(@RequestBody Map<String, String> payload, HttpServletRequest request) {
-        Optional<NhanVien> employeeOpt = findCurrentEmployee(request);
-        if (employeeOpt.isEmpty()) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        if (accountId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(accountId);
+        if (accountOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        NhanVien employee = employeeOpt.get();
         String phone = payload.get("soDienThoai");
         if (phone == null || phone.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại không được để trống."));
         }
         phone = phone.trim();
-        if (nhanVienRepository.existsBySoDienThoaiAndMaNhanVienNot(phone, employee.getMaNhanVien())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại đã được nhân viên khác sử dụng."));
-        }
 
-        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
-        Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(accountId);
-        if (accountOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        Optional<NhanVien> employeeOpt = findCurrentEmployee(request);
+        NhanVien employee;
+        if (employeeOpt.isPresent()) {
+            employee = employeeOpt.get();
+            if (nhanVienRepository.existsBySoDienThoaiAndMaNhanVienNot(phone, employee.getMaNhanVien())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại đã được nhân viên khác sử dụng."));
+            }
+        } else {
+            employee = new NhanVien();
+            employee.setMaNhanVien("NV" + (System.currentTimeMillis() % 10000000));
+            employee.setMaTaiKhoan(accountId);
+            employee.setHoTen(accountOpt.get().getTenDangNhap());
+            employee.setVaiTro(accountOpt.get().getVaiTro());
+            employee.setTrangThai("DangLamViec");
         }
 
         String email = normalizeOptional(payload.get("email"));
@@ -99,6 +126,7 @@ public class NhanVienController {
         nhanVienRepository.save(employee);
 
         TaiKhoan account = accountOpt.get();
+        account.setSoDienThoai(phone);
         account.setEmail(email);
         taiKhoanRepository.save(account);
 

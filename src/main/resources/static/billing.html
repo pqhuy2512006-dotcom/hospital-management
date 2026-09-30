@@ -209,6 +209,7 @@
         }
         .status-unpaid { background: #fee2e2; color: #991b1b; }
         .status-paid { background: #d1fae5; color: #065f46; }
+        .status-refunded { background: #fef3c7; color: #b45309; }
 
         /* CHI TIẾT VIỆN PHÍ (CỘT PHẢI) */
         .patient-bill-box {
@@ -325,6 +326,28 @@
             background: #059669;
         }
 
+        .btn-refund {
+            width: 100%;
+            height: 44px;
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1.5px solid #fed7aa;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-refund:hover {
+            background: #ffedd5;
+        }
+
         .btn-print-bill {
             width: 100%;
             height: 44px;
@@ -346,7 +369,26 @@
             background: #eff6ff;
         }
 
-        /* MODAL IN HÓA ĐƠN */
+        .btn-action-tool {
+            padding: 8px 14px;
+            background: #f0f9ff;
+            border: 1.5px solid #bae6fd;
+            color: #0284c7;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-action-tool:hover {
+            background: #e0f2fe;
+        }
+
+        /* MODAL */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -434,7 +476,7 @@
         <!-- Top Header -->
         <header class="top-header">
             <div class="header-title">
-                <h2>Quầy Thu Ngân - Quản Lý Hóa Đơn & Thanh Toán Viện Phí</h2>
+                <h2 id="topHeaderTitle">Quầy Thu Ngân - Quản Lý Hóa Đơn & Thanh Toán Viện Phí</h2>
             </div>
             <button class="btn-logout" onclick="logout()">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
@@ -443,34 +485,59 @@
 
         <!-- Main Body -->
         <main class="content-body">
-            <!-- Cột trái: Danh sách hóa đơn chờ thanh toán -->
+            <!-- Cột trái: Danh sách hóa đơn -->
             <div class="panel-card">
                 <div class="panel-header">
-                    <h3><i class="fa-solid fa-receipt"></i> Hóa Đơn Chờ Thanh Toán</h3>
-                    <span class="badge-code" id="unpaidCount">2 hóa đơn</span>
+                    <h3><i class="fa-solid fa-receipt"></i> Danh Sách Hóa Đơn</h3>
+                    <span class="badge-code" id="unpaidCount">0 hóa đơn</span>
                 </div>
                 <div id="invoiceQueueContainer">
                     <!-- Render bằng JS -->
                 </div>
             </div>
 
-            <!-- Cột phải: Chi tiết chi phí và Biểu mẫu thanh toán (Mẫu QLVP_BM1) -->
+            <!-- Cột phải: Chi tiết chi phí và Biểu mẫu thanh toán -->
             <div class="panel-card">
+                <!-- Thông báo phân quyền nếu là Điều dưỡng -->
+                <div id="nurseBanner" style="display:none; background:#ede9fe; color:#6b21a8; padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:13px; font-weight:600; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-user-nurse" style="font-size:18px;"></i>
+                    <span>Chế độ Điều dưỡng viên: Bạn đang xem bảng kê chi phí và BHYT của bệnh nhân nội trú. Các chức năng tính lại viện phí, thu tiền và hoàn ứng do bộ phận Thu ngân thực hiện.</span>
+                </div>
+
                 <div class="panel-header">
                     <h3><i class="fa-solid fa-file-invoice" style="color:var(--primary);"></i> Chi Tiết Viện Phí (Mẫu QLVP_BM1)</h3>
                     <span id="billStatusBadge" class="badge-status status-unpaid">Chưa thanh toán</span>
                 </div>
 
-                <div class="patient-bill-box">
-                    <div>Mã hóa đơn: <strong id="lblBillCode" style="color:var(--primary);">HD2026-001</strong></div>
-                    <div>Bệnh nhân: <strong id="lblPatientName">Nguyễn Văn An</strong></div>
-                    <div>Mã BN: <strong id="lblPatientId">BN2026000001</strong></div>
-                    <div>Mã thẻ BHYT: <strong id="lblBHYT">DN4790880012345 (Hưởng 80%)</strong></div>
-                    <div>Ngày lập: <strong id="lblDate">21/09/2026</strong></div>
-                    <div>Thu ngân phụ trách: <strong>Nguyễn Thu Ngân</strong></div>
+                <!-- Thanh công cụ Thu ngân: Tính viện phí tự động & Áp dụng BHYT -->
+                <div id="cashierTools" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; padding:12px; background:#f8fafc; border:1px solid var(--border-color); border-radius:8px;">
+                    <button type="button" class="btn-action-tool" id="btnAutoCalc" onclick="handleAutoCalculate()">
+                        <i class="fa-solid fa-calculator"></i> Tính Viện Phí Tự Động
+                    </button>
+                    <div style="display:inline-flex; align-items:center; gap:6px; margin-left:auto;">
+                        <span style="font-size:13px; font-weight:600; color:var(--text-muted);">Mức BHYT:</span>
+                        <select id="selBhytRate" style="height:35px; padding:0 10px; border-radius:6px; border:1.5px solid var(--border-color); font-size:13px;">
+                            <option value="80">BHYT 80% (Mức chuẩn)</option>
+                            <option value="95">BHYT 95% (Hộ nghèo / Cận nghèo)</option>
+                            <option value="100">BHYT 100% (Sĩ quan / Trẻ em)</option>
+                            <option value="0">0% (Không áp dụng BHYT)</option>
+                        </select>
+                        <button type="button" class="btn-action-tool" id="btnApplyBhyt" onclick="handleApplyBHYT()">
+                            <i class="fa-solid fa-shield-halved"></i> Áp Dụng BHYT
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Bảng chi tiết dịch vụ (UC53) -->
+                <div class="patient-bill-box">
+                    <div>Mã hóa đơn: <strong id="lblBillCode" style="color:var(--primary);">HD2026-001</strong></div>
+                    <div>Bệnh nhân: <strong id="lblPatientName">---</strong></div>
+                    <div>Mã BN: <strong id="lblPatientId">---</strong></div>
+                    <div>Mã thẻ BHYT: <strong id="lblBHYT">---</strong></div>
+                    <div>Ngày lập: <strong id="lblDate">---</strong></div>
+                    <div>Thu ngân phụ trách: <strong id="lblCashierName">---</strong></div>
+                </div>
+
+                <!-- Bảng chi tiết dịch vụ -->
                 <table>
                     <thead>
                         <tr>
@@ -490,41 +557,50 @@
                 <div class="summary-box">
                     <div class="summary-row">
                         <span>Tổng tiền dịch vụ y tế:</span>
-                        <strong id="lblSumTotal">320.000 đ</strong>
+                        <strong id="lblSumTotal">0 đ</strong>
                     </div>
                     <div class="summary-row">
                         <span>Bảo hiểm y tế (BHYT) chi trả:</span>
-                        <strong id="lblBhytPay" style="color:#059669;">- 176.000 đ</strong>
+                        <strong id="lblBhytPay" style="color:#059669;">- 0 đ</strong>
                     </div>
                     <div class="summary-row total">
                         <span>Số tiền bệnh nhân thanh toán:</span>
-                        <span id="lblPatientPay">144.000 đ</span>
+                        <span id="lblPatientPay">0 đ</span>
                     </div>
                 </div>
 
-                <!-- Hình thức thanh toán (UC52) -->
-                <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 8px;">Hình thức thanh toán:</div>
-                <div class="payment-methods">
-                    <div class="pay-method-btn active" onclick="selectPayMethod('CASH', this)">
-                        <i class="fa-solid fa-money-bill-wave" style="color:#10b981;"></i>
-                        <span>Tiền Mặt</span>
+                <!-- Khối thanh toán dành cho Thu ngân / Bệnh nhân -->
+                <div id="paymentMethodsBox">
+                    <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 8px;">Hình thức thanh toán:</div>
+                    <div class="payment-methods">
+                        <div class="pay-method-btn active" onclick="selectPayMethod('CASH', this)">
+                            <i class="fa-solid fa-money-bill-wave" style="color:#10b981;"></i>
+                            <span>Tiền Mặt</span>
+                        </div>
+                        <div class="pay-method-btn" onclick="selectPayMethod('QR', this)">
+                            <i class="fa-solid fa-qrcode" style="color:#0284c7;"></i>
+                            <span>Chuyển Khoản QR</span>
+                        </div>
+                        <div class="pay-method-btn" onclick="selectPayMethod('WALLET', this)">
+                            <i class="fa-solid fa-wallet" style="color:#f59e0b;"></i>
+                            <span>Ví Điện Tử</span>
+                        </div>
                     </div>
-                    <div class="pay-method-btn" onclick="selectPayMethod('QR', this)">
-                        <i class="fa-solid fa-qrcode" style="color:#0284c7;"></i>
-                        <span>Chuyển Khoản QR</span>
-                    </div>
-                    <div class="pay-method-btn" onclick="selectPayMethod('POS', this)">
-                        <i class="fa-solid fa-credit-card" style="color:#f59e0b;"></i>
-                        <span>Thẻ Ngân Hàng (POS)</span>
-                    </div>
+
+                    <!-- Nút xác nhận thu tiền -->
+                    <button type="button" class="btn-pay-now" id="btnPayNow" onclick="handlePayment()">
+                        <i class="fa-solid fa-circle-check"></i> Xác Nhận Thu Tiền & Đóng Hóa Đơn
+                    </button>
+
+                    <!-- Nút Lập phiếu hoàn ứng khi cần điều chỉnh sau thanh toán -->
+                    <button type="button" class="btn-refund" id="btnRefund" onclick="openRefundModal()">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Lập Phiếu Hoàn Ứng (Điều Chỉnh Sau Thanh Toán)
+                    </button>
                 </div>
 
-                <!-- Nút thanh toán và in hóa đơn -->
-                <button type="button" class="btn-pay-now" id="btnPayNow" onclick="handlePayment()">
-                    <i class="fa-solid fa-circle-check"></i> Xác Nhận Thu Tiền & Đóng Hóa Đơn
-                </button>
+                <!-- Nút in hóa đơn (Dùng được cho cả Thu ngân & Điều dưỡng) -->
                 <button type="button" class="btn-print-bill" id="btnPrintBill" onclick="openPrintModal()">
-                    <i class="fa-solid fa-print"></i> Xem & Xuất Hóa Đơn Viện Phí (UC56)
+                    <i class="fa-solid fa-print"></i> Xem & Xuất Hóa Đơn / Bảng Kê Viện Phí (UC56)
                 </button>
             </div>
         </main>
@@ -543,14 +619,14 @@
                         <h3 style="font-size: 18px; margin-bottom: 4px;">BỆNH VIỆN ĐA KHOA MEDICARE HIS</h3>
                         <p style="font-size: 12px; color: #64748b;">Địa chỉ: 01 Võ Văn Ngân, TP. Thủ Đức, TP. Hồ Chí Minh</p>
                         <h2 style="font-size: 20px; margin-top: 12px; letter-spacing: 0.5px;">HÓA ĐƠN VIỆN PHÍ</h2>
-                        <span style="font-size: 13px; color: #64748b;" id="printDate">Ngày in: 21/09/2026</span>
+                        <span style="font-size: 13px; color: #64748b;" id="printDate">Ngày in: ---</span>
                     </div>
 
                     <div style="font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
-                        <div>Mã hóa đơn: <strong id="prtBillId">HD2026-001</strong></div>
-                        <div>Họ và tên người bệnh: <strong id="prtPatientName">Nguyễn Văn An</strong></div>
-                        <div>Mã bệnh nhân: <strong id="prtPatientId">BN2026000001</strong></div>
-                        <div>Mã thẻ BHYT: <span id="prtBhyt">DN4790880012345</span></div>
+                        <div>Mã hóa đơn: <strong id="prtBillId">---</strong></div>
+                        <div>Họ và tên người bệnh: <strong id="prtPatientName">---</strong></div>
+                        <div>Mã bệnh nhân: <strong id="prtPatientId">---</strong></div>
+                        <div>Mã thẻ BHYT: <span id="prtBhyt">---</span></div>
                     </div>
 
                     <table style="border: 1px solid #e2e8f0; margin-bottom: 16px;">
@@ -570,15 +646,15 @@
                     <div style="border-top: 1px solid #0f172a; padding-top: 10px; font-size: 13.5px; line-height: 1.8;">
                         <div style="display:flex; justify-content:space-between;">
                             <span>Tổng chi phí dịch vụ:</span>
-                            <strong id="prtSum">320.000 đ</strong>
+                            <strong id="prtSum">0 đ</strong>
                         </div>
                         <div style="display:flex; justify-content:space-between; color: #059669;">
                             <span>Quỹ BHYT chi trả:</span>
-                            <strong id="prtBhytSum">- 176.000 đ</strong>
+                            <strong id="prtBhytSum">- 0 đ</strong>
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size: 15px; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">
                             <span>Người bệnh phải nộp:</span>
-                            <span id="prtFinalSum" style="color: #059669;">144.000 đ</span>
+                            <span id="prtFinalSum" style="color: #059669;">0 đ</span>
                         </div>
                     </div>
 
@@ -589,8 +665,8 @@
                         </div>
                         <div>
                             <strong>Nhân Viên Thu Ngân</strong><br>
-                            <small>(Đã thu đủ tiền)</small><br><br>
-                            <span style="font-weight:600; color:var(--primary);">Nguyễn Thu Ngân</span>
+                            <small>(Đã ký & xác nhận)</small><br><br>
+                            <span style="font-weight:600; color:var(--primary);" id="prtCashierSign">Thu ngân viên</span>
                         </div>
                     </div>
                 </div>
@@ -604,11 +680,111 @@
         </div>
     </div>
 
+    <!-- MODAL LẬP PHIẾU HOÀN ỨNG (ĐIỀU CHỈNH SAU THANH TOÁN) -->
+    <div class="modal-overlay" id="refundModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-money-bill-transfer" style="color:#c2410c;"></i> Lập Phiếu Hoàn Ứng Viện Phí</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeRefundModal()">&times;</button>
+            </div>
+            <form onsubmit="handleRefundSubmit(event)">
+                <div class="modal-body">
+                    <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:16px; font-size:13.5px;">
+                        <div>Mã hóa đơn: <strong id="rfModalBillId">---</strong></div>
+                        <div>Bệnh nhân: <strong id="rfModalPatient">---</strong></div>
+                        <div>Tổng đã nộp: <strong id="rfModalPaid">0 đ</strong></div>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Số Tiền Hoàn Trả (VNĐ) *</label>
+                        <input type="number" id="rfAmount" min="1000" step="1000" required style="width:100%; height:40px; padding:0 12px; border:1.5px solid var(--border-color); border-radius:8px; font-size:14px; font-weight:700; color:#c2410c;">
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Lý Do Hoàn Ứng / Điều Chỉnh *</label>
+                        <select id="rfReasonPreset" onchange="if(this.value) document.getElementById('rfReason').value = this.value;" style="width:100%; height:38px; padding:0 10px; border:1.5px solid var(--border-color); border-radius:8px; font-size:13px; margin-bottom:6px;">
+                            <option value="">-- Chọn lý do thường gặp --</option>
+                            <option value="Bệnh nhân xuất viện thừa tiền tạm ứng nội trú">Bệnh nhân xuất viện thừa tiền tạm ứng nội trú</option>
+                            <option value="Hủy y lệnh cận lâm sàng do bác sĩ chỉ định lại">Hủy y lệnh cận lâm sàng do bác sĩ chỉ định lại</option>
+                            <option value="Bệnh nhân trả lại thuốc chưa sử dụng">Bệnh nhân trả lại thuốc chưa sử dụng</option>
+                            <option value="Điều chỉnh mức hưởng BHYT bổ sung">Điều chỉnh mức hưởng BHYT bổ sung</option>
+                        </select>
+                        <textarea id="rfReason" rows="2" required placeholder="Nhập chi tiết lý do hoàn trả" style="width:100%; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; font-size:13px; font-family:inherit;"></textarea>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Hình Thức Hoàn Tiền *</label>
+                        <select id="rfMethod" style="width:100%; height:40px; padding:0 12px; border:1.5px solid var(--border-color); border-radius:8px; font-size:13.5px;">
+                            <option value="TienMat">Tiền mặt tại quầy</option>
+                            <option value="ChuyenKhoan">Chuyển khoản ngân hàng</option>
+                            <option value="ViDienTu">Ví điện tử</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="btn-logout" style="background:#ffffff; color:#64748b; border:1px solid #cbd5e1;" onclick="closeRefundModal()">Hủy</button>
+                    <button type="submit" class="btn-pay-now" style="width:auto; padding:0 22px; height:40px; background:#c2410c;">
+                        <i class="fa-solid fa-check"></i> Xác Nhận Lập Phiếu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL XEM & IN PHIẾU HOÀN ỨNG -->
+    <div class="modal-overlay" id="printRefundModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-print" style="color:#c2410c;"></i> Phiếu Hoàn Ứng / Điều Chỉnh Viện Phí</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closePrintRefundModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-print-view" id="printableRefund">
+                    <div class="invoice-print-header">
+                        <h3 style="font-size: 17px; margin-bottom: 4px;">BỆNH VIỆN ĐA KHOA MEDICARE HIS</h3>
+                        <p style="font-size: 12px; color: #64748b;">Địa chỉ: 01 Võ Văn Ngân, TP. Thủ Đức, TP. Hồ Chí Minh</p>
+                        <h2 style="font-size: 19px; margin-top: 12px; letter-spacing: 0.5px; color:#c2410c;">PHIẾU HOÀN ỨNG VIỆN PHÍ</h2>
+                        <span style="font-size: 13px; color: #64748b;" id="rfPrintDate">Ngày lập: ---</span>
+                    </div>
+
+                    <div style="font-size: 13.5px; line-height: 1.9; margin-bottom: 16px;">
+                        <div>Mã phiếu hoàn ứng: <strong id="rfPrintCode" style="color:#c2410c;">---</strong></div>
+                        <div>Liên quan hóa đơn số: <strong id="rfPrintBillId">---</strong></div>
+                        <div>Họ và tên người nhận tiền: <strong id="rfPrintPatient">---</strong></div>
+                        <div>Mã bệnh nhân: <span id="rfPrintPatientId">---</span></div>
+                        <div>Số tiền hoàn trả: <strong id="rfPrintAmount" style="font-size:16px; color:#c2410c;">0 đ</strong></div>
+                        <div>Hình thức hoàn: <span id="rfPrintMethod">Tiền mặt</span></div>
+                        <div>Lý do hoàn ứng: <em id="rfPrintReason">---</em></div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; margin-top: 36px; text-align:center; font-size: 12.5px;">
+                        <div>
+                            <strong>Người Nhận Tiền</strong><br>
+                            <small>(Ký và ghi rõ họ tên)</small>
+                        </div>
+                        <div>
+                            <strong>Người Lập Phiếu (Thu Ngân)</strong><br>
+                            <small>(Đã chi trả đủ tiền)</small><br><br>
+                            <span style="font-weight:600; color:var(--primary);" id="rfPrintCashier">Thu ngân viên</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border-color); display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-logout" style="background:#ffffff; color:#64748b; border:1px solid #cbd5e1;" onclick="closePrintRefundModal()">Đóng</button>
+                <button type="button" class="btn-pay-now" style="width:auto; padding:0 20px; height:40px; background:#c2410c;" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> In Phiếu Hoàn Ứng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT NGHIỆP VỤ VIỆN PHÍ -->
     <script>
         let invoices = [];
         let selectedInvoiceIdx = 0;
         let selectedPaymentMethod = "CASH";
+        let lastRefundSlip = null;
 
         async function loadInvoices() {
             try {
@@ -641,6 +817,7 @@
             document.getElementById('lblPatientId').innerText = '---';
             document.getElementById('lblBHYT').innerText = '---';
             document.getElementById('lblDate').innerText = '---';
+            document.getElementById('lblCashierName').innerText = '---';
             document.getElementById('billItemsBody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">Không có dịch vụ.</td></tr>';
             document.getElementById('lblSumTotal').innerText = '0 đ';
             document.getElementById('lblBhytPay').innerText = '0 đ';
@@ -650,6 +827,8 @@
                 btnPay.disabled = true;
                 btnPay.style.opacity = '0.5';
             }
+            const btnRefund = document.getElementById('btnRefund');
+            if (btnRefund) btnRefund.style.display = 'none';
         }
 
         function renderInvoiceQueue() {
@@ -662,9 +841,12 @@
                 if (inv.status === 'UNPAID') unpaidCount++;
 
                 const activeClass = idx === selectedInvoiceIdx ? 'active' : '';
-                const badgeHtml = inv.status === 'UNPAID'
-                    ? '<span class="badge-status status-unpaid">Chưa thanh toán</span>'
-                    : '<span class="badge-status status-paid">Đã thanh toán</span>';
+                let badgeHtml = '<span class="badge-status status-unpaid">Chưa thanh toán</span>';
+                if (inv.status === 'PAID') {
+                    badgeHtml = '<span class="badge-status status-paid">Đã thanh toán</span>';
+                } else if (inv.status === 'REFUNDED') {
+                    badgeHtml = '<span class="badge-status status-refunded">Đã hoàn tiền</span>';
+                }
 
                 container.innerHTML += `
                     <div class="invoice-item ${activeClass}" onclick="selectInvoice(${idx})">
@@ -678,7 +860,7 @@
                 `;
             });
 
-            document.getElementById('unpaidCount').innerText = `${unpaidCount} hóa đơn`;
+            document.getElementById('unpaidCount').innerText = `${unpaidCount} hóa đơn chưa thu`;
         }
 
         // Tự động tính toán viện phí (UC53)
@@ -691,6 +873,7 @@
             document.getElementById('lblPatientName').innerText = inv.patientName || 'Bệnh nhân';
             document.getElementById('lblPatientId').innerText = inv.patientId || '';
             document.getElementById('lblBHYT').innerText = inv.bhytCode || 'Không có BHYT';
+            document.getElementById('lblCashierName').innerText = inv.cashierName || inv.cashierId || 'Thu ngân viện phí';
             
             let formattedDate = inv.date || '';
             if (inv.date) {
@@ -705,6 +888,7 @@
 
             const badge = document.getElementById('billStatusBadge');
             const btnPay = document.getElementById('btnPayNow');
+            const btnRefund = document.getElementById('btnRefund');
 
             if (inv.status === 'PAID') {
                 badge.className = 'badge-status status-paid';
@@ -712,12 +896,21 @@
                 btnPay.disabled = true;
                 btnPay.style.opacity = '0.5';
                 btnPay.innerHTML = '<i class="fa-solid fa-check-double"></i> Đã Thu Đủ Tiền';
+                btnRefund.style.display = 'flex';
+            } else if (inv.status === 'REFUNDED') {
+                badge.className = 'badge-status status-refunded';
+                badge.innerText = 'Đã hoàn ứng / Hoàn tiền';
+                btnPay.disabled = true;
+                btnPay.style.opacity = '0.5';
+                btnPay.innerHTML = '<i class="fa-solid fa-arrow-rotate-left"></i> Đã Hoàn Tiền';
+                btnRefund.style.display = 'flex';
             } else {
                 badge.className = 'badge-status status-unpaid';
                 badge.innerText = 'Chưa thanh toán';
                 btnPay.disabled = false;
                 btnPay.style.opacity = '1';
                 btnPay.innerHTML = '<i class="fa-solid fa-circle-check"></i> Xác Nhận Thu Tiền & Đóng Hóa Đơn';
+                btnRefund.style.display = 'none';
             }
 
             const tbody = document.getElementById('billItemsBody');
@@ -753,6 +946,7 @@
             document.getElementById('lblPatientPay').innerText = `${patientPay.toLocaleString('vi-VN')} đ`;
 
             renderInvoiceQueue();
+            applyRoleUiRestrictions();
         }
 
         function selectPayMethod(method, el) {
@@ -761,7 +955,68 @@
             selectedPaymentMethod = method;
         }
 
-        // Thanh toán viện phí (UC52)
+        // 1. Tính viện phí tự động
+        async function handleAutoCalculate() {
+            const inv = invoices[selectedInvoiceIdx];
+            if (!inv) return;
+            const btn = document.getElementById('btnAutoCalc');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tính...';
+
+            try {
+                const res = await fetch(`/api/v1/hoadon/${encodeURIComponent(inv.billId)}/tinh-tu-dong`, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(data.message || 'Đã tính viện phí tự động thành công!');
+                    await loadInvoices();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Lỗi tính viện phí: ' + (err.message || res.statusText));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối máy chủ khi tính viện phí tự động.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-calculator"></i> Tính Viện Phí Tự Động';
+            }
+        }
+
+        // 2. Áp dụng bảo hiểm y tế (BHYT)
+        async function handleApplyBHYT() {
+            const inv = invoices[selectedInvoiceIdx];
+            if (!inv) return;
+            const rate = document.getElementById('selBhytRate').value;
+            const btn = document.getElementById('btnApplyBhyt');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang áp dụng...';
+
+            try {
+                const res = await fetch(`/api/v1/hoadon/${encodeURIComponent(inv.billId)}/ap-dung-bhyt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tiLe: Number(rate) })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(data.message || `Đã áp dụng mức BHYT ${rate}% thành công!`);
+                    await loadInvoices();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Lỗi áp dụng BHYT: ' + (err.message || res.statusText));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối máy chủ khi áp dụng BHYT.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Áp Dụng BHYT';
+            }
+        }
+
+        // 3. Thu tiền / Thanh toán (tiền mặt, chuyển khoản, ví điện tử)
         async function handlePayment() {
             const inv = invoices[selectedInvoiceIdx];
             if (!inv || inv.status === 'PAID') return;
@@ -771,10 +1026,9 @@
             if (selectedPaymentMethod === 'QR') {
                 methodCode = "ChuyenKhoan";
                 methodText = "Chuyển khoản QR ngân hàng";
-            }
-            if (selectedPaymentMethod === 'POS') {
-                methodCode = "The";
-                methodText = "Thẻ POS";
+            } else if (selectedPaymentMethod === 'WALLET') {
+                methodCode = "ViDienTu";
+                methodText = "Ví điện tử (MoMo / ZaloPay / VNPay)";
             }
 
             const btn = document.getElementById('btnPayNow');
@@ -805,7 +1059,81 @@
             }
         }
 
-        // Mở Modal xem trước để in hóa đơn (UC56)
+        // 4. Lập phiếu hoàn ứng khi cần điều chỉnh sau thanh toán
+        function openRefundModal() {
+            const inv = invoices[selectedInvoiceIdx];
+            if (!inv) return;
+            document.getElementById('rfModalBillId').innerText = inv.billId;
+            document.getElementById('rfModalPatient').innerText = inv.patientName || '---';
+            const payVal = inv.pay !== undefined ? Number(inv.pay) : 0;
+            document.getElementById('rfModalPaid').innerText = `${payVal.toLocaleString('vi-VN')} đ`;
+            document.getElementById('rfAmount').value = payVal > 0 ? payVal : 100000;
+            document.getElementById('refundModal').style.display = 'flex';
+        }
+
+        function closeRefundModal() {
+            document.getElementById('refundModal').style.display = 'none';
+        }
+
+        async function handleRefundSubmit(e) {
+            e.preventDefault();
+            const inv = invoices[selectedInvoiceIdx];
+            if (!inv) return;
+
+            const soTienHoan = document.getElementById('rfAmount').value;
+            const lyDo = document.getElementById('rfReason').value;
+            const hinhThuc = document.getElementById('rfMethod').value;
+
+            try {
+                const res = await fetch(`/api/v1/hoadon/${encodeURIComponent(inv.billId)}/hoan-ung`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        soTienHoan: Number(soTienHoan),
+                        lyDo: lyDo,
+                        hinhThuc: hinhThuc
+                    })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    closeRefundModal();
+                    lastRefundSlip = result.refundSlip;
+                    openPrintRefundModal(result.refundSlip);
+                    await loadInvoices();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Lỗi khi lập phiếu hoàn ứng: " + (err.message || res.statusText));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ khi lập phiếu hoàn ứng!");
+            }
+        }
+
+        function openPrintRefundModal(slip) {
+            if (!slip && lastRefundSlip) slip = lastRefundSlip;
+            if (!slip) return;
+
+            document.getElementById('rfPrintCode').innerText = slip.maPhieuHoan || '---';
+            document.getElementById('rfPrintBillId').innerText = slip.maHoaDon || '---';
+            document.getElementById('rfPrintPatient').innerText = slip.tenBenhNhan || '---';
+            document.getElementById('rfPrintPatientId').innerText = slip.maBenhNhan || '---';
+            const amount = Number(slip.soTienHoan || 0);
+            document.getElementById('rfPrintAmount').innerText = `${amount.toLocaleString('vi-VN')} đ`;
+            document.getElementById('rfPrintMethod').innerText = slip.hinhThuc === 'ChuyenKhoan' ? 'Chuyển khoản' : 'Tiền mặt';
+            document.getElementById('rfPrintReason').innerText = slip.lyDo || '---';
+            document.getElementById('rfPrintCashier').innerText = slip.nhanVienThu || 'Thu ngân viên';
+            document.getElementById('rfPrintDate').innerText = 'Ngày in: ' + new Date().toLocaleString('vi-VN');
+
+            document.getElementById('printRefundModal').style.display = 'flex';
+        }
+
+        function closePrintRefundModal() {
+            document.getElementById('printRefundModal').style.display = 'none';
+        }
+
+        // 5. Mở Modal xem trước để in hóa đơn / biên lai (UC56)
         function openPrintModal() {
             const inv = invoices[selectedInvoiceIdx];
             if (!inv) return;
@@ -814,6 +1142,8 @@
             document.getElementById('prtPatientName').innerText = inv.patientName || 'Bệnh nhân';
             document.getElementById('prtPatientId').innerText = inv.patientId || '';
             document.getElementById('prtBhyt').innerText = inv.bhytCode || 'Không có BHYT';
+            document.getElementById('printDate').innerText = 'Ngày in: ' + new Date().toLocaleDateString('vi-VN');
+            document.getElementById('prtCashierSign').innerText = inv.cashierName || 'Thu ngân viên';
 
             const tbody = document.getElementById('prtTableItems');
             tbody.innerHTML = '';
@@ -858,15 +1188,30 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
-            const userStr = sessionStorage.getItem('authenticatedUser');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    const cashierEl = document.querySelector('.invoice-print-view div strong + br + small + br + br + span');
-                    if (cashierEl && user.hoTen) cashierEl.innerText = user.hoTen;
-                } catch(e) {}
+        // Phân quyền hiển thị theo Role
+        function applyRoleUiRestrictions() {
+            let user = {};
+            try { user = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}'); }
+            catch(e) { user = {}; }
+
+            const role = (user.vaiTro || '').toUpperCase();
+            const isNurse = role === 'DIEUDUONG' || role === 'NURSE';
+            const isCashier = role === 'THUNGAN' || role === 'CASHIER';
+
+            if (isNurse) {
+                const banner = document.getElementById('nurseBanner');
+                if (banner) banner.style.display = 'flex';
+                const tools = document.getElementById('cashierTools');
+                if (tools) tools.style.display = 'none';
+                const payBox = document.getElementById('paymentMethodsBox');
+                if (payBox) payBox.style.display = 'none';
+                const title = document.getElementById('topHeaderTitle');
+                if (title) title.innerText = 'Tra Cứu Hóa Đơn & Bảng Kê Viện Phí Nội Trú';
             }
+        }
+
+        window.onload = function() {
+            applyRoleUiRestrictions();
             loadInvoices();
         };
     </script>
