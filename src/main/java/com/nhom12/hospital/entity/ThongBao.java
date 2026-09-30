@@ -1,20 +1,22 @@
 package com.nhom12.hospital.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
-public class TaiKhoan {
+@AllArgsConstructor
+public class ThongBao {
+    private Integer maThongBao;
     private Long maTaiKhoan;
-    private String tenDangNhap;
-    private String matKhauHash;
-    private String email;
-    private String soDienThoai;
-    private String vaiTro;
-    private Boolean trangThai;
+    private String tieuDe;
+    private String noiDung;
+    private String loaiThongBao;
+    private Boolean daDoc;
     private LocalDateTime ngayTao;
 }

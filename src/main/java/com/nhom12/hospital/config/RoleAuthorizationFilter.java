@@ -120,6 +120,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if (path.startsWith("/api/v1/thongbao")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if ("BenhNhan".equals(role)) {
                 boolean allowed = ("GET".equals(method) && "/api/v1/khoa".equals(path))
                         || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
@@ -199,7 +204,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 }
             }
             // 6. Phân hệ Quản lý nhân sự: Thêm/Sửa nhân sự & Phân công lịch trực (4.8 Quản lý nhân sự)
-            else if ((path.startsWith("/api/v1/nhanvien") || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
+            else if (( (path.startsWith("/api/v1/nhanvien") && !path.equals("/api/v1/nhanvien/me")) || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
                 if (!"NhanSu".equals(role)) {
                     isAllowed = false;
                     requiredRoleDesc = "Quản Lý Nhân Sự (HR MANAGER)";
@@ -251,7 +256,8 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         }
 
         return ("POST".equals(method) && ("/api/v1/phieukham".equals(path)
-                    || "/api/v1/chuyenkhoa".equals(path)))
+                    || "/api/v1/chuyenkhoa".equals(path)
+                    || path.matches("^/api/v1/lichhen/.+/start$")))
                 || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
     }
 

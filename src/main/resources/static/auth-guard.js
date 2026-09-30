@@ -14,7 +14,7 @@
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
         'inpatient.html': ['DieuDuong', 'NURSE', 'LeTan', 'RECEPTIONIST'],
         'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR']
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
@@ -187,13 +187,16 @@
             }
         });
 
-        if ((userRole === 'BacSi' || userRole === 'DOCTOR') && currentPage === 'settings.html') {
-            document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
-            document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
-            const title = document.querySelector('.top-header .header-title h2');
-            if (title) title.textContent = 'Thông tin cá nhân';
+        if (userRole !== 'QuanTri' && userRole !== 'ADMIN') {
             const profileLink = document.querySelector('.sidebar-menu a[href="/settings.html"]');
             if (profileLink) profileLink.innerHTML = '<i class="fa-solid fa-user-pen"></i> Thông tin cá nhân';
+            
+            if (currentPage === 'settings.html') {
+                document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
+                document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
+                const title = document.querySelector('.top-header .header-title h2');
+                if (title) title.textContent = 'Thông tin cá nhân';
+            }
         }
 
         if (userRole === 'BenhNhan' || userRole === 'PATIENT') {

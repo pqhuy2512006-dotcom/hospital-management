@@ -52,7 +52,17 @@ public class LichHenRepository {
 
     public List<LichHen> findByMaBenhNhan(String maBenhNhan) {
         return jdbcTemplate.query(
-                "SELECT * FROM dbo.vw_LichHen WHERE MaBenhNhan = ? ORDER BY NgayKham DESC, GioKham DESC",
+            "SELECT appointment.*, queue.ViTriHangDoi "
+                + "FROM dbo.vw_LichHen appointment "
+                + "LEFT JOIN ( "
+                        + "    SELECT MaLichHen, CAST(ROW_NUMBER() OVER ( "
+                + "        PARTITION BY MaBacSi, NgayKham ORDER BY GioKham, MaLichHen "
+                        + "    ) AS INT) AS ViTriHangDoi "
+                + "    FROM dbo.vw_LichHen "
+                        + "    WHERE TrangThai = 'DaDatLich' AND MaBacSi IS NOT NULL "
+                + ") queue ON queue.MaLichHen = appointment.MaLichHen "
+                + "WHERE appointment.MaBenhNhan = ? "
+                + "ORDER BY appointment.NgayKham DESC, appointment.GioKham DESC",
                 ROW_MAPPER,
                 maBenhNhan
         );
@@ -64,6 +74,20 @@ public class LichHenRepository {
                 Long.class
         );
         return count == null ? 0L : count;
+    }
+
+    public void startExamination(String maLichHen, String maPhieuKham, String maBacSi, String maKhoa) {
+        jdbcTemplate.update(
+                "EXEC sp_TiepNhanBenhNhan @MaLichHen=?, @MaPhieuKham=?, @MaBacSi=?, @MaKhoa=?",
+                maLichHen, maPhieuKham, maBacSi, maKhoa
+        );
+    }
+
+    public List<java.util.Map<String, Object>> getQueueForDoctor(String maBacSi, java.time.LocalDate date) {
+        return jdbcTemplate.queryForList(
+                "SELECT * FROM fn_TinhHangDoiKham(?, ?)",
+                maBacSi, date
+        );
     }
 
     public LichHen save(LichHen entity) {
@@ -95,7 +119,6 @@ public class LichHenRepository {
         json.append("\"ThoiGianKhamDuKien\":").append(toJsonValue(entity.getThoiGianKhamDuKien())).append(',');
         json.append("\"HinhThucDat\":").append(toJsonValue(entity.getHinhThucDat())).append(',');
         json.append("\"LyDoKham\":").append(toJsonValue(entity.getLyDoKham())).append(',');
-        json.append("\"GhiChu\":").append(toJsonValue(entity.getGhiChu())).append(',');
         json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
         json.append("\"NgayDatLich\":").append(toJsonValue(entity.getNgayDatLich()));
         return json.append('}').toString();

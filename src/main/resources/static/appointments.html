@@ -338,6 +338,15 @@
             font-size: 12px;
         }
 
+        #appointmentsPanel {
+            min-width: 0;
+            overflow-x: auto;
+        }
+
+        #appointmentsPanel table {
+            min-width: 760px;
+        }
+
         .badge-status {
             display: inline-block;
             padding: 4px 8px;
@@ -347,7 +356,6 @@
         }
 
         .status-waiting { background: #fef3c7; color: #b45309; }
-        .status-examining { background: #e0f2fe; color: #0369a1; }
         .status-done { background: #d1fae5; color: #065f46; }
         .status-cancelled { background: #fee2e2; color: #991b1b; }
 
@@ -402,9 +410,25 @@
             <div class="header-title">
                 <h2>Quản Lý Lịch Hẹn & Điều Phối Hàng Đợi Khám</h2>
             </div>
-            <button class="btn-logout" onclick="logout()">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-            </button>
+            <div style="display:flex; align-items:center; gap: 24px;">
+                <!-- Nút chuông thông báo -->
+                <div class="notification-wrapper" style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                    <i class="fa-solid fa-bell" style="font-size:22px; color:#64748b;"></i>
+                    <span id="notifBadge" style="position:absolute; top:-6px; right:-10px; background:var(--danger, #ef4444); color:white; font-size:11px; font-weight:700; padding:2px 6px; border-radius:12px; display:none;">0</span>
+                    
+                    <!-- Dropdown Thông Báo -->
+                    <div id="notifDropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border:1px solid var(--border-color, #e2e8f0); border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); z-index:1000; overflow:hidden;">
+                        <div style="padding:12px 16px; border-bottom:1px solid var(--border-color, #e2e8f0); font-weight:700; background:#f8fafc; font-size:14px;">Thông báo của bạn</div>
+                        <div id="notifList" style="max-height:300px; overflow-y:auto; padding:0; font-size:13px;">
+                            <div style="padding:16px; text-align:center; color:var(--text-muted, #64748b);">Đang tải...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
+            </div>
         </header>
 
         <!-- Body -->
@@ -444,6 +468,14 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label>Loại Khám *</label>
+                            <select id="onlType" class="form-control" required>
+                                <option value="KhamThuong">Khám Thường</option>
+                                <option value="KhamDichVu">Khám Dịch Vụ</option>
+                                <option value="TaiKham">Tái Khám</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Ngày khám *</label>
                             <input type="date" id="onlDate" class="form-control" required>
                         </div>
@@ -478,6 +510,14 @@
                                 <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp (Phòng 201)</option>
                                 <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng (Phòng 108)</option>
                                 <option value="Khoa Cấp Cứu">Khoa Cấp Cứu (Tầng 1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Khám *</label>
+                            <select id="walkType" class="form-control" required>
+                                <option value="KhamThuong">Khám Thường</option>
+                                <option value="KhamDichVu">Khám Dịch Vụ</option>
+                                <option value="TaiKham">Tái Khám</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -613,7 +653,7 @@
                     appointmentRes = await fetch('/api/v1/lichhen/me');
                     document.getElementById('appointmentsPanelTitle').innerHTML = '<i class="fa-solid fa-calendar-check"></i> Lịch hẹn của tôi';
                     document.getElementById('filterDept').closest('.panel-header').lastElementChild.remove();
-                    document.getElementById('appointmentsTableHead').innerHTML = '<th>Mã lịch</th><th>Khoa</th><th>Bác sĩ</th><th>Ngày, giờ khám</th><th>Trạng thái</th><th>Thao tác</th>';
+                    document.getElementById('appointmentsTableHead').innerHTML = '<th>Mã lịch</th><th>Khoa</th><th>Bác sĩ</th><th>Ngày, giờ khám</th><th>Vị trí hàng đợi</th><th>Trạng thái</th><th>Thao tác</th>';
                 } else {
                     const [appointmentsRes, patientsRes] = await Promise.all([
                         fetch('/api/v1/lichhen'),
@@ -635,8 +675,9 @@
                     doctor: doctors.find(doctor => doctor.id === item.maBacSi)?.name || item.maBacSi || 'Chưa phân công',
                     date: item.ngayKham,
                     time: item.gioKham,
+                    queuePosition: item.viTriHangDoi,
                     type: item.hinhThucDat || 'Online',
-                    status: item.trangThai || 'ChoXacNhan'
+                    status: item.trangThai || 'DaDatLich'
                 }));
 
                 renderQueue();
@@ -661,21 +702,20 @@
 
             if (isPatientUser()) {
                 if (appointments.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);">Bạn chưa có lịch hẹn nào.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">Bạn chưa có lịch hẹn nào.</td></tr>';
                     return;
                 }
                 appointments.forEach(item => {
                     const statusLabels = {
-                        ChoXacNhan: 'Chờ xác nhận',
-                        DaXacNhan: 'Đã xác nhận',
-                        DangKham: 'Đang khám',
+                        DaDatLich: 'Đã đặt lịch',
                         DaKham: 'Đã khám',
                         DaHuy: 'Đã hủy'
                     };
                     const actions = canChangeAppointment(item)
                         ? `<button class="btn-cancel-appt" onclick="openReschedule('${item.id}')">Đổi</button> <button class="btn-cancel-appt" onclick="cancelAppt('${item.id}')">Hủy</button>`
                         : '---';
-                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.dept}</td><td>${item.doctor}</td><td>${item.date} ${item.time}</td><td>${statusLabels[item.status] || item.status}</td><td>${actions}</td></tr>`;
+                    const queuePosition = item.queuePosition == null ? '---' : `<span class="badge-stt">${item.queuePosition}</span>`;
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.dept}</td><td>${item.doctor}</td><td>${item.date} ${item.time}</td><td>${queuePosition}</td><td>${statusLabels[item.status] || item.status}</td><td>${actions}</td></tr>`;
                 });
                 return;
             }
@@ -686,9 +726,9 @@
 
             list.forEach((item, index) => {
                 let badgeStatus = '';
-                if (item.status === 'WAITING') badgeStatus = '<span class="badge-status status-waiting">Đang chờ khám</span>';
-                else if (item.status === 'EXAMINING') badgeStatus = '<span class="badge-status status-examining">Đang khám</span>';
-                else if (item.status === 'DONE') badgeStatus = '<span class="badge-status status-done">Đã hoàn thành</span>';
+                if (item.status === 'DaDatLich') badgeStatus = '<span class="badge-status status-waiting">Đã đặt lịch</span>';
+                else if (item.status === 'DaKham') badgeStatus = '<span class="badge-status status-done">Đã khám</span>';
+                else if (item.status === 'DaHuy') badgeStatus = '<span class="badge-status status-cancelled">Đã hủy</span>';
                 else badgeStatus = '<span class="badge-status status-cancelled">Đã hủy</span>';
 
                 tbody.innerHTML += `
@@ -700,7 +740,7 @@
                         <td><small>${item.type}</small></td>
                         <td>${badgeStatus}</td>
                         <td>
-                            ${(item.status === 'WAITING' || item.status === 'ChoXacNhan') ? `<button class="btn-cancel-appt" onclick="cancelAppt('${item.id}')"><i class="fa-solid fa-xmark"></i> Hủy</button>` : '---'}
+                            ${item.status === 'DaDatLich' ? `<button class="btn-cancel-appt" onclick="cancelAppt('${item.id}')"><i class="fa-solid fa-xmark"></i> Hủy</button>` : '---'}
                         </td>
                     </tr>
                 `;
@@ -712,13 +752,15 @@
             const dept = document.getElementById('onlDept').value;
             const date = document.getElementById('onlDate').value;
             const reason = document.getElementById('onlReason').value.trim();
+            const loaiKham = document.getElementById('onlType').value;
             const payload = isPatientUser()
                 ? {
                     maKhoa: dept,
                     maBacSi: document.getElementById('onlDoctor').value,
                     ngayKham: date,
                     gioKham: document.getElementById('onlTime').value,
-                    lyDoKham: reason
+                    lyDoKham: reason,
+                    loaiKham: loaiKham
                 }
                 : {
                     patientName: document.getElementById('onlName').value.trim(),
@@ -728,6 +770,7 @@
                     ngayKham: date,
                     gioKham: document.getElementById('onlTime').value,
                     lyDoKham: reason,
+                    loaiKham: loaiKham,
                     hinhThucDat: 'Online'
                 };
 
@@ -759,6 +802,7 @@
             const cccd = document.getElementById('walkCCCD').value.trim();
             const dept = document.getElementById('walkDept').value;
             const reason = document.getElementById('walkReason').value.trim();
+            const loaiKham = document.getElementById('walkType').value;
 
             const payload = {
                 patientName: name,
@@ -767,6 +811,7 @@
                 ngayKham: new Date().toISOString().slice(0, 10),
                 gioKham: new Date().toTimeString().slice(0, 5),
                 lyDoKham: reason,
+                loaiKham: loaiKham,
                 hinhThucDat: 'TrucTiep'
             };
 
@@ -864,10 +909,77 @@
                 document.querySelectorAll('.staff-only').forEach(element => element.remove());
                 document.querySelector('#pane-online .btn-submit-action').innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Gửi yêu cầu đặt lịch';
                 document.getElementById('onlTime').value = '08:00';
+            } else {
+                // Lễ tân không được đặt khám Online mà chỉ tạo phiếu Walk-in
+                const appTabs = document.getElementById('appointmentTabs');
+                if (appTabs) appTabs.remove();
+                
+                const paneOnline = document.getElementById('pane-online');
+                if (paneOnline) paneOnline.remove();
+                
+                const paneWalkin = document.getElementById('pane-walkin');
+                if (paneWalkin) paneWalkin.classList.add('active');
             }
             await loadDepartments();
             await loadAppointments();
-        };
+        }; // Kết thúc window.onload
+
+        // --- CHỨC NĂNG THÔNG BÁO ---
+        let notifications = [];
+        
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/v1/thongbao/me');
+                if (res.ok) {
+                    notifications = await res.json();
+                    renderNotifications();
+                }
+            } catch (err) { console.error('Lỗi tải thông báo:', err); }
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            if(!list || !badge) return;
+            
+            const unreadCount = notifications.filter(n => !n.daDoc).length;
+            
+            if (unreadCount > 0) {
+                badge.style.display = 'block';
+                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<div style="padding:16px; text-align:center; color:#64748b;">Không có thông báo nào.</div>';
+                return;
+            }
+
+            list.innerHTML = notifications.map(n => `
+                <div onclick="markNotifAsRead(${n.maThongBao}, event)" style="padding:12px 16px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:${n.daDoc ? '#ffffff' : '#f0f9ff'};">
+                    <div style="font-weight:700; color:#0f172a; margin-bottom:4px; font-size:13px;">${n.tieuDe}</div>
+                    <div style="color:#475569; font-size:12.5px; line-height:1.4;">${n.noiDung}</div>
+                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;"><i class="fa-regular fa-clock"></i> ${new Date(n.ngayTao).toLocaleString('vi-VN')}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            if(dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function markNotifAsRead(id, event) {
+            event.stopPropagation();
+            try {
+                await fetch('/api/v1/thongbao/' + id + '/read', { method: 'PUT' });
+                fetchNotifications();
+            } catch (err) { console.error(err); }
+        }
+
+        setInterval(fetchNotifications, 30000);
+        setTimeout(fetchNotifications, 500);
     </script>
     <script src="/auth-guard.js"></script>
 </body>

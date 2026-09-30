@@ -1,6 +1,6 @@
 # Hospital Management
 
-Hệ thống quản lý bệnh viện được xây dựng bằng Spring Boot, JPA, Spring Security và SQL Server.
+Hệ thống quản lý bệnh viện được xây dựng bằng Spring Boot, Spring JDBC, Spring Security và SQL Server. Các repository đọc dữ liệu qua database views và ghi qua stored procedures.
 
 ## Yêu cầu môi trường
 
@@ -80,6 +80,8 @@ Mở file:
 Chạy toàn bộ script trong SSMS để tạo database `QuanLyBenhVien`.
 
 Nếu database đã được tạo trước đó, chạy thêm [database/AppointmentDuration.sql](database/AppointmentDuration.sql) để bổ sung thời lượng dự kiến cho lịch hẹn hiện có. Script tự gán 45 phút cho khám dịch vụ và 30 phút cho khám thường/tái khám.
+
+Chạy [database/AppointmentStatus.sql](database/AppointmentStatus.sql) để gộp trạng thái lịch hẹn cũ `ChoXacNhan`/`DaXacNhan` thành `DaDatLich` và cập nhật constraint/default cho database hiện có.
 
 Sau khi tạo schema cơ sở, chạy thêm [database/DoctorReferral.sql](database/DoctorReferral.sql) để tạo bảng lưu yêu cầu chuyển khoa/hội chẩn của bác sĩ.
 

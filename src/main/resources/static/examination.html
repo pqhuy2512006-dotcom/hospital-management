@@ -146,6 +146,16 @@
             border: 1px solid var(--border-color);
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .panel-card::-webkit-scrollbar {
+            width: 6px;
+        }
+        .panel-card::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
 
         .panel-header {
@@ -230,12 +240,12 @@
 
         .vital-signs-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px 16px;
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
             border-radius: 8px;
-            padding: 12px;
+            padding: 16px;
             margin-bottom: 18px;
         }
 
@@ -362,7 +372,7 @@
                 grid-template-columns: 1fr;
             }
             .vital-signs-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -396,9 +406,25 @@
             <div class="header-title">
                 <h2>Phòng Khám Nội Tổng Hợp (P.204) - BS. CKI. Trần Văn Hùng</h2>
             </div>
-            <button class="btn-logout" onclick="logout()">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-            </button>
+            <div style="display:flex; align-items:center; gap: 24px;">
+                <!-- Nút chuông thông báo -->
+                <div class="notification-wrapper" style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                    <i class="fa-solid fa-bell" style="font-size:22px; color:#64748b;"></i>
+                    <span id="notifBadge" style="position:absolute; top:-6px; right:-10px; background:var(--danger); color:white; font-size:11px; font-weight:700; padding:2px 6px; border-radius:12px; display:none;">0</span>
+                    
+                    <!-- Dropdown Thông Báo -->
+                    <div id="notifDropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border:1px solid var(--border-color); border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); z-index:1000; overflow:hidden;">
+                        <div style="padding:12px 16px; border-bottom:1px solid var(--border-color); font-weight:700; background:#f8fafc; font-size:14px;">Thông báo của bạn</div>
+                        <div id="notifList" style="max-height:300px; overflow-y:auto; padding:0; font-size:13px;">
+                            <div style="padding:16px; text-align:center; color:var(--text-muted);">Đang tải...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
+            </div>
         </header>
 
         <!-- Main Body -->
@@ -416,9 +442,14 @@
 
             <!-- Cột phải: Phiếu Khám Bệnh (Mẫu QLKB_BM1) -->
             <div class="panel-card">
-                <div class="panel-header">
-                    <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Phiếu Khám Bệnh & Kê Đơn (Mẫu QLKB_BM1)</h3>
-                    <span style="font-size:12.5px; color:var(--text-muted);">Mã phiếu: <strong id="lblExamCode">PK2026-0089</strong></span>
+                <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Phiếu Khám Bệnh & Kê Đơn</h3>
+                        <span style="font-size:12.5px; color:var(--text-muted);">Mã phiếu: <strong id="lblExamCode">...</strong></span>
+                    </div>
+                    <button type="button" id="btnStartExam" onclick="handleStartExam()" style="background: #e0f2fe; color: #0284c7; border: 1px solid #0284c7; padding: 8px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+                        <i class="fa-solid fa-play"></i> Bắt Đầu Khám
+                    </button>
                 </div>
 
                 <!-- Thông tin hành chính & Cảnh báo dị ứng (UC30) -->
@@ -579,6 +610,61 @@
 
     <!-- SCRIPT NGHIỆP VỤ PHÒNG KHÁM -->
     <script>
+        // --- CHỨC NĂNG THÔNG BÁO ---
+        let notifications = [];
+        
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/v1/thongbao/me');
+                if (res.ok) {
+                    notifications = await res.json();
+                    renderNotifications();
+                }
+            } catch (err) { console.error('Lỗi tải thông báo:', err); }
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const unreadCount = notifications.filter(n => !n.daDoc).length;
+            
+            if (unreadCount > 0) {
+                badge.style.display = 'block';
+                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<div style="padding:16px; text-align:center; color:#64748b;">Không có thông báo nào.</div>';
+                return;
+            }
+
+            list.innerHTML = notifications.map(n => `
+                <div onclick="markNotifAsRead(${n.maThongBao}, event)" style="padding:12px 16px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:${n.daDoc ? '#ffffff' : '#f0f9ff'};">
+                    <div style="font-weight:700; color:#0f172a; margin-bottom:4px; font-size:13px;">${n.tieuDe}</div>
+                    <div style="color:#475569; font-size:12.5px; line-height:1.4;">${n.noiDung}</div>
+                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;"><i class="fa-regular fa-clock"></i> ${new Date(n.ngayTao).toLocaleString('vi-VN')}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function markNotifAsRead(id, event) {
+            event.stopPropagation();
+            try {
+                await fetch('/api/v1/thongbao/' + id + '/read', { method: 'PUT' });
+                fetchNotifications(); // Tải lại danh sách
+            } catch (err) { console.error(err); }
+        }
+
+        // Tải thông báo ngay khi mở trang và định kỳ 30s
+        setInterval(fetchNotifications, 30000);
+        
         let patientQueue = [];
         let selectedQueueIdx = 0;
         let availableDrugs = [];
@@ -602,8 +688,18 @@
                 const patients = await patientsRes.json();
                 const patientMap = new Map(patients.map(p => [p.maBenhNhan, p]));
 
-                patientQueue = appointments.map((item, index) => {
+                // Lọc bỏ những lịch đã hủy hoặc đã khám xong, chỉ hiển thị Đã đặt lịch và Đang khám
+                const filteredAppointments = appointments.filter(item => 
+                    item.trangThai === 'DaDatLich' || item.trangThai === 'DangKham'
+                );
+
+                patientQueue = filteredAppointments.map((item, index) => {
                     const patient = patientMap.get(item.maBenhNhan);
+                    let displayStatus = 'WAITING';
+                    if (item.trangThai === 'DaKham') displayStatus = 'DONE';
+                    else if (item.trangThai === 'DangKham') displayStatus = 'EXAMINING';
+                    else if (item.trangThai === 'DaHuy') displayStatus = 'CANCELLED';
+
                     return {
                         stt: item.maLichHen || `KQ-${index + 1}`,
                         id: item.maBenhNhan,
@@ -611,7 +707,8 @@
                         ageGender: patient ? `${new Date().getFullYear() - new Date(patient.ngaySinh).getFullYear()} tuổi (${patient.gioiTinh})` : 'Chưa có',
                         bhyt: patient?.maBHYT || 'Không có BHYT',
                         allergy: patient?.tienSuDiUng || 'Không có',
-                        status: item.trangThai === 'DaKham' ? 'DONE' : (index === 0 ? 'EXAMINING' : 'WAITING')
+                        status: displayStatus,
+                        rawStatus: item.trangThai
                     };
                 });
 
@@ -623,6 +720,36 @@
                 console.error(error);
                 patientQueue = [];
                 renderQueue();
+            }
+        }
+
+        async function handleStartExam() {
+            const currentPatient = patientQueue[selectedQueueIdx];
+            if (!currentPatient) return alert("Vui lòng chọn một bệnh nhân trong hàng đợi!");
+            
+            if (currentPatient.status !== 'WAITING') {
+                return alert("Bệnh nhân này đang khám hoặc đã hoàn tất/hủy rồi.");
+            }
+
+            try {
+                const res = await fetch(`/api/v1/lichhen/${currentPatient.stt}/start`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("Đã tiếp nhận bệnh nhân thành công!");
+                    if (data.maPhieuKham) {
+                        document.getElementById('lblExamCode').innerText = data.maPhieuKham;
+                    }
+                    loadPatientQueue(); // Cập nhật lại hàng đợi
+                } else {
+                    alert("Lỗi: " + (data.message || "Không thể tiếp nhận bệnh nhân."));
+                    if (data.message && data.message.includes("quá 10 phút")) {
+                        loadPatientQueue(); // Tải lại vì lịch đã bị hủy
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Đã xảy ra lỗi hệ thống.");
             }
         }
 
@@ -961,6 +1088,7 @@
             } catch (error) {
                 console.error(error);
             }
+            fetchNotifications();
             await loadPatientQueue();
             try {
                 await Promise.all([loadReferralOptions(), loadMyReferrals()]);

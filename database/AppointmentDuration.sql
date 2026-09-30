@@ -1,3 +1,6 @@
+use QuanLyBenhVien
+go 
+
 IF COL_LENGTH(N'dbo.LichHen', N'ThoiGianKhamDuKien') IS NULL
 BEGIN
     ALTER TABLE dbo.LichHen ADD ThoiGianKhamDuKien INT NULL;

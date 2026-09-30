@@ -87,10 +87,6 @@ public class PhieuKhamController {
     @PostMapping
     @Transactional
     public ResponseEntity<?> hoanTatKham(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
-        String maPK = "PK" + (System.currentTimeMillis() % 10000000);
-        PhieuKham pk = new PhieuKham();
-        pk.setMaPhieuKham(maPK);
-
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
         Optional<NhanVien> doctorOpt = accountId == null ? Optional.empty()
                 : nhanVienRepository.findByMaTaiKhoan(accountId)
@@ -106,12 +102,16 @@ public class PhieuKhamController {
                 || "DaKham".equalsIgnoreCase(appointmentOpt.get().getTrangThai())) {
             return ResponseEntity.badRequest().body(Map.of("message", "Lịch khám không hợp lệ, không thuộc bác sĩ hoặc đã hoàn tất."));
         }
-
+        
         LichHen appointment = appointmentOpt.get();
-        pk.setMaBenhNhan(appointment.getMaBenhNhan());
-        pk.setMaBacSi(doctorOpt.get().getMaNhanVien());
-        pk.setMaKhoa(appointment.getMaKhoa());
-        pk.setMaLichHen(appointment.getMaLichHen());
+        
+        // Bắt buộc phải có Phiếu Khám đã được tạo từ bước "Bắt đầu khám"
+        Optional<PhieuKham> existingPk = phieuKhamRepository.findByMaLichHen(appointment.getMaLichHen());
+        if (existingPk.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy Phiếu khám. Vui lòng bấm Bắt đầu khám trước."));
+        }
+        PhieuKham pk = existingPk.get();
+        String maPK = pk.getMaPhieuKham();
 
         pk.setNgayKham(LocalDateTime.now());
         pk.setTrieuChung((String) payload.get("trieuChung"));

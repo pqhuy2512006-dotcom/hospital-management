@@ -904,6 +904,11 @@
             document.getElementById('profilePhone').value = profile.soDienThoai || '';
             document.getElementById('profileEmail').value = profile.email || '';
             document.getElementById('profileAddress').value = profile.diaChi || '';
+            
+            // Ẩn Chuyên khoa & Chứng chỉ nếu không có (dành cho nhân viên không phải bác sĩ)
+            if (!profile.chuyenKhoa) document.getElementById('profileSpecialty').parentElement.style.display = 'none';
+            if (!profile.chungChiHanhNghe) document.getElementById('profileLicense').parentElement.style.display = 'none';
+            
             document.getElementById('personalProfileCard').style.display = 'block';
         }
 
@@ -983,7 +988,7 @@
             try { currentUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}'); }
             catch (error) { currentUser = {}; }
 
-            if (currentUser.vaiTro === 'BacSi' || currentUser.vaiTro === 'DOCTOR') {
+            if (currentUser.vaiTro !== 'QuanTri' && currentUser.vaiTro !== 'ADMIN') {
                 try {
                     await loadMyProfile();
                 } catch (error) {

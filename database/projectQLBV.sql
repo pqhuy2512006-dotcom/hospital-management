@@ -5,8 +5,8 @@
 create database QuanLyBenhVien;
 go 
 
-USE QuanLyBenhVien;
-GO
+use QuanLyBenhVien
+go
 
 /* ---------- Xóa bảng cũ theo thứ tự phụ thuộc khóa ngoại ---------- */
 DROP TABLE IF EXISTS ChiTietHoaDon;
@@ -158,9 +158,8 @@ CREATE TABLE LichHen (
     HinhThucDat     VARCHAR(20)          NOT NULL 
                     CHECK (HinhThucDat IN ('Online','TrucTiep','DienThoai')),
     LyDoKham        NVARCHAR(300)        NULL,
-    GhiChu          NVARCHAR(300)        NULL,
-    TrangThai       VARCHAR(20)          NOT NULL DEFAULT 'ChoXacNhan' 
-                    CHECK (TrangThai IN ('ChoXacNhan','DaXacNhan','DaHuy','DaKham')),
+    TrangThai       VARCHAR(20)          NOT NULL DEFAULT 'DaDatLich'
+                    Constraint CK_LichHen_TrangThai CHECK (TrangThai IN ('DaDatLich','DangKham','DaHuy','DaKham')),
     NgayDatLich     DATETIME             NOT NULL DEFAULT GETDATE(),
     CONSTRAINT CK_LichHen_ThoiGianKhamDuKien CHECK (
         (LoaiKham IN ('KhamThuong','TaiKham') AND ThoiGianKhamDuKien = 30)
@@ -171,7 +170,6 @@ CREATE TABLE LichHen (
     CONSTRAINT FK_LichHen_BacSi    FOREIGN KEY (MaBacSi)    REFERENCES NhanVien(MaNhanVien)
 );
 GO
-
 
 /* ======================================================================
    8. BẢNG PHIEUKHAM

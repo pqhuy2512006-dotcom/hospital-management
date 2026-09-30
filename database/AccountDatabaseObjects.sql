@@ -1,3 +1,6 @@
+use QuanLyBenhVien
+go
+
 CREATE OR ALTER VIEW dbo.vw_TaiKhoan
 AS
     SELECT MaTaiKhoan, TenDangNhap, MatKhauHash, Email, SoDienThoai, VaiTro, TrangThai, NgayTao
