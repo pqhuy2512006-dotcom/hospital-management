@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "LichHen")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_LichHen")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -39,6 +40,9 @@ public class LichHen {
 
     @Column(name = "LoaiKham", nullable = false, length = 20)
     private String loaiKham;
+
+    @Column(name = "ThoiGianKhamDuKien", nullable = false)
+    private Integer thoiGianKhamDuKien;
 
     @Column(name = "HinhThucDat", nullable = false, length = 20)
     private String hinhThucDat;

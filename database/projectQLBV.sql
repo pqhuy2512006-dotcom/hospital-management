@@ -37,6 +37,7 @@ CREATE TABLE TaiKhoan (
     TenDangNhap     VARCHAR(50)          NOT NULL UNIQUE,
     MatKhauHash     VARCHAR(255)         NOT NULL,
     Email           VARCHAR(100)         NULL UNIQUE,
+    SoDienThoai     VARCHAR(15)          NOT NULL,
     VaiTro          VARCHAR(20)          NOT NULL 
                     CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','BenhNhan')),
     TrangThai       BIT                  NOT NULL DEFAULT 1,
@@ -153,6 +154,7 @@ CREATE TABLE LichHen (
     GioKham         TIME                 NOT NULL,
     LoaiKham        VARCHAR(20)          NOT NULL 
                     CHECK (LoaiKham IN ('KhamThuong','KhamDichVu','TaiKham')),
+    ThoiGianKhamDuKien INT               NOT NULL,
     HinhThucDat     VARCHAR(20)          NOT NULL 
                     CHECK (HinhThucDat IN ('Online','TrucTiep','DienThoai')),
     LyDoKham        NVARCHAR(300)        NULL,
@@ -160,11 +162,16 @@ CREATE TABLE LichHen (
     TrangThai       VARCHAR(20)          NOT NULL DEFAULT 'ChoXacNhan' 
                     CHECK (TrangThai IN ('ChoXacNhan','DaXacNhan','DaHuy','DaKham')),
     NgayDatLich     DATETIME             NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT CK_LichHen_ThoiGianKhamDuKien CHECK (
+        (LoaiKham IN ('KhamThuong','TaiKham') AND ThoiGianKhamDuKien = 30)
+        OR (LoaiKham = 'KhamDichVu' AND ThoiGianKhamDuKien = 45)
+    ),
     CONSTRAINT FK_LichHen_BenhNhan FOREIGN KEY (MaBenhNhan) REFERENCES BenhNhan(MaBenhNhan),
     CONSTRAINT FK_LichHen_Khoa     FOREIGN KEY (MaKhoa)     REFERENCES Khoa(MaKhoa),
     CONSTRAINT FK_LichHen_BacSi    FOREIGN KEY (MaBacSi)    REFERENCES NhanVien(MaNhanVien)
 );
 GO
+
 
 /* ======================================================================
    8. BẢNG PHIEUKHAM

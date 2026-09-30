@@ -2,10 +2,13 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.ChiTietKetQuaCLS;
 import com.nhom12.hospital.entity.KetQuaCLS;
+import com.nhom12.hospital.entity.NhanVien;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.BenhNhanRepository;
 import com.nhom12.hospital.repository.ChiTietKetQuaCLSRepository;
 import com.nhom12.hospital.repository.KetQuaCLSRepository;
 import com.nhom12.hospital.repository.NhanVienRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +37,22 @@ public class KetQuaCLSController {
 
     @GetMapping
     public List<Map<String, Object>> getAll() {
-        List<KetQuaCLS> list = ketQuaCLSRepository.findAll();
+        return mapResults(ketQuaCLSRepository.findAll());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyResults(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        Optional<NhanVien> doctor = accountId == null ? Optional.empty()
+                : nhanVienRepository.findByMaTaiKhoan(accountId)
+                        .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()));
+        if (doctor.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không tìm thấy hồ sơ bác sĩ."));
+        }
+        return ResponseEntity.ok(mapResults(ketQuaCLSRepository.findByMaBacSiDoc(doctor.get().getMaNhanVien())));
+    }
+
+    private List<Map<String, Object>> mapResults(List<KetQuaCLS> list) {
         List<Map<String, Object>> res = new ArrayList<>();
 
         for (KetQuaCLS kq : list) {

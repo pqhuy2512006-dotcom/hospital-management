@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "LichTruc")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_LichTruc")
 @Getter
 @Setter
 @NoArgsConstructor

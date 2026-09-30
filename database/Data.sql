@@ -6,6 +6,7 @@ BEGIN
         TenDangNhap,
         MatKhauHash,
         Email,
+        SoDienThoai,
         VaiTro,
         TrangThai
     )
@@ -14,6 +15,7 @@ BEGIN
         'admin',
         '$2a$10$MhcIw3ha3SWQrvmNnDzurO2NOEzBnB2BiKG43ZfsUoPhK21olvCDq',
         'admin@hospital.com',
+        '0900000000',
         'QuanTri',
         1
     );

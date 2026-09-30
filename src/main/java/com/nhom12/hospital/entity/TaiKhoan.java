@@ -28,6 +28,9 @@ public class TaiKhoan {
     @Column(name = "Email", length = 100)
     private String email;
 
+    @Column(name = "SoDienThoai", nullable = false, length = 15)
+    private String soDienThoai;
+
     @Column(name = "VaiTro", nullable = false, length = 20)
     private String vaiTro;
 

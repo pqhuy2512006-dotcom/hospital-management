@@ -1,7 +1,9 @@
 package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.*;
+import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.repository.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +58,20 @@ public class PhieuKhamController {
         return phieuKhamRepository.findAll();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyExaminations(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        if (accountId == null) {
+            return ResponseEntity.status(403).body(Map.of("message", "Yêu cầu đăng nhập."));
+        }
+        Optional<NhanVien> doctor = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()));
+        if (doctor.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không tìm thấy hồ sơ bác sĩ."));
+        }
+        return ResponseEntity.ok(phieuKhamRepository.findByMaBacSi(doctor.get().getMaNhanVien()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getById(@PathVariable String id) {
         return phieuKhamRepository.findById(id).map(pk -> {
@@ -70,50 +86,32 @@ public class PhieuKhamController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> hoanTatKham(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> hoanTatKham(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         String maPK = "PK" + (System.currentTimeMillis() % 10000000);
         PhieuKham pk = new PhieuKham();
         pk.setMaPhieuKham(maPK);
 
-        // Kiểm tra và gán MaBenhNhan hợp lệ
-        String rawBN = (String) payload.get("maBenhNhan");
-        if (rawBN != null && benhNhanRepository.existsById(rawBN)) {
-            pk.setMaBenhNhan(rawBN);
-        } else {
-            Optional<BenhNhan> firstBN = benhNhanRepository.findAll().stream().findFirst();
-            if (firstBN.isPresent()) {
-                pk.setMaBenhNhan(firstBN.get().getMaBenhNhan());
-            } else {
-                return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy dữ liệu bệnh nhân trong hệ thống!"));
-            }
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        Optional<NhanVien> doctorOpt = accountId == null ? Optional.empty()
+                : nhanVienRepository.findByMaTaiKhoan(accountId)
+                        .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()));
+        if (doctorOpt.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không tìm thấy hồ sơ bác sĩ."));
         }
 
-        // Kiểm tra và gán MaBacSi hợp lệ
-        String rawBS = (String) payload.get("maBacSi");
-        if (rawBS != null && nhanVienRepository.existsById(rawBS)) {
-            pk.setMaBacSi(rawBS);
-        } else {
-            nhanVienRepository.findAll().stream()
-                    .filter(nv -> "BacSi".equalsIgnoreCase(nv.getVaiTro()) || "DOCTOR".equalsIgnoreCase(nv.getVaiTro()))
-                    .findFirst()
-                    .ifPresentOrElse(nv -> pk.setMaBacSi(nv.getMaNhanVien()), () -> pk.setMaBacSi("NV-DOC01"));
-        }
-
-        // Kiểm tra và gán MaKhoa hợp lệ
-        String rawKhoa = (String) payload.get("maKhoa");
-        if (rawKhoa != null && khoaRepository.existsById(rawKhoa)) {
-            pk.setMaKhoa(rawKhoa);
-        } else {
-            khoaRepository.findAll().stream().findFirst().ifPresent(k -> pk.setMaKhoa(k.getMaKhoa()));
-        }
-
-        // Kiểm tra MaLichHen nếu có
         String rawLichHen = (String) payload.get("maLichHen");
-        if (rawLichHen != null && lichHenRepository.existsById(rawLichHen)) {
-            pk.setMaLichHen(rawLichHen);
-        } else {
-            pk.setMaLichHen(null);
+        Optional<LichHen> appointmentOpt = rawLichHen == null ? Optional.empty() : lichHenRepository.findById(rawLichHen);
+        if (appointmentOpt.isEmpty()
+                || !doctorOpt.get().getMaNhanVien().equals(appointmentOpt.get().getMaBacSi())
+                || "DaKham".equalsIgnoreCase(appointmentOpt.get().getTrangThai())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Lịch khám không hợp lệ, không thuộc bác sĩ hoặc đã hoàn tất."));
         }
+
+        LichHen appointment = appointmentOpt.get();
+        pk.setMaBenhNhan(appointment.getMaBenhNhan());
+        pk.setMaBacSi(doctorOpt.get().getMaNhanVien());
+        pk.setMaKhoa(appointment.getMaKhoa());
+        pk.setMaLichHen(appointment.getMaLichHen());
 
         pk.setNgayKham(LocalDateTime.now());
         pk.setTrieuChung((String) payload.get("trieuChung"));

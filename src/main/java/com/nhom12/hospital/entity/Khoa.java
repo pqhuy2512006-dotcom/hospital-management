@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Khoa", schema = "dbo")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_Khoa", schema = "dbo")
 @Getter
 @Setter
 @NoArgsConstructor

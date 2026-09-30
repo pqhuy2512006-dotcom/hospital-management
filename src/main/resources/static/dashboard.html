@@ -355,11 +355,12 @@
                 <h2>Báo Cáo Hoạt Động & Phân Tích Thống Kê</h2>
             </div>
             <div class="header-actions">
-                <button class="btn-action btn-excel" onclick="exportExcelReport()" title="Xuất file báo cáo doanh thu Excel">
-                    <i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo (Excel)
-                </button>
-                <button class="btn-action btn-pdf" onclick="window.print()" title="In hoặc lưu PDF">
-                    <i class="fa-solid fa-print"></i> In Thống Kê (PDF)
+                <label for="reportFrom">Từ</label>
+                <input type="date" id="reportFrom">
+                <label for="reportTo">Đến</label>
+                <input type="date" id="reportTo">
+                <button class="btn-action btn-excel" onclick="exportCSVReport()" title="Xuất báo cáo CSV">
+                    <i class="fa-solid fa-file-csv"></i> Xuất CSV
                 </button>
                 <button class="btn-logout" onclick="logout()">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
@@ -373,9 +374,9 @@
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div>
-                        <div class="kpi-label">Tổng Lượt Khám Hôm Nay</div>
-                        <div class="kpi-val" id="valVisits">128</div>
-                        <div class="kpi-sub"><i class="fa-solid fa-arrow-trend-up"></i> +12.5% so với hôm qua</div>
+                        <div class="kpi-label">Lượt khám trong kỳ</div>
+                        <div class="kpi-val" id="valVisits">--</div>
+                        <div class="kpi-sub">Theo ngày khám trên phiếu khám</div>
                     </div>
                     <div class="kpi-icon" style="background: #e0f2fe; color: #0284c7;">
                         <i class="fa-solid fa-hospital-user"></i>
@@ -384,9 +385,9 @@
 
                 <div class="kpi-card">
                     <div>
-                        <div class="kpi-label">Doanh Thu Trong Ngày</div>
-                        <div class="kpi-val" id="valRevenue">38.450.000 đ</div>
-                        <div class="kpi-sub"><i class="fa-solid fa-arrow-trend-up"></i> Đạt 105% chỉ tiêu</div>
+                        <div class="kpi-label">Doanh thu đã thanh toán</div>
+                        <div class="kpi-val" id="valRevenue">--</div>
+                        <div class="kpi-sub">Trừ phần BHYT chi trả</div>
                     </div>
                     <div class="kpi-icon" style="background: #d1fae5; color: #059669;">
                         <i class="fa-solid fa-sack-dollar"></i>
@@ -395,9 +396,9 @@
 
                 <div class="kpi-card">
                     <div>
-                        <div class="kpi-label">Bệnh Nhân Đang Nằm Viện</div>
-                        <div class="kpi-val" id="valInpatients">11 / 18</div>
-                        <div class="kpi-sub" style="color: #6366f1;"><i class="fa-solid fa-bed"></i> 61.1% công suất giường</div>
+                        <div class="kpi-label">Số chẩn đoán khác nhau</div>
+                        <div class="kpi-val" id="valDiseaseCount">--</div>
+                        <div class="kpi-sub">Trong các phiếu khám của kỳ</div>
                     </div>
                     <div class="kpi-icon" style="background: #ede9fe; color: #6366f1;">
                         <i class="fa-solid fa-bed-pulse"></i>
@@ -406,9 +407,9 @@
 
                 <div class="kpi-card">
                     <div>
-                        <div class="kpi-label">Thuốc Sắp Hết Hạn / Tồn Thấp</div>
-                        <div class="kpi-val" id="valStockAlert" style="color: var(--danger);">4 Loại</div>
-                        <div class="kpi-sub" style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Cần nhập bổ sung</div>
+                        <div class="kpi-label">Chẩn đoán phổ biến nhất</div>
+                        <div class="kpi-val" id="valTopDisease" style="font-size:15px; line-height:1.35; overflow-wrap:anywhere;">--</div>
+                        <div class="kpi-sub" id="valTopDiseaseCount">Chưa có dữ liệu</div>
                     </div>
                     <div class="kpi-icon" style="background: #fee2e2; color: #ef4444;">
                         <i class="fa-solid fa-boxes-stacked"></i>
@@ -416,111 +417,20 @@
                 </div>
             </div>
 
-            <!-- Bảng Báo Cáo Chi Tiết -->
-            <div class="analytics-grid">
-                <!-- UC72: Biểu mẫu Thống kê lượt khám theo Bác sĩ & Khoa (Mẫu BCTK_BM1) -->
+            <!-- Báo cáo tổng hợp, không hiển thị hồ sơ định danh -->
+            <div class="analytics-grid" style="grid-template-columns: 1fr;">
                 <div class="report-card">
                     <div class="report-header">
-                        <h3><i class="fa-solid fa-stethoscope" style="color: var(--primary);"></i> Thống Kê Lượt Khám Theo Khoa & Bác Sĩ (Mẫu BCTK_BM1)</h3>
-                        <span style="font-size: 12.5px; color: var(--text-muted);">Tháng 09/2026</span>
+                        <h3><i class="fa-solid fa-chart-column" style="color: var(--primary);"></i> Bệnh phổ biến theo chẩn đoán</h3>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Khoa Khám</th>
-                                <th>Bác Sĩ Phụ Trách</th>
-                                <th style="text-align: center;">Lượt Khám</th>
-                                <th>Tỉ Lệ Hoạt Động</th>
+                                <th>Chẩn đoán</th>
+                                <th style="text-align: right;">Số lượt</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Khoa Nội Tổng Hợp</strong></td>
-                                <td>BS. CKI. Trần Văn Hùng</td>
-                                <td style="text-align: center; font-weight: 700; color: var(--primary);">48</td>
-                                <td>
-                                    <div style="font-size: 12px; font-weight: 600;">37.5%</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar-fill" style="width: 37.5%; background: var(--primary);"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Khoa Tai Mũi Họng</strong></td>
-                                <td>ThS. BS. Nguyễn Thị Mai</td>
-                                <td style="text-align: center; font-weight: 700; color: var(--primary);">35</td>
-                                <td>
-                                    <div style="font-size: 12px; font-weight: 600;">27.3%</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar-fill" style="width: 27.3%; background: #0ea5e9;"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Khoa Ngoại Tiêu Hóa</strong></td>
-                                <td>BS. CKI. Lê Quốc Dũng</td>
-                                <td style="text-align: center; font-weight: 700; color: var(--primary);">25</td>
-                                <td>
-                                    <div style="font-size: 12px; font-weight: 600;">19.5%</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar-fill" style="width: 19.5%; background: #14b8a6;"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Khoa Cấp Cứu</strong></td>
-                                <td>BS. Đỗ Minh Quân</td>
-                                <td style="text-align: center; font-weight: 700; color: var(--primary);">20</td>
-                                <td>
-                                    <div style="font-size: 12px; font-weight: 600;">15.6%</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar-fill" style="width: 15.6%; background: #f59e0b;"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- UC73: Thống kê Doanh Thu Theo Dịch Vụ (Mẫu BCTK_BM2) -->
-                <div class="report-card">
-                    <div class="report-header">
-                        <h3><i class="fa-solid fa-receipt" style="color: #059669;"></i> Doanh Thu Theo Dịch Vụ (Mẫu BCTK_BM2)</h3>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Loại Dịch Vụ</th>
-                                <th style="text-align: center;">Số Lượng</th>
-                                <th style="text-align: right;">Doanh Thu</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><i class="fa-solid fa-user-doctor" style="color: var(--primary); width: 20px;"></i> Công Khám Bệnh</td>
-                                <td style="text-align: center; font-weight: 600;">128</td>
-                                <td style="text-align: right; font-weight: 700;">19.200.000 đ</td>
-                            </tr>
-                            <tr>
-                                <td><i class="fa-solid fa-flask-vial" style="color: #6366f1; width: 20px;"></i> Xét Nghiệm & CĐHA</td>
-                                <td style="text-align: center; font-weight: 600;">54</td>
-                                <td style="text-align: right; font-weight: 700;">11.350.000 đ</td>
-                            </tr>
-                            <tr>
-                                <td><i class="fa-solid fa-pills" style="color: #059669; width: 20px;"></i> Dược Phẩm / Thuốc</td>
-                                <td style="text-align: center; font-weight: 600;">96</td>
-                                <td style="text-align: right; font-weight: 700;">6.100.000 đ</td>
-                            </tr>
-                            <tr>
-                                <td><i class="fa-solid fa-bed" style="color: #f59e0b; width: 20px;"></i> Tiền Giường Nội Trú</td>
-                                <td style="text-align: center; font-weight: 600;">11</td>
-                                <td style="text-align: right; font-weight: 700;">1.800.000 đ</td>
-                            </tr>
-                            <tr style="background: #f8fafc; font-weight: 800;">
-                                <td colspan="2">Tổng Doanh Thu Hóa Đơn:</td>
-                                <td style="text-align: right; color: #059669; font-size: 15px;">38.450.000 đ</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="topDiseaseBody"><tr><td colspan="2">Đang tải thống kê...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -529,100 +439,56 @@
 
     <!-- Script Xuất file & Đăng xuất -->
     <script>
-        let currentStats = null;
-
         async function loadDashboardStats() {
             try {
-                const [statsRes, drugsRes] = await Promise.all([
-                    fetch('/api/v1/dashboard/stats'),
-                    fetch('/api/v1/thuoc')
-                ]);
+                const from = document.getElementById('reportFrom').value;
+                const to = document.getElementById('reportTo').value;
+                const response = await fetch(`/api/v1/dashboard/stats?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+                if (!response.ok) throw new Error('Không tải được thống kê.');
 
-                if (!statsRes.ok) return;
+                const stats = await response.json();
+                document.getElementById('valVisits').textContent = Number(stats.totalVisits || 0).toLocaleString('vi-VN');
+                document.getElementById('valRevenue').textContent = Number(stats.totalRevenue || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('valDiseaseCount').textContent = String((stats.topDiseases || []).length);
 
-                const stats = await statsRes.json();
-                currentStats = stats;
+                const topDisease = (stats.topDiseases || [])[0];
+                document.getElementById('valTopDisease').textContent = topDisease ? topDisease.diagnosis : 'Chưa có';
+                document.getElementById('valTopDiseaseCount').textContent = topDisease ? `${topDisease.count} lượt` : 'Chưa có dữ liệu';
 
-                const drugs = drugsRes.ok ? await drugsRes.json() : [];
-                const lowStockCount = drugs.filter(d => d.tonKhoHienTai <= d.nguongCanhBao).length;
-
-                // Cập nhật các thẻ KPI
-                const valVisits = document.getElementById('valVisits');
-                if (valVisits) valVisits.innerText = stats.totalAppointments || stats.totalPatients || 0;
-
-                const valRevenue = document.getElementById('valRevenue');
-                if (valRevenue) valRevenue.innerText = (stats.totalRevenue || 0).toLocaleString('vi-VN') + ' đ';
-
-                const valInpatients = document.getElementById('valInpatients');
-                if (valInpatients) valInpatients.innerText = `${stats.totalInpatients || 0} / ${stats.totalBeds || 0}`;
-
-                const valStockAlert = document.getElementById('valStockAlert');
-                if (valStockAlert) valStockAlert.innerText = `${lowStockCount} Loại`;
-
-                // Cập nhật bảng doanh thu dịch vụ nếu có
-                const tbl = document.querySelector('.report-card table tbody');
-                if (tbl) {
-                    const totalAll = (stats.revKham || 0) + (stats.revCLS || 0) + (stats.revThuoc || 0) + (stats.revGiuong || 0);
-                    tbl.innerHTML = `
-                        <tr>
-                            <td><i class="fa-solid fa-user-doctor" style="color: var(--primary); width: 20px;"></i> Công Khám Bệnh</td>
-                            <td style="text-align: center; font-weight: 600;">--</td>
-                            <td style="text-align: right; font-weight: 700;">${(stats.revKham || 0).toLocaleString('vi-VN')} đ</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fa-solid fa-flask-vial" style="color: #6366f1; width: 20px;"></i> Xét Nghiệm & CĐHA</td>
-                            <td style="text-align: center; font-weight: 600;">--</td>
-                            <td style="text-align: right; font-weight: 700;">${(stats.revCLS || 0).toLocaleString('vi-VN')} đ</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fa-solid fa-pills" style="color: #059669; width: 20px;"></i> Dược Phẩm / Thuốc</td>
-                            <td style="text-align: center; font-weight: 600;">--</td>
-                            <td style="text-align: right; font-weight: 700;">${(stats.revThuoc || 0).toLocaleString('vi-VN')} đ</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fa-solid fa-bed" style="color: #f59e0b; width: 20px;"></i> Tiền Giường Nội Trú</td>
-                            <td style="text-align: center; font-weight: 600;">${stats.totalInpatients || 0}</td>
-                            <td style="text-align: right; font-weight: 700;">${(stats.revGiuong || 0).toLocaleString('vi-VN')} đ</td>
-                        </tr>
-                        <tr style="background: #f8fafc; font-weight: 800;">
-                            <td colspan="2">Tổng Doanh Thu Hóa Đơn:</td>
-                            <td style="text-align: right; color: #059669; font-size: 15px;">${(stats.totalRevenue || totalAll).toLocaleString('vi-VN')} đ</td>
-                        </tr>
-                    `;
+                const tableBody = document.getElementById('topDiseaseBody');
+                tableBody.replaceChildren();
+                if (!stats.topDiseases || stats.topDiseases.length === 0) {
+                    const row = tableBody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 2;
+                    cell.textContent = 'Không có chẩn đoán trong khoảng ngày đã chọn.';
+                } else {
+                    stats.topDiseases.forEach(item => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = item.diagnosis;
+                        row.insertCell().textContent = Number(item.count).toLocaleString('vi-VN');
+                    });
                 }
             } catch (error) {
                 console.error("Lỗi tải dashboard stats:", error);
             }
         }
 
-        // Hàm xuất file Excel (CSV có định dạng UTF-8 chuẩn cho Excel)
-        function exportExcelReport() {
-            const stats = currentStats || {};
-            const rows = [
-                ["BÁO CÁO THỐNG KÊ DOANH THU BỆNH VIỆN MEDICARE HIS"],
-                ["Ngày xuất:", new Date().toLocaleDateString('vi-VN')],
-                [],
-                ["Loại Dịch Vụ", "Doanh Thu (VNĐ)"],
-                ["Công Khám Bệnh", (stats.revKham || 0).toString()],
-                ["Xét Nghiệm & CĐHA", (stats.revCLS || 0).toString()],
-                ["Dược Phẩm / Thuốc", (stats.revThuoc || 0).toString()],
-                ["Tiền Giường Nội Trú", (stats.revGiuong || 0).toString()],
-                ["TỔNG CỘNG", (stats.totalRevenue || 0).toString()]
-            ];
-
-            let csvContent = "\uFEFF";
-            rows.forEach(row => {
-                csvContent += row.join(",") + "\r\n";
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        async function exportCSVReport() {
+            const from = document.getElementById('reportFrom').value;
+            const to = document.getElementById('reportTo').value;
+            const response = await fetch(`/api/v1/dashboard/report?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+            if (!response.ok) {
+                alert('Không thể xuất báo cáo cho khoảng ngày đã chọn.');
+                return;
+            }
+            const blob = await response.blob();
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `BaoCao_DoanhThu_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `hospital-report-${from}-${to}.csv`;
             link.click();
-            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         function logout() {
@@ -631,6 +497,13 @@
         }
 
         window.onload = async function() {
+            const today = new Date();
+            const dateString = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('reportFrom').value = dateString(monthStart);
+            document.getElementById('reportTo').value = dateString(today);
+            document.getElementById('reportFrom').addEventListener('change', loadDashboardStats);
+            document.getElementById('reportTo').addEventListener('change', loadDashboardStats);
             await loadDashboardStats();
         };
     </script>

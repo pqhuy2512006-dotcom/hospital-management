@@ -496,21 +496,7 @@
                                     <th style="width:40px;"></th>
                                 </tr>
                             </thead>
-                            <tbody id="clsTableBody">
-                                <tr>
-                                    <td>
-                                        <select class="form-control" style="height:32px;">
-                                            <option value="CLS01">Tổng phân tích tế bào máu ngoại vi (Bằng máy laser)</option>
-                                            <option value="CLS02">Sinh hóa máu: Định lượng Glucose</option>
-                                            <option value="CLS03">Nội soi thực quản - dạ dày - tá tràng</option>
-                                            <option value="CLS04">X-Quang ngực thẳng</option>
-                                        </select>
-                                    </td>
-                                    <td>Phòng Xét Nghiệm CLS</td>
-                                    <td><span style="color:#059669; font-weight:600;"><i class="fa-solid fa-check"></i> Đã có kết quả: Hồng cầu 4.6 T/L, Hb 142 g/L</span></td>
-                                    <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
-                                </tr>
-                            </tbody>
+                            <tbody id="clsTableBody"></tbody>
                         </table>
                     </div>
 
@@ -532,27 +518,7 @@
                                     <th style="width: 40px;"></th>
                                 </tr>
                             </thead>
-                            <tbody id="medTableBody">
-                                <tr>
-                                    <td>
-                                        <select class="form-control med-select" style="height:32px;" onchange="updateStock(this)">
-                                            <option value="500" data-name="Paracetamol 500mg">Paracetamol 500mg (Viên nén)</option>
-                                            <option value="200" data-name="Amoxicillin 500mg">Amoxicillin 500mg (Kháng sinh)</option>
-                                            <option value="15" data-name="Panadol Extra">Panadol Extra</option>
-                                            <option value="350" data-name="Berberin 100mg">Berberin 100mg</option>
-                                            <option value="30" data-name="Vitamin C 500mg">Vitamin C 500mg</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" class="form-control med-qty" value="10" min="1" style="height:32px;" onchange="checkStockLimit(this)">
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control" value="Uống 1 viên sau ăn khi đau, ngày tối đa 3 lần" style="height:32px;">
-                                    </td>
-                                    <td class="stock-cell" style="font-weight:700; color:var(--primary);">Còn 500 viên</td>
-                                    <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
-                                </tr>
-                            </tbody>
+                            <tbody id="medTableBody"></tbody>
                         </table>
                     </div>
 
@@ -567,6 +533,46 @@
                         <i class="fa-solid fa-clipboard-check"></i> Hoàn Tất Khám Bệnh & Chuyển Đơn Sang Quầy Thuốc / Thu Ngân
                     </button>
                 </form>
+
+                <section class="section-box" style="margin-top:20px;">
+                    <div class="section-title">
+                        <span><i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển khoa / Hội chẩn</span>
+                    </div>
+                    <form onsubmit="submitReferral(event)">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Loại yêu cầu *</label>
+                                <select id="referralType" class="form-control" onchange="toggleInvitedDoctor()" required>
+                                    <option value="CHUYEN_KHOA">Chuyển khoa</option>
+                                    <option value="HOI_CHAN">Hội chẩn</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Phiếu khám *</label>
+                                <select id="referralExam" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Khoa nhận *</label>
+                                <select id="referralDepartment" class="form-control" required></select>
+                            </div>
+                            <div class="form-group" id="invitedDoctorGroup" style="display:none;">
+                                <label>Bác sĩ được mời *</label>
+                                <select id="invitedDoctor" class="form-control"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Lý do chuyển khoa / nội dung hội chẩn *</label>
+                            <textarea id="referralReason" class="form-control" maxlength="500" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-add-item"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button>
+                    </form>
+                    <div style="margin-top:16px; overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Ngày gửi</th><th>Loại</th><th>Phiếu khám</th><th>Khoa nhận</th><th>Lý do</th><th>Trạng thái</th></tr></thead>
+                            <tbody id="referralTableBody"><tr><td colspan="6">Chưa có yêu cầu.</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -581,7 +587,7 @@
         async function loadPatientQueue() {
             try {
                 const [appointmentsRes, patientsRes, drugsRes, clsRes] = await Promise.all([
-                    fetch('/api/v1/lichhen'),
+                    fetch('/api/v1/lichhen/me'),
                     fetch('/api/v1/benhnhan'),
                     fetch('/api/v1/thuoc'),
                     fetch('/api/v1/dichvucls')
@@ -819,8 +825,6 @@
 
             const payload = {
                 maBenhNhan: currentPatient.id,
-                maBacSi: "NV-DOC01",
-                maKhoa: "KNT",
                 maLichHen: currentPatient.stt.startsWith("LH") ? currentPatient.stt : null,
                 mach: pulse,
                 nhietDo: temp,
@@ -866,13 +870,103 @@
             }
         }
 
+        function toggleInvitedDoctor() {
+            const isConsult = document.getElementById('referralType').value === 'HOI_CHAN';
+            document.getElementById('invitedDoctorGroup').style.display = isConsult ? 'block' : 'none';
+            document.getElementById('invitedDoctor').required = isConsult;
+        }
+
+        async function loadReferralOptions() {
+            const [departmentsResponse, doctorsResponse, examsResponse] = await Promise.all([
+                fetch('/api/v1/khoa'),
+                fetch('/api/v1/nhanvien/doctors'),
+                fetch('/api/v1/phieukham/me')
+            ]);
+            if (!departmentsResponse.ok || !doctorsResponse.ok || !examsResponse.ok) {
+                throw new Error('Không thể tải danh sách khoa, bác sĩ hoặc phiếu khám.');
+            }
+            const departments = await departmentsResponse.json();
+            const doctors = await doctorsResponse.json();
+            const examinations = await examsResponse.json();
+
+            const departmentSelect = document.getElementById('referralDepartment');
+            departmentSelect.replaceChildren(new Option('Chọn khoa nhận', ''));
+            departments.forEach(department => departmentSelect.add(new Option(department.tenKhoa, department.maKhoa)));
+
+            const doctorSelect = document.getElementById('invitedDoctor');
+            doctorSelect.replaceChildren(new Option('Chọn bác sĩ', ''));
+            doctors.forEach(doctor => doctorSelect.add(new Option(`${doctor.name} - ${doctor.specialty || ''}`, doctor.id)));
+
+            const examSelect = document.getElementById('referralExam');
+            examSelect.replaceChildren(new Option('Chọn phiếu khám', ''));
+            examinations.forEach(exam => examSelect.add(new Option(`${exam.maPhieuKham} - ${exam.maBenhNhan}`, exam.maPhieuKham)));
+        }
+
+        async function loadMyReferrals() {
+            const response = await fetch('/api/v1/chuyenkhoa/me');
+            if (!response.ok) throw new Error('Không thể tải yêu cầu chuyển khoa/hội chẩn.');
+            const referrals = await response.json();
+            const body = document.getElementById('referralTableBody');
+            body.replaceChildren();
+            if (referrals.length === 0) {
+                const row = body.insertRow();
+                row.insertCell().colSpan = 6;
+                row.cells[0].textContent = 'Chưa có yêu cầu.';
+                return;
+            }
+            referrals.forEach(referral => {
+                const row = body.insertRow();
+                [referral.ngayTao, referral.loaiYeuCau === 'HOI_CHAN' ? 'Hội chẩn' : 'Chuyển khoa',
+                    referral.maPhieuKham, referral.maKhoaNhan, referral.lyDo, 'Chờ tiếp nhận']
+                    .forEach(value => row.insertCell().textContent = String(value || ''));
+            });
+        }
+
+        async function submitReferral(event) {
+            event.preventDefault();
+            const type = document.getElementById('referralType').value;
+            const response = await fetch('/api/v1/chuyenkhoa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    loaiYeuCau: type,
+                    maPhieuKham: document.getElementById('referralExam').value,
+                    maKhoaNhan: document.getElementById('referralDepartment').value,
+                    maBacSiDuocMoi: type === 'HOI_CHAN' ? document.getElementById('invitedDoctor').value : null,
+                    lyDo: document.getElementById('referralReason').value.trim()
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || 'Không thể gửi yêu cầu.');
+                return;
+            }
+            document.getElementById('referralReason').value = '';
+            await loadMyReferrals();
+            alert('Đã gửi yêu cầu, trạng thái: Chờ tiếp nhận.');
+        }
+
         function logout() {
             sessionStorage.removeItem('authenticatedUser');
             window.location.href = '/login.html';
         }
 
         window.onload = async function() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+                const title = document.querySelector('.top-header .header-title h2');
+                if (title && (user.hoTen || user.username)) {
+                    title.textContent = `Phòng khám - ${user.hoTen || user.username}`;
+                }
+            } catch (error) {
+                console.error(error);
+            }
             await loadPatientQueue();
+            try {
+                await Promise.all([loadReferralOptions(), loadMyReferrals()]);
+            } catch (error) {
+                console.error(error);
+            }
         };
     </script>
     <script src="/auth-guard.js"></script>

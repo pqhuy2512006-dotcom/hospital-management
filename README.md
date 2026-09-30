@@ -79,6 +79,24 @@ Mở file:
 
 Chạy toàn bộ script trong SSMS để tạo database `QuanLyBenhVien`.
 
+Nếu database đã được tạo trước đó, chạy thêm [database/AppointmentDuration.sql](database/AppointmentDuration.sql) để bổ sung thời lượng dự kiến cho lịch hẹn hiện có. Script tự gán 45 phút cho khám dịch vụ và 30 phút cho khám thường/tái khám.
+
+Sau khi tạo schema cơ sở, chạy thêm [database/DoctorReferral.sql](database/DoctorReferral.sql) để tạo bảng lưu yêu cầu chuyển khoa/hội chẩn của bác sĩ.
+
+Sau đó chạy thêm script tạo bảng nhật ký truy cập:
+
+- [database/AuditLog.sql](database/AuditLog.sql)
+
+Script này chỉ bổ sung bảng `AuditLog`, không xóa dữ liệu nghiệp vụ.
+
+Để ứng dụng dùng database views cho thao tác đọc và stored procedures cho thao tác ghi, chạy tiếp theo thứ tự:
+
+1. [database/AccountDatabaseObjects.sql](database/AccountDatabaseObjects.sql)
+2. [database/EntityViews.sql](database/EntityViews.sql)
+3. [database/EntityWriteProcedures.sql](database/EntityWriteProcedures.sql)
+
+Các script trên dùng `CREATE OR ALTER` và không xóa dữ liệu bảng nghiệp vụ.
+
 ## Tài khoản mặc định của ứng dụng
 
 Tài khoản ứng dụng để đăng nhập vào hệ thống qua giao diện web:
@@ -91,35 +109,7 @@ Dữ liệu mặc định này nằm trong bảng `TaiKhoan` và được seed q
 
 - [database/Data.sql](database/Data.sql)
 
-## Reset mật khẩu tài khoản admin
-
-Sau khi ứng dụng đã chạy, bạn có thể reset mật khẩu admin bằng API sau:
-
-```powershell
-curl -X POST "http://localhost:8080/api/v1/auth/reset-admin" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-```
-
-Hoặc dùng fetch trong trình duyệt:
-
-```javascript
-fetch('http://localhost:8080/api/v1/auth/reset-admin', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    username: 'admin',
-    password: 'admin123'
-  })
-})
-.then(res => res.text())
-.then(console.log)
-.catch(console.error);
-```
-
-API này sẽ tạo hoặc reset tài khoản `admin` về mật khẩu `admin123` và vai trò `QuanTri`.
-
-> Lưu ý: đây là tài khoản ứng dụng, không phải tài khoản SQL Server `sa`.
+Tài khoản ứng dụng khác với tài khoản SQL Server `sa`. Sau khi đăng nhập Admin, có thể cấp tài khoản nhân viên, đổi vai trò, khóa/mở khóa và đặt lại mật khẩu trong mục Cấu hình hệ thống.
 
 ## Bước 5: Chạy project trên Windows
 

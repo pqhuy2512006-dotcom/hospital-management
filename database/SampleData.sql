@@ -20,15 +20,15 @@ GO
 DECLARE @Hash VARCHAR(255) = '$2a$10$MhcIw3ha3SWQrvmNnDzurO2NOEzBnB2BiKG43ZfsUoPhK21olvCDq';
 
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = 'bs_hung')
-INSERT INTO TaiKhoan (TenDangNhap, MatKhauHash, Email, VaiTro, TrangThai) VALUES
-('bs_hung', @Hash, 'hung.tran@hospital.com', 'BacSi', 1),
-('bs_quan', @Hash, 'quan.do@hospital.com', 'BacSi', 1),
-('bs_mai', @Hash, 'mai.nguyen@hospital.com', 'BacSi', 1),
-('ds_lan', @Hash, 'lan.duoc@hospital.com', 'DuocSi', 1),
-('tn_nga', @Hash, 'nga.thungan@hospital.com', 'ThuNgan', 1),
-('ktv_huy', @Hash, 'huy.ktv@hospital.com', 'KTV', 1),
-('lt_minh', @Hash, 'minh.letan@hospital.com', 'LeTan', 1),
-('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', 'DieuDuong', 1);
+INSERT INTO TaiKhoan (TenDangNhap, MatKhauHash, Email, SoDienThoai, VaiTro, TrangThai) VALUES
+('bs_hung', @Hash, 'hung.tran@hospital.com', '0912345001', 'BacSi', 1),
+('bs_quan', @Hash, 'quan.do@hospital.com', '0912345002', 'BacSi', 1),
+('bs_mai', @Hash, 'mai.nguyen@hospital.com', '0912345003', 'BacSi', 1),
+('ds_lan', @Hash, 'lan.duoc@hospital.com', '0912345004', 'DuocSi', 1),
+('tn_nga', @Hash, 'nga.thungan@hospital.com', '0912345005', 'ThuNgan', 1),
+('ktv_huy', @Hash, 'huy.ktv@hospital.com', '0912345006', 'KTV', 1),
+('lt_minh', @Hash, 'minh.letan@hospital.com', '0912345007', 'LeTan', 1),
+('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', '0912345008', 'DieuDuong', 1);
 GO
 
 -- 3. NHAN VIEN
@@ -104,11 +104,11 @@ GO
 
 -- 8. LICH HEN
 IF NOT EXISTS (SELECT 1 FROM LichHen WHERE MaLichHen = 'LH2026000001')
-INSERT INTO LichHen (MaLichHen, MaBenhNhan, MaKhoa, MaBacSi, NgayKham, GioKham, LoaiKham, HinhThucDat, LyDoKham, GhiChu, TrangThai, NgayDatLich) VALUES
-('LH2026000001', 'BN2026000001', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '08:30:00', 'KhamThuong', 'Online', N'Đau thượng vị âm ỉ, ợ chua kéo dài', N'Khám buổi sáng', 'ChoXacNhan', GETDATE()),
-('LH2026000002', 'BN2026000002', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '09:00:00', 'KhamDichVu', 'TrucTiep', N'Sốt nhẹ 38 độ, mệt mỏi, đau nhức cơ', N'Tiếp đón tại quầy', 'ChoXacNhan', GETDATE()),
-('LH2026000003', 'BN2026000003', 'TMH', 'NV-DOC03', CAST(GETDATE() AS DATE), '10:00:00', 'KhamThuong', 'Online', N'Nghẹt mũi, chảy nước mũi trong, đau đầu', N'Đã đặt qua app', 'DaXacNhan', GETDATE()),
-('LH2026000004', 'BN2026000004', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '10:30:00', 'TaiKham', 'DienThoai', N'Tái khám định kỳ tăng huyết áp', N'Bệnh nhân quen', 'DaXacNhan', GETDATE());
+INSERT INTO LichHen (MaLichHen, MaBenhNhan, MaKhoa, MaBacSi, NgayKham, GioKham, LoaiKham, ThoiGianKhamDuKien, HinhThucDat, LyDoKham, GhiChu, TrangThai, NgayDatLich) VALUES
+('LH2026000001', 'BN2026000001', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '08:30:00', 'KhamThuong', 30, 'Online', N'Đau thượng vị âm ỉ, ợ chua kéo dài', N'Khám buổi sáng', 'ChoXacNhan', GETDATE()),
+('LH2026000002', 'BN2026000002', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '09:00:00', 'KhamDichVu', 45, 'TrucTiep', N'Sốt nhẹ 38 độ, mệt mỏi, đau nhức cơ', N'Tiếp đón tại quầy', 'ChoXacNhan', GETDATE()),
+('LH2026000003', 'BN2026000003', 'TMH', 'NV-DOC03', CAST(GETDATE() AS DATE), '10:00:00', 'KhamThuong', 30, 'Online', N'Nghẹt mũi, chảy nước mũi trong, đau đầu', N'Đã đặt qua app', 'DaXacNhan', GETDATE()),
+('LH2026000004', 'BN2026000004', 'KNT', 'NV-DOC01', CAST(GETDATE() AS DATE), '10:30:00', 'TaiKham', 30, 'DienThoai', N'Tái khám định kỳ tăng huyết áp', N'Bệnh nhân quen', 'DaXacNhan', GETDATE());
 GO
 
 -- 9. PHIEU KHAM

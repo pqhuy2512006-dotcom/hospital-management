@@ -1,96 +1,104 @@
 package com.nhom12.hospital.controller;
 
-import com.nhom12.hospital.entity.ChiTietHoaDon;
-import com.nhom12.hospital.entity.GiuongBenh;
 import com.nhom12.hospital.entity.HoaDon;
-import com.nhom12.hospital.repository.*;
+import com.nhom12.hospital.entity.PhieuKham;
+import com.nhom12.hospital.repository.HoaDonRepository;
+import com.nhom12.hospital.repository.PhieuKhamRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @CrossOrigin(origins = "*")
 public class DashboardController {
 
-    private final BenhNhanRepository benhNhanRepository;
-    private final NhanVienRepository nhanVienRepository;
-    private final LichHenRepository lichHenRepository;
-    private final GiuongBenhRepository giuongBenhRepository;
-    private final NoiTruRepository noiTruRepository;
     private final HoaDonRepository hoaDonRepository;
-    private final ChiTietHoaDonRepository chiTietHoaDonRepository;
+    private final PhieuKhamRepository phieuKhamRepository;
 
-    public DashboardController(BenhNhanRepository benhNhanRepository,
-                               NhanVienRepository nhanVienRepository,
-                               LichHenRepository lichHenRepository,
-                               GiuongBenhRepository giuongBenhRepository,
-                               NoiTruRepository noiTruRepository,
-                               HoaDonRepository hoaDonRepository,
-                               ChiTietHoaDonRepository chiTietHoaDonRepository) {
-        this.benhNhanRepository = benhNhanRepository;
-        this.nhanVienRepository = nhanVienRepository;
-        this.lichHenRepository = lichHenRepository;
-        this.giuongBenhRepository = giuongBenhRepository;
-        this.noiTruRepository = noiTruRepository;
+    public DashboardController(HoaDonRepository hoaDonRepository,
+                               PhieuKhamRepository phieuKhamRepository) {
         this.hoaDonRepository = hoaDonRepository;
-        this.chiTietHoaDonRepository = chiTietHoaDonRepository;
+        this.phieuKhamRepository = phieuKhamRepository;
     }
 
     @GetMapping("/stats")
-    public Map<String, Object> getStats() {
+    public ResponseEntity<Map<String, Object>> getStats(@RequestParam LocalDate from,
+                                                        @RequestParam LocalDate to) {
+        if (from.isAfter(to)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        LocalDateTime fromTime = from.atStartOfDay();
+        LocalDateTime toExclusive = to.plusDays(1).atStartOfDay();
+        List<PhieuKham> visits = phieuKhamRepository
+            .findByNgayKhamGreaterThanEqualAndNgayKhamLessThan(fromTime, toExclusive);
+        List<HoaDon> paidInvoices = hoaDonRepository
+            .findByTrangThaiTTAndNgayThanhToanGreaterThanEqualAndNgayThanhToanLessThan(
+                "DaThanhToan", fromTime, toExclusive);
+
+        BigDecimal revenue = paidInvoices.stream()
+                .map(invoice -> invoice.getTongTienDichVu().subtract(
+                        invoice.getBhytChiTra() == null ? BigDecimal.ZERO : invoice.getBhytChiTra()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Map<String, Long> diagnosisCounts = new HashMap<>();
+        visits.stream()
+                .map(PhieuKham::getChanDoan)
+                .filter(diagnosis -> diagnosis != null && !diagnosis.isBlank())
+                .map(String::trim)
+                .forEach(diagnosis -> diagnosisCounts.merge(diagnosis, 1L, Long::sum));
+
         Map<String, Object> res = new HashMap<>();
+        res.put("from", from);
+        res.put("to", to);
+        res.put("totalVisits", visits.size());
+        res.put("totalRevenue", revenue);
+        res.put("topDiseases", diagnosisCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(10)
+                .map(entry -> Map.of("diagnosis", entry.getKey(), "count", entry.getValue()))
+                .toList());
+        return ResponseEntity.ok(res);
+    }
 
-        long totalPatients = benhNhanRepository.count();
-        long totalStaff = nhanVienRepository.count();
-        long totalAppointments = lichHenRepository.count();
-        long totalInpatients = noiTruRepository.findByTrangThai("DangNam").size();
+    @GetMapping(value = "/report", produces = "text/csv")
+    public ResponseEntity<byte[]> exportReport(@RequestParam LocalDate from,
+                                               @RequestParam LocalDate to) {
+        ResponseEntity<Map<String, Object>> statsResponse = getStats(from, to);
+        if (!statsResponse.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Map<String, Object> stats = statsResponse.getBody();
+        StringBuilder csv = new StringBuilder("\uFEFFChỉ số,Giá trị\r\n")
+                .append("Khoảng ngày,").append(from).append(" - ").append(to).append("\r\n")
+                .append("Lượt khám,").append(stats.get("totalVisits")).append("\r\n")
+                .append("Doanh thu đã thanh toán (VND),").append(stats.get("totalRevenue")).append("\r\n\r\n")
+                .append("Bệnh phổ biến,Lượt\r\n");
 
-        List<GiuongBenh> allBeds = giuongBenhRepository.findAll();
-        long totalBeds = allBeds.size();
-        long availableBeds = allBeds.stream().filter(b -> "Trong".equalsIgnoreCase(b.getTrangThai())).count();
-        long occupiedBeds = totalBeds - availableBeds;
-        double occupancyRate = totalBeds > 0 ? ((double) occupiedBeds / totalBeds) * 100 : 0.0;
-
-        List<HoaDon> allInvoices = hoaDonRepository.findAll();
-        BigDecimal totalRevenue = BigDecimal.ZERO;
-        for (HoaDon hd : allInvoices) {
-            if ("DaThanhToan".equalsIgnoreCase(hd.getTrangThaiTT())) {
-                BigDecimal pay = hd.getTongTienDichVu().subtract(hd.getBhytChiTra() != null ? hd.getBhytChiTra() : BigDecimal.ZERO);
-                totalRevenue = totalRevenue.add(pay);
-            }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> topDiseases = (List<Map<String, Object>>) stats.get("topDiseases");
+        for (Map<String, Object> disease : topDiseases) {
+            csv.append(csvCell(String.valueOf(disease.get("diagnosis"))))
+                    .append(',').append(disease.get("count")).append("\r\n");
         }
 
-        // Doanh thu theo loại dịch vụ
-        List<ChiTietHoaDon> allDetails = chiTietHoaDonRepository.findAll();
-        BigDecimal revKham = BigDecimal.ZERO;
-        BigDecimal revCLS = BigDecimal.ZERO;
-        BigDecimal revThuoc = BigDecimal.ZERO;
-        BigDecimal revGiuong = BigDecimal.ZERO;
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"hospital-report-" + from + "-" + to + ".csv\"")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
 
-        for (ChiTietHoaDon d : allDetails) {
-            BigDecimal lineTotal = d.getDonGia().multiply(BigDecimal.valueOf(d.getSoLuong()));
-            if ("Kham".equalsIgnoreCase(d.getLoaiDichVu())) revKham = revKham.add(lineTotal);
-            else if ("CanLamSang".equalsIgnoreCase(d.getLoaiDichVu())) revCLS = revCLS.add(lineTotal);
-            else if ("Thuoc".equalsIgnoreCase(d.getLoaiDichVu())) revThuoc = revThuoc.add(lineTotal);
-            else if ("Giuong".equalsIgnoreCase(d.getLoaiDichVu())) revGiuong = revGiuong.add(lineTotal);
-        }
-
-        res.put("totalPatients", totalPatients);
-        res.put("totalStaff", totalStaff);
-        res.put("totalAppointments", totalAppointments);
-        res.put("totalInpatients", totalInpatients);
-        res.put("totalBeds", totalBeds);
-        res.put("availableBeds", availableBeds);
-        res.put("occupiedBeds", occupiedBeds);
-        res.put("occupancyRate", Math.round(occupancyRate * 10.0) / 10.0);
-        res.put("totalRevenue", totalRevenue);
-        res.put("revKham", revKham);
-        res.put("revCLS", revCLS);
-        res.put("revThuoc", revThuoc);
-        res.put("revGiuong", revGiuong);
-
-        return res;
+    private String csvCell(String value) {
+        String safeValue = value.matches("^[\\s]*[=+@\\-].*") ? "'" + value : value;
+        return "\"" + safeValue.replace("\"", "\"\"") + "\"";
     }
 }

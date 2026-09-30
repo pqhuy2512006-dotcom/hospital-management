@@ -10,7 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "BenhNhan")
+@org.hibernate.annotations.Immutable
+@Table(name = "vw_BenhNhan")
 @Getter
 @Setter
 @NoArgsConstructor
