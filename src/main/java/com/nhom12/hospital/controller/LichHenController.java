@@ -42,6 +42,62 @@ public class LichHenController {
         this.taiKhoanRepository = taiKhoanRepository;
     }
 
+    
+    @GetMapping("/available-slots")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @RequestParam String doctorId,
+            @RequestParam String date,
+            @RequestParam(defaultValue = "KhamThuong") String loaiKham) {
+        
+        LocalDate kDate;
+        try {
+            kDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        if (kDate.isBefore(LocalDate.now())) {
+            return ResponseEntity.ok(List.of()); // No slots in the past
+        }
+
+        Integer duration = expectedDuration(loaiKham);
+        if (duration == null) duration = 30;
+
+        List<LichHen> existing = lichHenRepository.findByMaBacSiAndNgayKham(doctorId, kDate).stream()
+                .filter(lh -> !"DaHuy".equalsIgnoreCase(lh.getTrangThai()))
+                .toList();
+
+        List<String> availableSlots = new ArrayList<>();
+        // Khung giờ sáng: 08:00 - 11:30
+        generateSlots(availableSlots, existing, kDate, LocalTime.of(8, 0), LocalTime.of(11, 30), duration);
+        // Khung giờ chiều: 13:00 - 16:30
+        generateSlots(availableSlots, existing, kDate, LocalTime.of(13, 0), LocalTime.of(16, 30), duration);
+
+        return ResponseEntity.ok(availableSlots);
+    }
+
+    private void generateSlots(List<String> availableSlots, List<LichHen> existing, LocalDate kDate, LocalTime start, LocalTime end, int duration) {
+        LocalTime current = start;
+        LocalDateTime now = LocalDateTime.now();
+        while (!current.plusMinutes(duration).isAfter(end)) {
+            LocalDateTime slotStart = LocalDateTime.of(kDate, current);
+            if (slotStart.isAfter(now)) { // Only future slots
+                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+                boolean conflict = existing.stream().anyMatch(lh -> {
+                    Integer exDur = lh.getThoiGianKhamDuKien() != null ? lh.getThoiGianKhamDuKien() : expectedDuration(lh.getLoaiKham());
+                    if (exDur == null || lh.getGioKham() == null) return false;
+                    LocalDateTime exStart = LocalDateTime.of(lh.getNgayKham(), lh.getGioKham());
+                    LocalDateTime exEnd = exStart.plusMinutes(exDur);
+                    return exStart.isBefore(slotEnd) && slotStart.isBefore(exEnd);
+                });
+                if (!conflict) {
+                    availableSlots.add(current.toString());
+                }
+            }
+            current = current.plusMinutes(30); // Giả sử mỗi slot cách nhau 30p để dễ nhìn
+        }
+    }
+
     @GetMapping
     public List<LichHen> getAll(HttpServletRequest request) {
         if (isDoctor(request)) {

@@ -463,13 +463,13 @@
                         </div>
                         <div class="form-group">
                             <label>Bác Sĩ Phụ Trách</label>
-                            <select id="onlDoctor" class="form-control" required>
+                            <select id="onlDoctor" class="form-control" onchange="loadAvailableSlotsOnline()" required>
                                 <option value="">Chọn khoa trước</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Loại Khám *</label>
-                            <select id="onlType" class="form-control" required>
+                            <select id="onlType" class="form-control" onchange="loadAvailableSlotsOnline()" required>
                                 <option value="KhamThuong">Khám Thường</option>
                                 <option value="KhamDichVu">Khám Dịch Vụ</option>
                                 <option value="TaiKham">Tái Khám</option>
@@ -477,11 +477,11 @@
                         </div>
                         <div class="form-group">
                             <label>Ngày khám *</label>
-                            <input type="date" id="onlDate" class="form-control" required>
+                            <input type="date" id="onlDate" class="form-control" onchange="loadAvailableSlotsOnline()" required>
                         </div>
                         <div class="form-group">
                             <label>Giờ khám *</label>
-                            <input type="time" id="onlTime" class="form-control" required>
+                            <select id="onlTime" class="form-control" required><option value="">Chọn giờ...</option></select>
                         </div>
                         <div class="form-group">
                             <label>Lý do khám</label>
@@ -506,15 +506,29 @@
                         </div>
                         <div class="form-group">
                             <label>Khoa Khám Chỉ Định *</label>
-                            <select id="walkDept" class="form-control" required>
-                                <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp (Phòng 201)</option>
-                                <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng (Phòng 108)</option>
-                                <option value="Khoa Cấp Cứu">Khoa Cấp Cứu (Tầng 1)</option>
+                            <select id="walkDept" class="form-control" onchange="loadDoctorsForDepartmentWalkin()" required>
+                                <option value="">Chọn khoa...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bác Sĩ *</label>
+                            <select id="walkDoctor" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
+                                <option value="">Chọn khoa trước</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Khám *</label>
+                            <input type="date" id="walkDate" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giờ Khám *</label>
+                            <select id="walkTime" class="form-control" required>
+                                <option value="">Chọn giờ...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Loại Khám *</label>
-                            <select id="walkType" class="form-control" required>
+                            <select id="walkType" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
                                 <option value="KhamThuong">Khám Thường</option>
                                 <option value="KhamDichVu">Khám Dịch Vụ</option>
                                 <option value="TaiKham">Tái Khám</option>
@@ -807,9 +821,10 @@
             const payload = {
                 patientName: name,
                 cccd: cccd,
-                dept: dept,
-                ngayKham: new Date().toISOString().slice(0, 10),
-                gioKham: new Date().toTimeString().slice(0, 5),
+                maKhoa: dept,
+                ngayKham: document.getElementById('walkDate').value,
+                gioKham: document.getElementById('walkTime').value,
+                maBacSi: document.getElementById('walkDoctor').value,
                 lyDoKham: reason,
                 loaiKham: loaiKham,
                 hinhThucDat: 'TrucTiep'
@@ -898,10 +913,91 @@
             window.location.href = '/login.html';
         }
 
+        
+        // --- Fetch Available Slots ---
+        async function fetchAvailableSlots(doctorId, date, loaiKham, timeSelectId) {
+            const timeSelect = document.getElementById(timeSelectId);
+            if (!timeSelect) return;
+            timeSelect.innerHTML = '<option value="">Đang tải...</option>';
+            if (!doctorId || !date) {
+                timeSelect.innerHTML = '<option value="">Chọn bác sĩ và ngày trước</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/api/v1/lichhen/available-slots?doctorId=${doctorId}&date=${date}&loaiKham=${loaiKham}`);
+                if (res.ok) {
+                    const slots = await res.json();
+                    if (slots.length === 0) {
+                        timeSelect.innerHTML = '<option value="">Hết lịch trống</option>';
+                    } else {
+                        timeSelect.innerHTML = '<option value="">Chọn giờ khám...</option>';
+                        slots.forEach(slot => {
+                            timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
+                        });
+                    }
+                } else {
+                    timeSelect.innerHTML = '<option value="">Lỗi tải lịch</option>';
+                }
+            } catch (err) {
+                timeSelect.innerHTML = '<option value="">Lỗi tải lịch</option>';
+            }
+        }
+
+        function loadAvailableSlotsOnline() {
+            const docEl = document.getElementById('onlDoctor');
+            if(!docEl) return;
+            const doctorId = docEl.value;
+            const date = document.getElementById('onlDate').value;
+            const loaiKham = document.getElementById('onlType').value || 'KhamThuong';
+            fetchAvailableSlots(doctorId, date, loaiKham, 'onlTime');
+        }
+
+        function loadAvailableSlotsWalkin() {
+            const docEl = document.getElementById('walkDoctor');
+            if(!docEl) return;
+            const doctorId = docEl.value;
+            const date = document.getElementById('walkDate').value;
+            const loaiKham = document.getElementById('walkType').value || 'KhamThuong';
+            fetchAvailableSlots(doctorId, date, loaiKham, 'walkTime');
+        }
+        
+        async function loadDoctorsForDepartmentWalkin() {
+            const doctorSelect = document.getElementById('walkDoctor');
+            const departmentId = document.getElementById('walkDept').value;
+            doctorSelect.innerHTML = '<option value="">Đang tải bác sĩ...</option>';
+            if (!departmentId) {
+                doctorSelect.innerHTML = '<option value="">Chọn khoa trước</option>';
+                return;
+            }
+            try {
+                const response = await fetch('/api/v1/nhanvien/doctors');
+                if (!response.ok) throw new Error('Không thể tải danh sách bác sĩ.');
+                const allDoctors = await response.json();
+                const department = departments.find(item => item.maKhoa === departmentId);
+                const available = allDoctors.filter(doc => doc.specialty
+                    && department.tenKhoa.toLowerCase().includes(doc.specialty.toLowerCase()));
+                doctorSelect.innerHTML = available.length
+                    ? '<option value="">Chọn bác sĩ</option>' + available.map(doc =>
+                        `<option value="${doc.id}">${doc.name}</option>`).join('')
+                    : '<option value="">Chưa có bác sĩ thuộc khoa này</option>';
+                loadAvailableSlotsWalkin();
+            } catch (error) {
+                console.error(error);
+                doctorSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            }
+        }
+
         window.onload = async function() {
             const today = new Date().toISOString().slice(0, 10);
             document.getElementById('onlDate').min = today;
             document.getElementById('onlDate').value = today;
+            // Set today for walkDate if exists
+            const walkDate = document.getElementById('walkDate');
+            if (walkDate) {
+                walkDate.min = today;
+                walkDate.value = today;
+            }
+
             if (isPatientUser()) {
                 document.body.classList.add('patient-mode');
                 document.getElementById('appointmentTabs').remove();
@@ -921,6 +1017,17 @@
                 if (paneWalkin) paneWalkin.classList.add('active');
             }
             await loadDepartments();
+            const walkDeptSelect = document.getElementById('walkDept');
+            if (walkDeptSelect) {
+                walkDeptSelect.innerHTML = '<option value="">Chọn khoa...</option>';
+                departments.forEach(dept => {
+                    const opt = document.createElement('option');
+                    opt.value = dept.maKhoa;
+                    opt.textContent = dept.tenKhoa;
+                    walkDeptSelect.appendChild(opt);
+                });
+            }
+
             await loadAppointments();
         }; // Kết thúc window.onload
 

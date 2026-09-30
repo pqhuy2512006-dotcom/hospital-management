@@ -53,9 +53,17 @@ BEGIN
         RETURN;
     END
 
+    
     -- Tính số phút trễ (khoảng cách từ lúc hẹn đến hiện tại)
     SET @DelayMinutes = DATEDIFF(MINUTE, @GioHen, GETDATE());
     
+    -- Kiểm tra nếu bác sĩ gọi khám quá sớm (trước giờ hẹn)
+    IF @DelayMinutes < 0
+    BEGIN
+        RAISERROR(N'Chưa tới giờ hẹn. Không thể bắt đầu khám sớm hơn lịch trình được xếp!', 16, 1);
+        RETURN;
+    END
+
     -- Nếu đến trễ quá 10 phút, TỰ ĐỘNG HỦY
     IF @DelayMinutes > 10
     BEGIN
