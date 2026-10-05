@@ -56,7 +56,7 @@ class LichHenControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         verify(lichHenRepository).save(org.mockito.ArgumentMatchers.argThat(saved ->
-                saved.getThoiGianKhamDuKien() == 30));
+            saved.getThoiGianKhamDuKien() == 30 && "DaDatLich".equals(saved.getTrangThai())));
     }
 
     @Test
@@ -128,7 +128,7 @@ class LichHenControllerTest {
         appointment.setGioKham(LocalTime.parse(time));
         appointment.setLoaiKham("KhamDichVu");
         appointment.setThoiGianKhamDuKien(duration);
-        appointment.setTrangThai("DaXacNhan");
+        appointment.setTrangThai("DaDatLich");
         return appointment;
     }
 }

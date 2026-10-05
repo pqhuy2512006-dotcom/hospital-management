@@ -61,6 +61,7 @@ public class KetQuaCLSController {
             map.put("patientId", kq.getMaBenhNhan());
             map.put("service", kq.getLoaiXetNghiem());
             map.put("conclusion", kq.getKetLuan());
+            map.put("hinhAnhFile", kq.getHinhAnhFile());
             map.put("status", kq.getKetLuan() != null && !kq.getKetLuan().trim().isEmpty() ? "COMPLETED" : "PENDING");
             map.put("dept", "Khoa Cận Lâm Sàng");
 
@@ -110,7 +111,9 @@ public class KetQuaCLSController {
     public ResponseEntity<?> capNhatKetQua(@PathVariable String id, @RequestBody Map<String, Object> payload) {
         return ketQuaCLSRepository.findById(id).map(kq -> {
             String conclusion = (String) payload.get("conclusion");
+            String hinhAnh = (String) payload.get("hinhAnh");
             kq.setKetLuan(conclusion);
+            if (hinhAnh != null) kq.setHinhAnhFile(hinhAnh);
             ketQuaCLSRepository.save(kq);
 
             List<Map<String, Object>> params = (List<Map<String, Object>>) payload.get("params");

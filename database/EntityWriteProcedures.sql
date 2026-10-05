@@ -1,3 +1,6 @@
+use QuanLyBenhVien
+go
+
 CREATE OR ALTER PROCEDURE dbo.usp_Entity_Save
     @EntityName SYSNAME,
     @Payload NVARCHAR(MAX)

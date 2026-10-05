@@ -50,6 +50,15 @@ public class PhieuKhamRepository {
         );
     }
 
+    public Optional<PhieuKham> findByMaLichHen(String maLichHen) {
+        List<PhieuKham> rows = jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_PhieuKham WHERE MaLichHen = ?",
+                ROW_MAPPER,
+                maLichHen
+        );
+        return rows.stream().findFirst();
+    }
+
     public List<PhieuKham> findByNgayKhamGreaterThanEqualAndNgayKhamLessThan(LocalDateTime from, LocalDateTime toExclusive) {
         return jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_PhieuKham WHERE NgayKham >= ? AND NgayKham < ? ORDER BY NgayKham",

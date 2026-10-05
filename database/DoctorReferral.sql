@@ -1,3 +1,6 @@
+use QuanLyBenhVien
+go
+
 IF OBJECT_ID(N'dbo.YeuCauChuyenKhoa', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.YeuCauChuyenKhoa (

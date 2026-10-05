@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Lch & Hàng Đợi Tiếp Đón - MEDICARE HIS</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .content-body {
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        body.patient-mode .content-body {
+            grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
+        }
+
+        dialog {
+            width: min(440px, calc(100% - 32px));
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            margin: auto;
+        }
+
+        dialog::backdrop {
+            background: rgba(15, 23, 42, .48);
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            height: 40px;
+            padding: 0 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        /* KHUNG CHN GI KHÁM */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .slot-btn {
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 8px 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot-btn:hover:not(.disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .slot-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .slot-btn.disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .btn-submit-action {
+            width: 100%;
+            height: 44px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-submit-action:hover {
+            background: var(--primary-hover);
+        }
+
+        /* BẢNG HNG ĐỢI */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge-stt {
+            display: inline-block;
+            font-weight: 700;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        #appointmentsPanel {
+            min-width: 0;
+            overflow-x: auto;
+        }
+
+        #appointmentsPanel table {
+            min-width: 760px;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .status-waiting { background: #fef3c7; color: #b45309; }
+        .status-done { background: #d1fae5; color: #065f46; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+        .btn-cancel-appt {
+            border: 1px solid #fee2e2;
+            background: #ffffff;
+            color: #ef4444;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel-appt:hover {
+            background: #fee2e2;
+        }
+
+        @media (max-width: 1024px) {
+            .content-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i>
+            <span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng iều khin</a></li>
+            <li><a href="/appointments.html" class="active"><i class="fa-solid fa-calendar-check"></i> Đặt lch & Tiếp ón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp ón & Khám bnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa ơn Vin phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình h thng</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">
+                <h2>Quản Lý Lch Hẹn & Điều Phi Hàng Đợi Khám</h2>
+            </div>
+            <div style="display:flex; align-items:center; gap: 24px;">
+                <!-- Nút chuông thông báo -->
+                <div class="notification-wrapper" style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                    <i class="fa-solid fa-bell" style="font-size:22px; color:#64748b;"></i>
+                    <span id="notifBadge" style="position:absolute; top:-6px; right:-10px; background:var(--danger, #ef4444); color:white; font-size:11px; font-weight:700; padding:2px 6px; border-radius:12px; display:none;">0</span>
+                    
+                    <!-- Dropdown Thông Báo -->
+                    <div id="notifDropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border:1px solid var(--border-color, #e2e8f0); border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); z-index:1000; overflow:hidden;">
+                        <div style="padding:12px 16px; border-bottom:1px solid var(--border-color, #e2e8f0); font-weight:700; background:#f8fafc; font-size:14px;">Thông báo của bạn</div>
+                        <div id="notifList" style="max-height:300px; overflow-y:auto; padding:0; font-size:13px;">
+                            <div style="padding:16px; text-align:center; color:var(--text-muted, #64748b);">Đang tải...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đng xuất
+                </button>
+            </div>
+        </header>
+
+        <!-- Body -->
+        <main class="content-body">
+            <!-- Ct trái: Biu mẫu Đặt lch & Tiếp nhận -->
+            <div class="panel-card">
+                <div class="tab-bar" id="appointmentTabs">
+                    <button class="tab-btn active" onclick="switchApptTab('online', this)">
+                        <i class="fa-solid fa-globe"></i> Đặt Lch Online
+                    </button>
+                    <button class="tab-btn" onclick="switchApptTab('walkin', this)">
+                        <i class="fa-solid fa-person-walking"></i> Tiếp Nhận Tại Quầy
+                    </button>
+                </div>
+
+                <!-- FORM 1: ĐẶT LCH KHÁM ONLINE (BNH NHN) -->
+                <div id="pane-online" class="tab-pane active">
+                    <form onsubmit="handleBookOnline(event)">
+                        <div class="form-group staff-only">
+                            <label>Họ và Tên Bnh Nhân *</label>
+                            <input type="text" id="onlName" class="form-control" placeholder="Nhập tên người khám" required>
+                        </div>
+                        <div class="form-group staff-only">
+                            <label>S Đin Thoại / CCCD *</label>
+                            <input type="text" id="onlContact" class="form-control" placeholder="Nhập SĐT hoặc CCCD  tra cứu" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa Khám Bnh *</label>
+                            <select id="onlDept" class="form-control" onchange="loadDoctorsForDepartment()" required>
+                                <option value="">Đang tải khoa khám...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bác Sĩ Phụ Trách</label>
+                            <select id="onlDoctor" class="form-control" onchange="loadAvailableSlotsOnline()" required>
+                                <option value="">Chọn khoa trưc</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Khám *</label>
+                            <select id="onlType" class="form-control" onchange="loadAvailableSlotsOnline()" required>
+                                <option value="KhamThuong">Khám Thường</option>
+                                <option value="KhamDichVu">Khám Dch Vụ</option>
+                                <option value="TaiKham">Tái Khám</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày khám *</label>
+                            <input type="date" id="onlDate" class="form-control" onchange="loadAvailableSlotsOnline()" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giờ khám *</label>
+                            <select id="onlTime" class="form-control" required><option value="">Chọn giờ...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Lý do khám</label>
+                            <textarea id="onlReason" class="form-control" maxlength="300" style="height:76px; padding:10px 12px;" placeholder="Mô tả ngắn lý do khám"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-action">
+                            <i class="fa-solid fa-calendar-plus"></i> Xác Nhận Đặt Lch Hẹn
+                        </button>
+                    </form>
+                </div>
+
+                <!-- FORM 2: ĐNG KÝ KHÁM TRỰC TIẾP (L TN CẤP SỐ) -->
+                <div id="pane-walkin" class="tab-pane">
+                    <form onsubmit="handleRegisterWalkin(event)">
+                        <div class="form-group">
+                            <label>Họ và Tên Bnh Nhân *</label>
+                            <input type="text" id="walkName" class="form-control" placeholder="Tên bnh nhân ến quầy" required>
+                        </div>
+                        <div class="form-group">
+                            <label>S CCCD / Mã BHYT *</label>
+                            <input type="text" id="walkCCCD" class="form-control" placeholder="Tra cứu hoặc tạo h sơ nhanh" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa Khám Ch Đnh *</label>
+                            <select id="walkDept" class="form-control" onchange="loadDoctorsForDepartmentWalkin()" required>
+                                <option value="">Chọn khoa...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bác Sĩ *</label>
+                            <select id="walkDoctor" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
+                                <option value="">Chọn khoa trưc</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Khám *</label>
+                            <input type="date" id="walkDate" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giờ Khám *</label>
+                            <select id="walkTime" class="form-control" required>
+                                <option value="">Chọn giờ...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Khám *</label>
+                            <select id="walkType" class="form-control" onchange="loadAvailableSlotsWalkin()" required>
+                                <option value="KhamThuong">Khám Thường</option>
+                                <option value="KhamDichVu">Khám Dch Vụ</option>
+                                <option value="TaiKham">Tái Khám</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Lý do khám / Triu chứng ban ầu</label>
+                            <textarea id="walkReason" class="form-control" style="height: 70px; padding: 8px;" placeholder="St nhẹ, ho kéo dài..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-action" style="background: #059669;">
+                            <i class="fa-solid fa-ticket"></i> Cấp S Thứ Tự & Đưa Vào Hàng Đợi
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Ct phải: Hàng ợi khám bnh theo thời gian thực -->
+            <div class="panel-card" id="appointmentsPanel">
+                <div class="panel-header">
+                    <h3 id="appointmentsPanelTitle"><i class="fa-solid fa-users-line"></i> Hàng Đợi Tiếp Nhận & Lch Hẹn Trong Ngày</h3>
+                    <select id="filterDept" class="form-control" style="width: 200px; height: 34px;" onchange="renderQueue()">
+                        <option value="ALL">Tất cả các khoa</option>
+                        <option value="Khoa Ni Tng Hợp">Khoa Ni Tng Hợp</option>
+                        <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng</option>
+                        <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
+                    </select>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr id="appointmentsTableHead">
+                            <th>STT</th>
+                            <th>Bnh Nhân</th>
+                            <th>Khoa Khám</th>
+                            <th>Thời Gian / Giờ Hẹn</th>
+                            <th>Hình Thức</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTableBody">
+                        <!-- Render bằng JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="rescheduleDialog">
+        <form id="rescheduleForm" onsubmit="submitReschedule(event)">
+            <h3 style="margin-bottom:16px;">Đi lch hẹn</h3>
+            <input type="hidden" id="rescheduleId">
+            <div class="form-group">
+                <label for="rescheduleDate">Ngày khám mi *</label>
+                <input type="date" id="rescheduleDate" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="rescheduleTime">Giờ khám mi *</label>
+                <input type="time" id="rescheduleTime" class="form-control" required>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+                <button type="button" class="btn-cancel-appt" onclick="document.getElementById('rescheduleDialog').close()">Đóng</button>
+                <button type="submit" class="btn-submit-action" style="width:auto; padding:0 16px;">Lưu lch mi</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Script Nghip vụ Hàng ợi -->
+    <script>
+        let appointments = [];
+        let departments = [];
+        let doctors = [];
+
+        function isPatientUser() {
+            try {
+                return ['BenhNhan', 'PATIENT'].includes(
+                    JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').vaiTro
+                );
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function loadDepartments() {
+            try {
+                const response = await fetch('/api/v1/khoa');
+                if (!response.ok) throw new Error('Failed to load departments');
+                departments = await response.json();
+
+                const deptSelect = document.getElementById('filterDept');
+                const bookingDept = document.getElementById('onlDept');
+                const filterOptions = ['<option value="ALL">Tất cả khoa</option>'];
+                const bookingOptions = ['<option value="">Chọn khoa khám</option>'];
+                departments.forEach(dept => {
+                    filterOptions.push(`<option value="${dept.tenKhoa}">${dept.tenKhoa}</option>`);
+                    bookingOptions.push(`<option value="${dept.maKhoa}">${dept.tenKhoa}</option>`);
+                });
+                deptSelect.innerHTML = filterOptions.join('');
+                bookingDept.innerHTML = bookingOptions.join('');
+                await loadDoctorsForDepartment();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadDoctorsForDepartment() {
+            const doctorSelect = document.getElementById('onlDoctor');
+            const departmentId = document.getElementById('onlDept').value;
+            doctorSelect.innerHTML = '<option value="">Đang tải bác sĩ...</option>';
+            if (!departmentId) {
+                doctorSelect.innerHTML = '<option value="">Chọn khoa trưc</option>';
+                return;
+            }
+            try {
+                const response = await fetch('/api/v1/nhanvien/doctors');
+                if (!response.ok) throw new Error('Không th tải danh sách bác sĩ.');
+                doctors = await response.json();
+                const department = departments.find(item => item.maKhoa === departmentId);
+                const available = doctors.filter(doctor => doctor.specialty
+                    && department.tenKhoa.toLowerCase().includes(doctor.specialty.toLowerCase()));
+                doctorSelect.innerHTML = available.length
+                    ? '<option value="">Chọn bác sĩ</option>' + available.map(doctor =>
+                        `<option value="${doctor.id}">${doctor.name}</option>`).join('')
+                    : '<option value="">Chưa có bác sĩ thuc khoa này</option>';
+            } catch (error) {
+                console.error(error);
+                doctorSelect.innerHTML = '<option value="">Không tải ược danh sách bác sĩ</option>';
+            }
+        }
+
+        async function loadAppointments() {
+            try {
+                let appointmentRes;
+                let patientMap = new Map();
+                if (isPatientUser()) {
+                    appointmentRes = await fetch('/api/v1/lichhen/me');
+                    document.getElementById('appointmentsPanelTitle').innerHTML = '<i class="fa-solid fa-calendar-check"></i> Lch hẹn của tôi';
+                    document.getElementById('filterDept').closest('.panel-header').lastElementChild.remove();
+                    document.getElementById('appointmentsTableHead').innerHTML = '<th>Mã lch</th><th>Khoa</th><th>Bác sĩ</th><th>Ngày, giờ khám</th><th>V trí hàng ợi</th><th>Trạng thái</th><th>Thao tác</th>';
+                } else {
+                    const [appointmentsRes, patientsRes] = await Promise.all([
+                        fetch('/api/v1/lichhen'),
+                        fetch('/api/v1/benhnhan')
+                    ]);
+                    if (!patientsRes.ok) throw new Error('Failed to load patient data');
+                    const patientList = await patientsRes.json();
+                    patientMap = new Map(patientList.map(patient => [patient.maBenhNhan, patient.hoTen]));
+                    appointmentRes = appointmentsRes;
+                }
+                if (!appointmentRes.ok) throw new Error('Failed to load appointments data');
+                const appointmentList = await appointmentRes.json();
+
+                appointments = appointmentList.map(item => ({
+                    id: item.maLichHen,
+                    stt: item.maLichHen,
+                    patientName: patientMap.get(item.maBenhNhan) || item.maBenhNhan,
+                    dept: departments.find(dept => dept.maKhoa === item.maKhoa)?.tenKhoa || item.maKhoa,
+                    doctor: doctors.find(doctor => doctor.id === item.maBacSi)?.name || item.maBacSi || 'Chưa phân công',
+                    date: item.ngayKham,
+                    time: item.gioKham,
+                    queuePosition: item.viTriHangDoi,
+                    type: item.hinhThucDat || 'Online',
+                    status: item.trangThai || 'DaDatLich'
+                }));
+
+                renderQueue();
+            } catch (error) {
+                console.error(error);
+                appointments = [];
+                renderQueue();
+            }
+        }
+
+        function switchApptTab(paneKey, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(`pane-${paneKey}`).classList.add('active');
+        }
+
+        function renderQueue() {
+            const tbody = document.getElementById('queueTableBody');
+            tbody.innerHTML = '';
+
+            if (isPatientUser()) {
+                if (appointments.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">Bạn chưa có lch hẹn nào.</td></tr>';
+                    return;
+                }
+                appointments.forEach(item => {
+                    const statusLabels = {
+                        DaDatLich: 'Đã ặt lch',
+                        DaKham: 'Đã khám',
+                        DaHuy: 'Đã hủy'
+                    };
+                    const actions = canChangeAppointment(item)
+                        ? `<button class="btn-cancel-appt" onclick="openReschedule('${item.id}')">Đi</button> <button class="btn-cancel-appt" onclick="cancelAppt('${item.id}')">Hủy</button>`
+                        : '---';
+                    const queuePosition = item.queuePosition == null ? '---' : `<span class="badge-stt">${item.queuePosition}</span>`;
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.dept}</td><td>${item.doctor}</td><td>${item.date} ${item.time}</td><td>${queuePosition}</td><td>${statusLabels[item.status] || item.status}</td><td>${actions}</td></tr>`;
+                });
+                return;
+            }
+
+            const filter = document.getElementById('filterDept').value;
+
+            const list = filter === 'ALL' ? appointments : appointments.filter(a => a.dept === filter);
+
+            list.forEach((item, index) => {
+                let badgeStatus = '';
+                if (item.status === 'DaDatLich') badgeStatus = '<span class="badge-status status-waiting">Đã ặt lch</span>';
+                else if (item.status === 'DaKham') badgeStatus = '<span class="badge-status status-done">Đã khám</span>';
+                else if (item.status === 'DaHuy') badgeStatus = '<span class="badge-status status-cancelled">Đã hủy</span>';
+                else badgeStatus = '<span class="badge-status status-cancelled">Đã hủy</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge-stt">${item.stt}</span></td>
+                        <td><strong>${item.patientName}</strong></td>
+                        <td>${item.dept}</td>
+                        <td>${item.time}</td>
+                        <td><small>${item.type}</small></td>
+                        <td>${badgeStatus}</td>
+                        <td>
+                            ${item.status === 'DaDatLich' ? `<button class="btn-cancel-appt" style="background:#059669;color:white;margin-right:4px;" onclick="checkinAppt('${item.id}')"><i class="fa-solid fa-check"></i> Check-in</button> <button class="btn-cancel-appt" onclick="cancelAppt('${item.id}')"><i class="fa-solid fa-xmark"></i> Hy</button>` : '---'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function handleBookOnline(e) {
+            e.preventDefault();
+            const dept = document.getElementById('onlDept').value;
+            const date = document.getElementById('onlDate').value;
+            const reason = document.getElementById('onlReason').value.trim();
+            const loaiKham = document.getElementById('onlType').value;
+            const payload = isPatientUser()
+                ? {
+                    maKhoa: dept,
+                    maBacSi: document.getElementById('onlDoctor').value,
+                    ngayKham: date,
+                    gioKham: document.getElementById('onlTime').value,
+                    lyDoKham: reason,
+                    loaiKham: loaiKham
+                }
+                : {
+                    patientName: document.getElementById('onlName').value.trim(),
+                    cccd: document.getElementById('onlContact').value.trim(),
+                    dept: departments.find(item => item.maKhoa === dept)?.tenKhoa || dept,
+                    maBacSi: document.getElementById('onlDoctor').value,
+                    ngayKham: date,
+                    gioKham: document.getElementById('onlTime').value,
+                    lyDoKham: reason,
+                    loaiKham: loaiKham,
+                    hinhThucDat: 'Online'
+                };
+
+            try {
+                const res = await fetch('/api/v1/lichhen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Li ặt lch: " + err);
+                    return;
+                }
+                const saved = await res.json();
+                alert(`Đặt lch khám online thành công!\nMã lch hẹn: ${saved.maLichHen}`);
+                e.target.reset();
+                await loadDoctorsForDepartment();
+                await loadAppointments();
+            } catch (err) {
+                console.error(err);
+                alert("Không th kết ni ến máy chủ Backend!");
+            }
+        }
+
+        async function handleRegisterWalkin(e) {
+            e.preventDefault();
+            const name = document.getElementById('walkName').value.trim();
+            const cccd = document.getElementById('walkCCCD').value.trim();
+            const dept = document.getElementById('walkDept').value;
+            const reason = document.getElementById('walkReason').value.trim();
+            const loaiKham = document.getElementById('walkType').value;
+
+            const payload = {
+                patientName: name,
+                cccd: cccd,
+                maKhoa: dept,
+                ngayKham: document.getElementById('walkDate').value,
+                gioKham: document.getElementById('walkTime').value,
+                maBacSi: document.getElementById('walkDoctor').value,
+                lyDoKham: reason,
+                loaiKham: loaiKham,
+                hinhThucDat: 'TrucTiep'
+            };
+
+            try {
+                const res = await fetch('/api/v1/lichhen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Li cấp s tiếp ón: " + err);
+                    return;
+                }
+                const saved = await res.json();
+                alert(`Cấp s tiếp ón trực tiếp thành công!\nMã tiếp nhận: ${saved.maLichHen} tại ${dept}`);
+                e.target.reset();
+                await loadAppointments();
+            } catch (err) {
+                console.error(err);
+                alert("Không th kết ni ến máy chủ Backend!");
+            }
+        }
+
+                async function checkinAppt(id) {
+            if (!confirm('Xc nhn bnh nhn  n?')) return;
+            try {
+                const res = await fetch(/api/v1/lichhen/ + encodeURIComponent(id) + /checkin, {
+                    method: 'PUT'
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message);
+                } else {
+                    alert('Li: ' + data.message);
+                }
+                await loadAppointments();
+            } catch (err) {
+                console.error(err);
+                alert('C li xy ra khi check-in.');
+            }
+        }
+
+        async function cancelAppt(id) {
+            if (confirm("Bạn có chắc chắn mun hủy lch hẹn này?")) {
+                try {
+                    const res = await fetch(`/api/v1/lichhen/${encodeURIComponent(id)}/cancel`, {
+                        method: 'PUT'
+                    });
+                    if (!res.ok) {
+                        alert("Không th hủy lch hẹn trên h thng!");
+                        return;
+                    }
+                    alert("Đã hủy lch hẹn thành công!");
+                    await loadAppointments();
+                } catch (err) {
+                    console.error(err);
+                    alert("Li kết ni khi hủy lch hẹn!");
+                }
+            }
+        }
+
+        function canChangeAppointment(appointment) {
+            if (['DaHuy', 'DaKham'].includes(appointment.status)) return false;
+            const appointmentTime = new Date(`${appointment.date}T${appointment.time}`);
+            return appointmentTime.getTime() - Date.now() >= 24 * 60 * 60 * 1000;
+        }
+
+        function openReschedule(id) {
+            const appointment = appointments.find(item => item.id === id);
+            if (!appointment || !canChangeAppointment(appointment)) {
+                alert('Ch ược i lch trưc giờ khám ít nhất 24 tiếng.');
+                return;
+            }
+            document.getElementById('rescheduleId').value = id;
+            document.getElementById('rescheduleDate').value = appointment.date;
+            document.getElementById('rescheduleTime').value = appointment.time.slice(0, 5);
+            document.getElementById('rescheduleDialog').showModal();
+        }
+
+        async function submitReschedule(event) {
+            event.preventDefault();
+            const id = document.getElementById('rescheduleId').value;
+            const response = await fetch(`/api/v1/lichhen/${encodeURIComponent(id)}/reschedule`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ngayKham: document.getElementById('rescheduleDate').value,
+                    gioKham: document.getElementById('rescheduleTime').value
+                })
+            });
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                alert(error.message || 'Không th i lch hẹn.');
+                return;
+            }
+            document.getElementById('rescheduleDialog').close();
+            await loadAppointments();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        
+        // --- Fetch Available Slots ---
+        async function fetchAvailableSlots(doctorId, date, loaiKham, timeSelectId) {
+            const timeSelect = document.getElementById(timeSelectId);
+            if (!timeSelect) return;
+            timeSelect.innerHTML = '<option value="">Đang tải...</option>';
+            if (!doctorId || !date) {
+                timeSelect.innerHTML = '<option value="">Chọn bác sĩ và ngày trưc</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/api/v1/lichhen/available-slots?doctorId=${doctorId}&date=${date}&loaiKham=${loaiKham}`);
+                if (res.ok) {
+                    const slots = await res.json();
+                    if (slots.length === 0) {
+                        timeSelect.innerHTML = '<option value="">Hết lch trng</option>';
+                    } else {
+                        timeSelect.innerHTML = '<option value="">Chọn giờ khám...</option>';
+                        slots.forEach(slot => {
+                            timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
+                        });
+                    }
+                } else {
+                    timeSelect.innerHTML = '<option value="">Li tải lch</option>';
+                }
+            } catch (err) {
+                timeSelect.innerHTML = '<option value="">Li tải lch</option>';
+            }
+        }
+
+        function loadAvailableSlotsOnline() {
+            const docEl = document.getElementById('onlDoctor');
+            if(!docEl) return;
+            const doctorId = docEl.value;
+            const date = document.getElementById('onlDate').value;
+            const loaiKham = document.getElementById('onlType').value || 'KhamThuong';
+            fetchAvailableSlots(doctorId, date, loaiKham, 'onlTime');
+        }
+
+        function loadAvailableSlotsWalkin() {
+            const docEl = document.getElementById('walkDoctor');
+            if(!docEl) return;
+            const doctorId = docEl.value;
+            const date = document.getElementById('walkDate').value;
+            const loaiKham = document.getElementById('walkType').value || 'KhamThuong';
+            fetchAvailableSlots(doctorId, date, loaiKham, 'walkTime');
+        }
+        
+        async function loadDoctorsForDepartmentWalkin() {
+            const doctorSelect = document.getElementById('walkDoctor');
+            const departmentId = document.getElementById('walkDept').value;
+            doctorSelect.innerHTML = '<option value="">Đang tải bác sĩ...</option>';
+            if (!departmentId) {
+                doctorSelect.innerHTML = '<option value="">Chọn khoa trưc</option>';
+                return;
+            }
+            try {
+                const response = await fetch('/api/v1/nhanvien/doctors');
+                if (!response.ok) throw new Error('Không th tải danh sách bác sĩ.');
+                const allDoctors = await response.json();
+                const department = departments.find(item => item.maKhoa === departmentId);
+                const available = allDoctors.filter(doc => doc.specialty
+                    && department.tenKhoa.toLowerCase().includes(doc.specialty.toLowerCase()));
+                doctorSelect.innerHTML = available.length
+                    ? '<option value="">Chọn bác sĩ</option>' + available.map(doc =>
+                        `<option value="${doc.id}">${doc.name}</option>`).join('')
+                    : '<option value="">Chưa có bác sĩ thuc khoa này</option>';
+                loadAvailableSlotsWalkin();
+            } catch (error) {
+                console.error(error);
+                doctorSelect.innerHTML = '<option value="">Li tải dữ liu</option>';
+            }
+        }
+
+        window.onload = async function() {
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('onlDate').min = today;
+            document.getElementById('onlDate').value = today;
+            // Set today for walkDate if exists
+            const walkDate = document.getElementById('walkDate');
+            if (walkDate) {
+                walkDate.min = today;
+                walkDate.value = today;
+            }
+
+            if (isPatientUser()) {
+                document.body.classList.add('patient-mode');
+                document.getElementById('appointmentTabs').remove();
+                document.getElementById('pane-walkin').remove();
+                document.querySelectorAll('.staff-only').forEach(element => element.remove());
+                document.querySelector('#pane-online .btn-submit-action').innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Gửi yêu cầu ặt lch';
+                document.getElementById('onlTime').value = '08:00';
+            } else {
+                // L tân không ược ặt khám Online mà ch tạo phiếu Walk-in
+                const appTabs = document.getElementById('appointmentTabs');
+                if (appTabs) appTabs.remove();
+                
+                const paneOnline = document.getElementById('pane-online');
+                if (paneOnline) paneOnline.remove();
+                
+                const paneWalkin = document.getElementById('pane-walkin');
+                if (paneWalkin) paneWalkin.classList.add('active');
+            }
+            await loadDepartments();
+            const walkDeptSelect = document.getElementById('walkDept');
+            if (walkDeptSelect) {
+                walkDeptSelect.innerHTML = '<option value="">Chọn khoa...</option>';
+                departments.forEach(dept => {
+                    const opt = document.createElement('option');
+                    opt.value = dept.maKhoa;
+                    opt.textContent = dept.tenKhoa;
+                    walkDeptSelect.appendChild(opt);
+                });
+            }
+
+            await loadAppointments();
+        }; // Kết thúc window.onload
+
+        // --- CHỨC NNG THNG BÁO ---
+        let notifications = [];
+        
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/v1/thongbao/me');
+                if (res.ok) {
+                    notifications = await res.json();
+                    renderNotifications();
+                }
+            } catch (err) { console.error('Li tải thông báo:', err); }
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            if(!list || !badge) return;
+            
+            const unreadCount = notifications.filter(n => !n.daDoc).length;
+            
+            if (unreadCount > 0) {
+                badge.style.display = 'block';
+                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<div style="padding:16px; text-align:center; color:#64748b;">Không có thông báo nào.</div>';
+                return;
+            }
+
+            list.innerHTML = notifications.map(n => `
+                <div onclick="markNotifAsRead(${n.maThongBao}, event)" style="padding:12px 16px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:${n.daDoc ? '#ffffff' : '#f0f9ff'};">
+                    <div style="font-weight:700; color:#0f172a; margin-bottom:4px; font-size:13px;">${n.tieuDe}</div>
+                    <div style="color:#475569; font-size:12.5px; line-height:1.4;">${n.noiDung}</div>
+                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;"><i class="fa-regular fa-clock"></i> ${new Date(n.ngayTao).toLocaleString('vi-VN')}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            if(dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function markNotifAsRead(id, event) {
+            event.stopPropagation();
+            try {
+                await fetch('/api/v1/thongbao/' + id + '/read', { method: 'PUT' });
+                fetchNotifications();
+            } catch (err) { console.error(err); }
+        }
+
+        setInterval(fetchNotifications, 30000);
+        setTimeout(fetchNotifications, 500);
+    </script>
+    <script src="/auth-guard.js"></script>
+</body>
+</html>
+

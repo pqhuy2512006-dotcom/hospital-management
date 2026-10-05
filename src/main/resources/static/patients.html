@@ -747,8 +747,7 @@
                     const currentStatusByPatient = new Map();
                     doctorAppointments.forEach(appointment => {
                         if (!currentStatusByPatient.has(appointment.maBenhNhan)) {
-                            currentStatusByPatient.set(appointment.maBenhNhan,
-                                        appointment.trangThai === 'DangKham' ? 'Đang khám' : 'Đang chờ');
+                            currentStatusByPatient.set(appointment.maBenhNhan, 'Đã đặt lịch');
                         }
                     });
                     currentStatusByPatient.forEach((status, patientId) => {

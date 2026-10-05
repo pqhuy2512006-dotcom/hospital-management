@@ -111,7 +111,6 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-
             if (path.startsWith("/api/v1/taikhoan")) {
                 if (path.equals("/api/v1/taikhoan/change-password")) {
                     filterChain.doFilter(request, response);
@@ -125,6 +124,10 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if (path.startsWith("/api/v1/thongbao")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             if ("BenhNhan".equals(role)) {
                 boolean allowed = ("GET".equals(method) && "/api/v1/khoa".equals(path))
                         || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
@@ -182,7 +185,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     requiredRoleDesc = "Dược Sĩ Kho Dược (PHARMACIST)";
                 }
             }
-            // 3. Phân hệ Viện phí: Thu ngân toàn quyền; Điều dưỡng chỉ xem; Nhân sự & các role khác bị từ chối
+            // 3. Phân hệ Viện phí: Thu ngân toàn quyền; Điều dưỡng chỉ xem; Bệnh nhân thanh toán online; Nhân sự & các role khác bị từ chối
             else if (path.startsWith("/api/v1/hoadon")) {
                 if ("GET".equals(method)) {
                     if (!"ThuNgan".equals(role) && !"DieuDuong".equals(role) && !"GiamDoc".equals(role)) {
@@ -190,9 +193,9 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                         requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Điều Dưỡng (NURSE)";
                     }
                 } else if (path.endsWith("/thanhtoan") && "PUT".equals(method)) {
-                    if (!"ThuNgan".equals(role)) {
+                    if (!"ThuNgan".equals(role) && !"BenhNhan".equals(role)) {
                         isAllowed = false;
-                        requiredRoleDesc = "Thu Ngân (CASHIER)";
+                        requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Bệnh Nhân (Online)";
                     }
                 } else if ((path.endsWith("/tinh-tu-dong") || path.endsWith("/ap-dung-bhyt") || path.endsWith("/hoan-ung")) && "POST".equals(method)) {
                     if (!"ThuNgan".equals(role)) {
@@ -219,7 +222,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 }
             }
             // 6. Phân hệ Quản lý nhân sự: Thêm/Sửa nhân sự & Phân công lịch trực (4.8 Quản lý nhân sự)
-            else if ((path.startsWith("/api/v1/nhanvien") || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
+            else if (((path.startsWith("/api/v1/nhanvien") && !path.equals("/api/v1/nhanvien/me")) || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
                 if (!"NhanSu".equals(role)) {
                     isAllowed = false;
                     requiredRoleDesc = "Quản Lý Nhân Sự (HR MANAGER)";
@@ -271,7 +274,8 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         }
 
         return ("POST".equals(method) && ("/api/v1/phieukham".equals(path)
-                    || "/api/v1/chuyenkhoa".equals(path)))
+                    || "/api/v1/chuyenkhoa".equals(path)
+                    || path.matches("^/api/v1/lichhen/.+/start$")))
                 || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
     }
 

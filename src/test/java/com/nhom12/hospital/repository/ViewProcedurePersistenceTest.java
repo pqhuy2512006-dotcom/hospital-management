@@ -1,7 +1,6 @@
 package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.BenhNhan;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,9 +18,6 @@ class ViewProcedurePersistenceTest {
 
     @Autowired
     private BenhNhanRepository benhNhanRepository;
-
-    @Autowired
-    private EntityManager entityManager;
 
     @Test
     void savesThroughProcedureAndReadsThroughView() {
@@ -45,7 +41,6 @@ class ViewProcedurePersistenceTest {
         assertEquals("Updated Probe", benhNhanRepository.findById(patient.getMaBenhNhan()).orElseThrow().getHoTen());
 
         benhNhanRepository.deleteById(patient.getMaBenhNhan());
-        entityManager.clear();
         assertTrue(benhNhanRepository.findById(patient.getMaBenhNhan()).isEmpty());
     }
 }

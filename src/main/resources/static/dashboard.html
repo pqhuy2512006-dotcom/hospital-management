@@ -359,8 +359,11 @@
                 <input type="date" id="reportFrom">
                 <label for="reportTo">Đến</label>
                 <input type="date" id="reportTo">
-                <button class="btn-action btn-excel" onclick="exportCSVReport()" title="Xuất báo cáo CSV">
-                    <i class="fa-solid fa-file-csv"></i> Xuất CSV
+                <button class="btn-action btn-excel" onclick="exportCSVReport()" title="Xuất báo cáo Excel/CSV">
+                    <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                </button>
+                <button class="btn-action btn-pdf" onclick="window.print()" title="In báo cáo / Xuất PDF">
+                    <i class="fa-solid fa-file-pdf"></i> Xuất PDF
                 </button>
                 <button class="btn-logout" onclick="logout()">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất

@@ -1,3 +1,6 @@
+use QuanLyBenhVien
+go
+
 IF OBJECT_ID(N'dbo.AuditLog', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.AuditLog (

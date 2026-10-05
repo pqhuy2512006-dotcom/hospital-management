@@ -42,6 +42,61 @@ public class LichHenController {
         this.taiKhoanRepository = taiKhoanRepository;
     }
 
+    @GetMapping("/available-slots")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @RequestParam String doctorId,
+            @RequestParam String date,
+            @RequestParam(defaultValue = "KhamThuong") String loaiKham) {
+        
+        LocalDate kDate;
+        try {
+            kDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        if (kDate.isBefore(LocalDate.now())) {
+            return ResponseEntity.ok(List.of()); // No slots in the past
+        }
+
+        Integer duration = expectedDuration(loaiKham);
+        if (duration == null) duration = 30;
+
+        List<LichHen> existing = lichHenRepository.findByMaBacSiAndNgayKham(doctorId, kDate).stream()
+                .filter(lh -> !"DaHuy".equalsIgnoreCase(lh.getTrangThai()))
+                .toList();
+
+        List<String> availableSlots = new ArrayList<>();
+        // Khung giờ sáng: 08:00 - 11:30
+        generateSlots(availableSlots, existing, kDate, LocalTime.of(8, 0), LocalTime.of(11, 30), duration);
+        // Khung giờ chiều: 13:00 - 16:30
+        generateSlots(availableSlots, existing, kDate, LocalTime.of(13, 0), LocalTime.of(16, 30), duration);
+
+        return ResponseEntity.ok(availableSlots);
+    }
+
+    private void generateSlots(List<String> availableSlots, List<LichHen> existing, LocalDate kDate, LocalTime start, LocalTime end, int duration) {
+        LocalTime current = start;
+        LocalDateTime now = LocalDateTime.now();
+        while (!current.plusMinutes(duration).isAfter(end)) {
+            LocalDateTime slotStart = LocalDateTime.of(kDate, current);
+            if (slotStart.isAfter(now)) { // Only future slots
+                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+                boolean conflict = existing.stream().anyMatch(lh -> {
+                    Integer exDur = lh.getThoiGianKhamDuKien() != null ? lh.getThoiGianKhamDuKien() : expectedDuration(lh.getLoaiKham());
+                    if (exDur == null || lh.getGioKham() == null) return false;
+                    LocalDateTime exStart = LocalDateTime.of(lh.getNgayKham(), lh.getGioKham());
+                    LocalDateTime exEnd = exStart.plusMinutes(exDur);
+                    return exStart.isBefore(slotEnd) && slotStart.isBefore(exEnd);
+                });
+                if (!conflict) {
+                    availableSlots.add(current.toString());
+                }
+            }
+            current = current.plusMinutes(30); // Giả sử mỗi slot cách nhau 30p để dễ nhìn
+        }
+    }
+
     @GetMapping
     public List<LichHen> getAll(HttpServletRequest request) {
         if (isDoctor(request)) {
@@ -178,7 +233,7 @@ public class LichHenController {
         lh.setHinhThucDat((String) req.getOrDefault("hinhThucDat", "Online"));
         lh.setLyDoKham((String) req.get("lyDoKham"));
         lh.setGhiChu((String) req.get("ghiChu"));
-        lh.setTrangThai("ChoXacNhan");
+        lh.setTrangThai("DaDatLich");
         lh.setNgayDatLich(LocalDateTime.now());
 
         if (hasScheduleConflict(lh, null)) {
@@ -247,6 +302,83 @@ public class LichHenController {
         }
     }
 
+    @GetMapping("/queue")
+    public ResponseEntity<?> getDoctorQueue(HttpServletRequest request) {
+        if (!isDoctor(request)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Chức năng này chỉ dành cho bác sĩ."));
+        }
+        Optional<NhanVien> doctor = findCurrentDoctor(request);
+        if (doctor.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không tìm thấy hồ sơ bác sĩ."));
+        }
+        List<Map<String, Object>> queue = lichHenRepository.getQueueForDoctor(doctor.get().getMaNhanVien(), LocalDate.now());
+        return ResponseEntity.ok(queue);
+    }
+
+    @PutMapping("/{id}/checkin")
+    public ResponseEntity<?> receptionistCheckin(@PathVariable String id, HttpServletRequest request) {
+        if (!isReceptionist(request)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Chức năng này chỉ dành cho lễ tân."));
+        }
+        Optional<LichHen> appointment = lichHenRepository.findById(id);
+        if (appointment.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        LichHen current = appointment.get();
+        if (!"DaDatLich".equalsIgnoreCase(current.getTrangThai())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Chỉ có thể check-in lịch hẹn ở trạng thái Đã đặt lịch."));
+        }
+        
+        LocalDateTime scheduledTime = LocalDateTime.of(current.getNgayKham(), current.getGioKham());
+        
+        if (LocalDateTime.now().isBefore(scheduledTime.minusMinutes(30))) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Chỉ được check-in trước giờ khám tối đa 30 phút."));
+        }
+
+        if (LocalDateTime.now().isAfter(scheduledTime.plusMinutes(15))) {
+            current.setTrangThai("DaHuy");
+            lichHenRepository.save(current);
+            return ResponseEntity.status(400).body(Map.of(
+                "message", "Bệnh nhân đã đến trễ quá 15 phút. Lịch hẹn tự động bị hủy.",
+                "status", "DaHuy"
+            ));
+        }
+        
+        current.setTrangThai("DangChoKham");
+        lichHenRepository.save(current);
+        return ResponseEntity.ok(Map.of("message", "Check-in thành công", "status", "DangChoKham"));
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<?> startExamination(@PathVariable String id, HttpServletRequest request) {
+        if (!isDoctor(request)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Chỉ bác sĩ mới có quyền tiếp nhận."));
+        }
+        Optional<LichHen> appointment = lichHenRepository.findById(id);
+        if (appointment.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        LichHen current = appointment.get();
+        Optional<NhanVien> doctor = findCurrentDoctor(request);
+        if (doctor.isEmpty() || !doctor.get().getMaNhanVien().equals(current.getMaBacSi())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Bạn không được phép khám ca này."));
+        }
+        
+        try {
+            // Sinh mã phiếu khám ngẫu nhiên theo định dạng PK + time
+            String maPhieuKham = "PK" + id.substring(id.length() > 6 ? id.length() - 6 : 0) + (System.currentTimeMillis() % 10000);
+            lichHenRepository.startExamination(id, maPhieuKham, current.getMaBacSi(), current.getMaKhoa());
+            return ResponseEntity.ok(Map.of("message", "Bắt đầu khám thành công.", "maPhieuKham", maPhieuKham));
+        } catch (org.springframework.dao.DataAccessException e) {
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Lỗi không xác định khi tiếp nhận bệnh nhân.";
+            // Trích xuất câu thông báo lỗi thực tế từ SQL Server (RAISERROR)
+            if (errorMsg.contains("Bệnh nhân đã đến trễ quá 10 phút") || errorMsg.contains("trễ quá 10 phút")) {
+                return ResponseEntity.status(400).body(Map.of("message", "Bệnh nhân đã đến trễ quá 10 phút. Lịch hẹn đã bị tự động hủy!"));
+            }
+            return ResponseEntity.status(400).body(Map.of("message", "Không thể bắt đầu khám: " + errorMsg));
+        }
+    }
+
     private ResponseEntity<?> createPatientAppointment(Map<String, Object> requestBody, HttpServletRequest request) {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
         Optional<BenhNhan> patient = accountId == null
@@ -290,7 +422,7 @@ public class LichHenController {
             appointment.setHinhThucDat("Online");
             appointment.setLyDoKham((String) requestBody.get("lyDoKham"));
             appointment.setGhiChu((String) requestBody.get("ghiChu"));
-            appointment.setTrangThai("ChoXacNhan");
+            appointment.setTrangThai("DaDatLich");
             appointment.setNgayDatLich(LocalDateTime.now());
             if (hasScheduleConflict(appointment, null)) {
                 return ResponseEntity.status(409).body(Map.of("message", "Bác sĩ đã có lịch khám giao với khung giờ này."));
@@ -299,6 +431,14 @@ public class LichHenController {
         } catch (RuntimeException error) {
             return ResponseEntity.badRequest().body(Map.of("message", "Ngày, giờ, khoa hoặc bác sĩ không hợp lệ."));
         }
+    }
+
+    private boolean isReceptionist(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        return accountId != null && taiKhoanRepository.findById(accountId)
+                .map(TaiKhoan::getVaiTro)
+                .filter("LeTan"::equalsIgnoreCase)
+                .isPresent();
     }
 
     private boolean isPatient(HttpServletRequest request) {
