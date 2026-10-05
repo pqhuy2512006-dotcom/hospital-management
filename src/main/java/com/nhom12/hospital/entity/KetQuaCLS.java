@@ -19,6 +19,7 @@ public class KetQuaCLS {
     private String maBacSiDoc;
     private String loaiXetNghiem;
     private String ketLuan;
+    private String hinhAnhFile;
     private LocalDateTime ngayThucHien;
     public void prePersist() {
         if (this.ngayThucHien == null) {

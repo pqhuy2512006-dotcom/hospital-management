@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -690,7 +690,7 @@
 
                 // Lọc bỏ những lịch đã hủy hoặc đã khám xong, chỉ hiển thị Đã đặt lịch và Đang khám
                 const filteredAppointments = appointments.filter(item => 
-                    item.trangThai === 'DaDatLich' || item.trangThai === 'DangKham'
+                    item.trangThai === 'DangChoKham' || item.trangThai === 'DangKham'
                 );
 
                 patientQueue = filteredAppointments.map((item, index) => {

@@ -100,6 +100,7 @@ public class ThuocController {
         ctnk.setMaThuoc(maThuoc);
         ctnk.setSoLo(batch);
         ctnk.setSoLuong(soLuong);
+        ctnk.setSoLuongTon(soLuong);
         ctnk.setDonGia(price);
         ctnk.setHanSuDung(LocalDate.parse(expiryStr));
         chiTietNhapKhoRepository.save(ctnk);

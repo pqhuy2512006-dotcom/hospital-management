@@ -17,6 +17,7 @@ public class ChiTietNhapKho {
     private String maThuoc;
     private String soLo;
     private Integer soLuong;
+    private Integer soLuongTon;
     private BigDecimal donGia;
     private BigDecimal thanhTien;
     private LocalDate hanSuDung;

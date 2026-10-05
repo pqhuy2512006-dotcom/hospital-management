@@ -42,6 +42,14 @@ public class ChiTietNhapKhoRepository {
         );
     }
 
+    public List<ChiTietNhapKho> findByMaThuocForFEFO(String maThuoc) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.ChiTietNhapKho WHERE MaThuoc = ? AND SoLuongTon > 0 ORDER BY HanSuDung ASC",
+                ROW_MAPPER,
+                maThuoc
+        );
+    }
+
     public ChiTietNhapKho save(ChiTietNhapKho detail) {
         Map<String, Object> columns = new LinkedHashMap<>();
         columns.put("MaChiTietNhap", detail.getMaChiTietNhap());
@@ -49,6 +57,7 @@ public class ChiTietNhapKhoRepository {
         columns.put("MaThuoc", detail.getMaThuoc());
         columns.put("SoLo", detail.getSoLo());
         columns.put("SoLuong", detail.getSoLuong());
+        columns.put("SoLuongTon", detail.getSoLuongTon());
         columns.put("DonGia", detail.getDonGia());
         columns.put("HanSuDung", detail.getHanSuDung());
         EntityProcedureSupport.save(jdbcTemplate, "ChiTietNhapKho", columns);

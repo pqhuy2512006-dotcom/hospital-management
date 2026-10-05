@@ -1,29 +1,26 @@
-/**
+﻿/**
  * MEDICARE HIS - Authentication & Role-Based Access Control (RBAC) System
  * Phân quyền chi tiết theo vai trò chuẩn y tế (UC12 RBAC)
  */
 (function () {
     // 1. Ma trận phân quyền các phân hệ (Module Permission Matrix - Chuẩn 11 tác nhân y tế)
     const ROLE_PERMISSIONS = {
-        'dashboard.html': ['QuanTri', 'ADMIN', 'GiamDoc', 'DIRECTOR', 'BGD'],
+        'dashboard.html': ['QuanTri', 'ADMIN'],
         'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
         'doctors.html': ['NhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
         'examination.html': ['BacSi', 'DOCTOR'],
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
-        'inpatient.html': ['DieuDuong', 'NURSE', 'LeTan', 'RECEPTIONIST'],
+        'inpatient.html': ['DieuDuong', 'NURSE'],
         'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST']
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
     const ROLE_LANDING_PAGES = {
         'QuanTri': '/dashboard.html',
         'ADMIN': '/dashboard.html',
-        'GiamDoc': '/dashboard.html',
-        'DIRECTOR': '/dashboard.html',
-        'BGD': '/dashboard.html',
         'NhanSu': '/doctors.html',
         'HR': '/doctors.html',
         'BacSi': '/examination.html',
@@ -46,9 +43,6 @@
     const ROLE_META = {
         'QuanTri': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
         'ADMIN': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
-        'GiamDoc': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
-        'DIRECTOR': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
-        'BGD': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
         'NhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'HR': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'BacSi': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },

@@ -23,17 +23,20 @@ public class DonThuocController {
     private final ThuocRepository thuocRepository;
     private final BenhNhanRepository benhNhanRepository;
     private final NhanVienRepository nhanVienRepository;
+    private final com.nhom12.hospital.repository.ChiTietNhapKhoRepository chiTietNhapKhoRepository;
 
     public DonThuocController(DonThuocRepository donThuocRepository,
                               PhieuKhamRepository phieuKhamRepository,
                               ThuocRepository thuocRepository,
                               BenhNhanRepository benhNhanRepository,
-                              NhanVienRepository nhanVienRepository) {
+                              NhanVienRepository nhanVienRepository,
+                              com.nhom12.hospital.repository.ChiTietNhapKhoRepository chiTietNhapKhoRepository) {
         this.donThuocRepository = donThuocRepository;
         this.phieuKhamRepository = phieuKhamRepository;
         this.thuocRepository = thuocRepository;
         this.benhNhanRepository = benhNhanRepository;
         this.nhanVienRepository = nhanVienRepository;
+        this.chiTietNhapKhoRepository = chiTietNhapKhoRepository;
     }
 
     @GetMapping
@@ -83,6 +86,25 @@ public class DonThuocController {
             if (drug.getTonKhoHienTai() < dt.getSoLuong()) {
                 return ResponseEntity.badRequest().body("Số lượng tồn kho không đủ để xuất!");
             }
+            
+            // Thực hiện FEFO
+            int remainingToDispense = dt.getSoLuong();
+            List<com.nhom12.hospital.entity.ChiTietNhapKho> batches = chiTietNhapKhoRepository.findByMaThuocForFEFO(dt.getMaThuoc());
+            for (com.nhom12.hospital.entity.ChiTietNhapKho batch : batches) {
+                if (remainingToDispense <= 0) break;
+                
+                int batchStock = batch.getSoLuongTon();
+                if (batchStock >= remainingToDispense) {
+                    batch.setSoLuongTon(batchStock - remainingToDispense);
+                    chiTietNhapKhoRepository.save(batch);
+                    remainingToDispense = 0;
+                } else {
+                    batch.setSoLuongTon(0);
+                    chiTietNhapKhoRepository.save(batch);
+                    remainingToDispense -= batchStock;
+                }
+            }
+            
             drug.setTonKhoHienTai(drug.getTonKhoHienTai() - dt.getSoLuong());
             thuocRepository.save(drug);
             return ResponseEntity.ok(Map.of("success", true, "message", "Đã xuất thuốc thành công!", "tonKhoMoi", drug.getTonKhoHienTai()));

@@ -1,4 +1,4 @@
-package com.nhom12.hospital.repository;
+﻿package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.LichHen;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -59,7 +59,7 @@ public class LichHenRepository {
                 + "        PARTITION BY MaBacSi, NgayKham ORDER BY GioKham, MaLichHen "
                         + "    ) AS INT) AS ViTriHangDoi "
                 + "    FROM dbo.vw_LichHen "
-                        + "    WHERE TrangThai = 'DaDatLich' AND MaBacSi IS NOT NULL "
+                        + "    WHERE TrangThai = 'DangChoKham' AND MaBacSi IS NOT NULL "
                 + ") queue ON queue.MaLichHen = appointment.MaLichHen "
                 + "WHERE appointment.MaBenhNhan = ? "
                 + "ORDER BY appointment.NgayKham DESC, appointment.GioKham DESC",
@@ -148,3 +148,4 @@ public class LichHenRepository {
                 .replace("\t", "\\t") + '"';
     }
 }
+

@@ -65,7 +65,7 @@ BEGIN
                CAST(NgayKham AS DATETIME) + CAST(GioKham AS DATETIME) AS GioHenScheduled, 
                ThoiGianKhamDuKien
         FROM dbo.LichHen
-        WHERE TrangThai = 'DaDatLich'
+        WHERE TrangThai = 'DangChoKham'
           AND NgayKham = @NgayKham
           AND MaBacSi = @MaBacSi
         ORDER BY GioKham;

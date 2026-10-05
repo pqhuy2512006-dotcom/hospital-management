@@ -159,7 +159,7 @@ CREATE TABLE LichHen (
                     CHECK (HinhThucDat IN ('Online','TrucTiep','DienThoai')),
     LyDoKham        NVARCHAR(300)        NULL,
     TrangThai       VARCHAR(20)          NOT NULL DEFAULT 'DaDatLich'
-                    Constraint CK_LichHen_TrangThai CHECK (TrangThai IN ('DaDatLich','DangKham','DaHuy','DaKham')),
+                    Constraint CK_LichHen_TrangThai CHECK (TrangThai IN ('DaDatLich','DangChoKham','DangKham','DaHuy','DaKham')),
     NgayDatLich     DATETIME             NOT NULL DEFAULT GETDATE(),
     CONSTRAINT CK_LichHen_ThoiGianKhamDuKien CHECK (
         (LoaiKham IN ('KhamThuong','TaiKham') AND ThoiGianKhamDuKien = 30)

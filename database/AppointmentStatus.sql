@@ -42,7 +42,7 @@ IF NOT EXISTS (
 BEGIN
     ALTER TABLE dbo.LichHen
         ADD CONSTRAINT CK_LichHen_TrangThai
-        CHECK (TrangThai IN ('DaDatLich', 'DangKham', 'DaKham', 'DaHuy'));
+        CHECK (TrangThai IN ('DaDatLich', 'DangChoKham', 'DangKham', 'DaKham', 'DaHuy'));
 END;
 GO
 

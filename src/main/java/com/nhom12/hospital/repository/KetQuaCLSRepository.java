@@ -95,6 +95,7 @@ public class KetQuaCLSRepository {
         json.append("\"MaBacSiDoc\":").append(toJsonValue(entity.getMaBacSiDoc())).append(',');
         json.append("\"LoaiXetNghiem\":").append(toJsonValue(entity.getLoaiXetNghiem())).append(',');
         json.append("\"KetLuan\":").append(toJsonValue(entity.getKetLuan())).append(',');
+        json.append("\"HinhAnhFile\":").append(toJsonValue(entity.getHinhAnhFile())).append(',');
         json.append("\"NgayThucHien\":").append(toJsonValue(entity.getNgayThucHien()));
         return json.append('}').toString();
     }

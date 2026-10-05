@@ -1,4 +1,4 @@
-USE QuanLyBenhVien;
+﻿USE QuanLyBenhVien;
 GO
 
 -- =========================================================================
@@ -47,7 +47,7 @@ BEGIN
     FROM dbo.LichHen
     WHERE MaLichHen = @MaLichHen;
     
-    IF @TrangThai <> 'DaDatLich'
+    IF @TrangThai <> 'DangChoKham'
     BEGIN
         RAISERROR(N'Lịch hẹn không ở trạng thái hợp lệ để tiếp nhận.', 16, 1);
         RETURN;
@@ -97,3 +97,4 @@ BEGIN
     END CATCH
 END;
 GO
+
