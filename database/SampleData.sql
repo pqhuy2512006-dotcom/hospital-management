@@ -28,7 +28,8 @@ INSERT INTO TaiKhoan (TenDangNhap, MatKhauHash, Email, SoDienThoai, VaiTro, Tran
 ('tn_nga', @Hash, 'nga.thungan@hospital.com', '0912345005', 'ThuNgan', 1),
 ('ktv_huy', @Hash, 'huy.ktv@hospital.com', '0912345006', 'KTV', 1),
 ('lt_minh', @Hash, 'minh.letan@hospital.com', '0912345007', 'LeTan', 1),
-('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', '0912345008', 'DieuDuong', 1);
+('dd_hoa', @Hash, 'hoa.dieuduong@hospital.com', '0912345008', 'DieuDuong', 1),
+('ns_ngoc', @Hash, 'ngoc.nhansu@hospital.com', '0912345009', 'NhanSu', 1);
 GO
 
 -- 3. NHAN VIEN
@@ -42,6 +43,7 @@ BEGIN
     DECLARE @tkHuy BIGINT = (SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = 'ktv_huy');
     DECLARE @tkMinh BIGINT = (SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = 'lt_minh');
     DECLARE @tkHoa BIGINT = (SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = 'dd_hoa');
+    DECLARE @tkNgoc BIGINT = (SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = 'ns_ngoc');
 
     INSERT INTO NhanVien (MaNhanVien, MaTaiKhoan, HoTen, NgaySinh, GioiTinh, SoCCCD, SoDienThoai, Email, DiaChi, ChuyenKhoa, ChungChiHanhNghe, TrinhDoChuyenMon, NgayVaoLam, VaiTro, TrangThai) VALUES
     ('NV-DOC01', @tkHung, N'BS. CKI. Trần Văn Hùng', '1980-05-15', 'Nam', '079080001111', '0912345001', 'hung.tran@hospital.com', N'Phòng 201 - Nhà A', N'Nội Tổng Hợp', '012345/BYT-CCHN', N'Bác sĩ CKI', '2015-01-10', 'BacSi', 'DangLamViec'),
@@ -51,7 +53,8 @@ BEGIN
     ('NV-CAS01', @tkNga, N'Nguyễn Thu Nga', '1992-09-25', 'Nu', '079092005555', '0912345005', 'nga.thungan@hospital.com', N'Quầy Thu Ngân 01', N'Viện Phí', NULL, N'Cử nhân Kế toán', '2021-05-10', 'ThuNgan', 'DangLamViec'),
     ('NV-LAB01', @tkHuy, N'KTV. Phạm Quốc Huy', '1993-12-05', 'Nam', '079093006666', '0912345006', 'huy.ktv@hospital.com', N'Phòng Xét Nghiệm Tầng 2', N'Kỹ Thuật Y Học', '012349/BYT-CCHN', N'Cử nhân Xét nghiệm', '2021-08-15', 'KTV', 'DangLamViec'),
     ('NV-REC01', @tkMinh, N'Lê Quang Minh', '1995-07-30', 'Nam', '079095007777', '0912345007', 'minh.letan@hospital.com', N'Quầy Tiếp Đón Trung Tâm', N'Tiếp Đón', NULL, N'Cao đẳng Y tế', '2022-01-10', 'LeTan', 'DangLamViec'),
-    ('NV-NUR01', @tkHoa, N'ĐD. Vũ Quỳnh Hoa', '1994-03-22', 'Nu', '079094008888', '0912345008', 'hoa.dieuduong@hospital.com', N'Khoa Nội Trú Tầng 3', N'Điều Dưỡng', '012350/BYT-CCHN', N'Cử nhân Điều dưỡng', '2021-09-01', 'DieuDuong', 'DangLamViec');
+    ('NV-NUR01', @tkHoa, N'ĐD. Vũ Quỳnh Hoa', '1994-03-22', 'Nu', '079094008888', '0912345008', 'hoa.dieuduong@hospital.com', N'Khoa Nội Trú Tầng 3', N'Điều Dưỡng', '012350/BYT-CCHN', N'Cử nhân Điều dưỡng', '2021-09-01', 'DieuDuong', 'DangLamViec'),
+    ('NV-HR01', @tkNgoc, N'Nguyễn Bích Ngọc', '1991-03-10', 'Nu', '079091009999', '0912345009', 'ngoc.nhansu@hospital.com', N'Phòng Nhân Sự Tầng 4', N'Tổ Chức Cán Bộ', NULL, N'Cử nhân Quản trị nhân lực', '2020-05-15', 'NhanSu', 'DangLamViec');
 END
 GO
 

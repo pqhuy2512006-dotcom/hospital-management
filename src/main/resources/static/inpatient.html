@@ -613,6 +613,36 @@
         </div>
     </div>
 
+    <!-- MODAL CHUYỂN KHOA / CHUYỂN GIƯỜNG -->
+    <div class="modal-overlay" id="transferModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-right-left" style="color: var(--primary);"></i> Chuyển Bệnh Nhân Sang Khoa / Giường Khác</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeTransferModal()">&times;</button>
+            </div>
+            <form onsubmit="confirmTransferBed(event)">
+                <div class="modal-body">
+                    <div style="background:#f8fafc; padding:10px 14px; border-radius:8px; font-size:13.5px; border:1px solid var(--border-color); margin-bottom: 15px;">
+                        Bệnh nhân: <strong id="transferPatientInfo" style="color:var(--primary);"></strong><br>
+                        Giường hiện tại: <span id="transferCurrentBed"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Chọn Giường Trống Đích Đến *</label>
+                        <select id="transferTargetBed" class="form-control" required>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeTransferModal()">Hủy</button>
+                    <button type="submit" class="btn-save-assign" style="background:#0284c7;">
+                        <i class="fa-solid fa-check"></i> Xác Nhận Chuyển
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPT LOGIC GIƯỜNG BỆNH -->
     <script>
         let departmentsData = [];
@@ -733,9 +763,14 @@
                                     <div>Chẩn đoán: ${bed.diag || 'Đang theo dõi'}</div>
                                     <div>Vào viện: <small>${bed.inDate || 'Gần đây'}</small></div>
                                 </div>
-                                <button class="btn-action-bed btn-release" onclick="releaseBed('${bed.bedId}', '${bed.noiTruId}')">
-                                    <i class="fa-solid fa-person-walking-arrow-right"></i> Trả Giường / Xuất Viện
-                                </button>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn-action-bed" style="flex:1; background:#0284c7; color:#fff;" onclick="openTransferModal('${bed.bedId}', '${bed.noiTruId}', '${bed.patientId}', '${bed.patientName}')">
+                                        <i class="fa-solid fa-right-left"></i> Chuyển Khoa/Giường
+                                    </button>
+                                    <button class="btn-action-bed btn-release" style="flex:1;" onclick="releaseBed('${bed.bedId}', '${bed.noiTruId}')">
+                                        <i class="fa-solid fa-person-walking-arrow-right"></i> Xuất Viện
+                                    </button>
+                                </div>
                             `
                             : `
                                 <div class="bed-patient-info" style="color:#059669; min-height:74px; display:flex; align-items:center; justify-content:center;">
@@ -834,6 +869,74 @@
             } catch (err) {
                 console.error(err);
                 alert("Không thể kết nối đến máy chủ Backend!");
+            }
+        }
+
+        let currentTransferNoiTruId = null;
+
+        function openTransferModal(bedId, noiTruId, pid, pname) {
+            currentTransferNoiTruId = noiTruId;
+            if (!currentTransferNoiTruId || currentTransferNoiTruId === 'null') {
+                const nt = activeInpatients.find(n => n.maGiuong === bedId && n.trangThai === 'DangNam');
+                if (nt) currentTransferNoiTruId = nt.maNoiTru;
+            }
+            document.getElementById('transferPatientInfo').textContent = `${pname} (${pid})`;
+            document.getElementById('transferCurrentBed').textContent = bedId;
+
+            const select = document.getElementById('transferTargetBed');
+            select.innerHTML = '';
+            const availableBeds = [];
+            departmentsData.forEach(d => {
+                d.rooms.forEach(r => {
+                    r.beds.forEach(b => {
+                        if (b.status === 'AVAILABLE' && b.bedId !== bedId) {
+                            availableBeds.push({ id: b.bedId, dept: d.deptName, room: r.roomName });
+                        }
+                    });
+                });
+            });
+
+            if (availableBeds.length === 0) {
+                select.innerHTML = '<option value="">Không có giường trống khả dụng</option>';
+            } else {
+                availableBeds.forEach(b => {
+                    select.innerHTML += `<option value="${b.id}">${b.dept} - ${b.room} (Giường ${b.id})</option>`;
+                });
+            }
+
+            document.getElementById('transferModal').style.display = 'flex';
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transferModal').style.display = 'none';
+        }
+
+        async function confirmTransferBed(e) {
+            e.preventDefault();
+            const targetBed = document.getElementById('transferTargetBed').value;
+            if (!targetBed) {
+                alert("Vui lòng chọn giường đích khả dụng!");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/v1/noitru/${encodeURIComponent(currentTransferNoiTruId)}/chuyenkhoa`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maGiuongMoi: targetBed })
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("Lỗi khi chuyển giường/khoa: " + err);
+                    return;
+                }
+
+                alert(`Đã chuyển bệnh nhân sang giường ${targetBed} thành công!`);
+                closeTransferModal();
+                await loadInpatientData();
+            } catch (err) {
+                alert("Không thể kết nối Backend khi chuyển khoa!");
             }
         }
 

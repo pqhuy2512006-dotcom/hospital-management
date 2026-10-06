@@ -128,6 +128,17 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            if (path.startsWith("/api/v1/phanquyen")) {
+                if ("POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method)) {
+                    if (!"QuanTri".equals(role)) {
+                        writeForbidden(response, "Chỉ Admin có quyền chỉnh sửa phân quyền.");
+                        return;
+                    }
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
             if ("BenhNhan".equals(role)) {
                 boolean allowed = ("GET".equals(method) && "/api/v1/khoa".equals(path))
                         || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))

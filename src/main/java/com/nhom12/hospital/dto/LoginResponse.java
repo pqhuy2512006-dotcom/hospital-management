@@ -1,4 +1,4 @@
-package com.nhom12.hospital.dto;
+﻿package com.nhom12.hospital.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

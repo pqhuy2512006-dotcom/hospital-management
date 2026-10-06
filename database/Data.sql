@@ -1,4 +1,4 @@
-
+﻿
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = 'admin')
 BEGIN
     INSERT INTO TaiKhoan

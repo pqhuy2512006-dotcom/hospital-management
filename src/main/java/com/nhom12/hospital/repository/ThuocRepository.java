@@ -1,4 +1,4 @@
-package com.nhom12.hospital.repository;
+﻿package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.Thuoc;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;

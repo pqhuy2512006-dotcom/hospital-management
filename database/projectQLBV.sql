@@ -1,7 +1,9 @@
 use QuanLyBenhVien
 go 
 
-/* ---------- Xóa bảng cũ theo thứ tự phụ thuộc khóa ngoại ---------- */
+DROP TABLE IF EXISTS PhanQuyen;
+DROP TABLE IF EXISTS ChucNang;
+DROP TABLE IF EXISTS VaiTro;
 DROP TABLE IF EXISTS ChiTietHoaDon;
 DROP TABLE IF EXISTS HoaDon;
 DROP TABLE IF EXISTS DonThuoc;
@@ -365,3 +367,51 @@ CREATE TABLE ChiTietNhapKho (
     CONSTRAINT FK_ChiTietNhap_Thuoc     FOREIGN KEY (MaThuoc)     REFERENCES Thuoc(MaThuoc)
 );
 GO
+
+/* ======================================================================
+   19. BẢNG VAITRO (Danh mục vai trò RBAC)
+   ====================================================================== */
+CREATE TABLE VaiTro (
+    MaVaiTro        VARCHAR(20)      PRIMARY KEY,
+    TenVaiTro       NVARCHAR(100)    NOT NULL,
+    TenTiengAnh     VARCHAR(50)      NULL,
+    MoTa            NVARCHAR(255)    NULL,
+    TrangThai       BIT              NOT NULL DEFAULT 1
+);
+GO
+
+/* ======================================================================
+   20. BẢNG CHUCNANG (Danh mục chức năng trên giao diện UI)
+   ====================================================================== */
+CREATE TABLE ChucNang (
+    MaChucNang      VARCHAR(50)      PRIMARY KEY,
+    TenChucNang     NVARCHAR(150)    NOT NULL,
+    MaPhanHe        VARCHAR(30)      NOT NULL,
+    TenPhanHe       NVARCHAR(100)    NOT NULL,
+    UrlTrang        VARCHAR(100)     NULL,
+    PhuongThucApi   VARCHAR(10)      NULL,
+    EndpointApi     VARCHAR(150)     NULL,
+    MoTa            NVARCHAR(500)    NULL,
+    ThuTuHienThi    INT              NOT NULL DEFAULT 0
+);
+GO
+
+/* ======================================================================
+   21. BẢNG PHANQUYEN (Gán quyền theo vai trò - Role-Based Permissions)
+   ====================================================================== */
+CREATE TABLE PhanQuyen (
+    MaPhanQuyen     BIGINT IDENTITY(1,1) PRIMARY KEY,
+    MaVaiTro        VARCHAR(20)      NOT NULL,
+    MaChucNang      VARCHAR(50)      NOT NULL,
+    QuyenXem        BIT              NOT NULL DEFAULT 1,
+    QuyenThem       BIT              NOT NULL DEFAULT 0,
+    QuyenSua        BIT              NOT NULL DEFAULT 0,
+    QuyenXoa        BIT              NOT NULL DEFAULT 0,
+    GhiChu          NVARCHAR(255)    NULL,
+    NgayCapNhat     DATETIME         NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT UQ_PhanQuyen_VaiTro_ChucNang UNIQUE (MaVaiTro, MaChucNang),
+    CONSTRAINT FK_PhanQuyen_VaiTro FOREIGN KEY (MaVaiTro) REFERENCES VaiTro(MaVaiTro) ON DELETE CASCADE,
+    CONSTRAINT FK_PhanQuyen_ChucNang FOREIGN KEY (MaChucNang) REFERENCES ChucNang(MaChucNang) ON DELETE CASCADE
+);
+GO
+

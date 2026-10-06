@@ -1,4 +1,4 @@
-package com.nhom12.hospital.config;
+﻿package com.nhom12.hospital.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

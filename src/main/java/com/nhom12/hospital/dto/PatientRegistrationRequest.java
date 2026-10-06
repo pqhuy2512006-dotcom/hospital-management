@@ -1,4 +1,4 @@
-package com.nhom12.hospital.dto;
+﻿package com.nhom12.hospital.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

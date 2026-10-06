@@ -712,8 +712,30 @@
                             btn.style.background = '#f1f5f9';
                             btn.style.color = '#475569';
                         });
+                        document.querySelectorAll('.btn-tbl-lock').forEach(btn => btn.style.display = 'none');
                     }
                 } catch(e) {}
+            }
+        }
+
+        async function toggleLockDoctor(maNV, currentStatus) {
+            const isLocking = currentStatus !== 'DaNghi';
+            const actionText = isLocking ? 'khóa (ngừng làm việc)' : 'mở khóa lại';
+            if (!confirm(`Bạn có chắc chắn muốn ${actionText} hồ sơ nhân viên ${maNV}?`)) return;
+
+            try {
+                const res = await fetch(`/api/v1/nhanvien/${encodeURIComponent(maNV)}/toggle-status`, {
+                    method: 'PUT'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(data.message || 'Cập nhật thành công!');
+                    await loadDoctors();
+                } else {
+                    alert('Không thể cập nhật trạng thái nhân viên.');
+                }
+            } catch(e) {
+                alert('Lỗi kết nối khi cập nhật trạng thái.');
             }
         }
 
@@ -756,6 +778,9 @@
                         <td>
                             <button class="btn-tbl-edit" onclick="openEditDocModal('${doc.maNV}')">
                                 <i class="fa-solid fa-pen-to-square"></i> Sửa
+                            </button>
+                            <button class="btn-tbl-lock" style="margin-left: 6px; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: ${doc.trangThai === 'DaNghi' ? '#dcfce7' : '#fee2e2'}; color: ${doc.trangThai === 'DaNghi' ? '#166534' : '#991b1b'};" onclick="toggleLockDoctor('${doc.maNV}', '${doc.trangThai}')">
+                                <i class="fa-solid ${doc.trangThai === 'DaNghi' ? 'fa-lock-open' : 'fa-lock'}"></i> ${doc.trangThai === 'DaNghi' ? 'Mở khóa' : 'Khóa'}
                             </button>
                         </td>
                     </tr>

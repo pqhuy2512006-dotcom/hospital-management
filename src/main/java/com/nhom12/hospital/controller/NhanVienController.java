@@ -168,6 +168,51 @@ public class NhanVienController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/toggle-status")
+    @Transactional
+    public ResponseEntity<?> toggleStatus(@PathVariable String id) {
+        return nhanVienRepository.findById(id).map(nv -> {
+            boolean isWorking = "DangLamViec".equalsIgnoreCase(nv.getTrangThai());
+            String newStatus = isWorking ? "DaNghi" : "DangLamViec";
+            nv.setTrangThai(newStatus);
+            nhanVienRepository.save(nv);
+
+            if (nv.getMaTaiKhoan() != null) {
+                taiKhoanRepository.findById(nv.getMaTaiKhoan()).ifPresent(tk -> {
+                    tk.setTrangThai(!isWorking);
+                    taiKhoanRepository.save(tk);
+                });
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "trangThai", newStatus,
+                    "message", isWorking ? "Đã khóa (ngưng hoạt động) hồ sơ nhân viên!" : "Đã kích hoạt lại hồ sơ nhân viên!"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteOrLock(@PathVariable String id) {
+        return nhanVienRepository.findById(id).map(nv -> {
+            nv.setTrangThai("DaNghi");
+            nhanVienRepository.save(nv);
+
+            if (nv.getMaTaiKhoan() != null) {
+                taiKhoanRepository.findById(nv.getMaTaiKhoan()).ifPresent(tk -> {
+                    tk.setTrangThai(false);
+                    taiKhoanRepository.save(tk);
+                });
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đã xóa (khóa nghỉ việc) hồ sơ nhân viên!"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     private Optional<NhanVien> findCurrentEmployee(HttpServletRequest request) {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
         return accountId == null ? Optional.empty() : nhanVienRepository.findByMaTaiKhoan(accountId);

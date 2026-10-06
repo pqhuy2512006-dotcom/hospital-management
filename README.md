@@ -96,6 +96,7 @@ Script này chỉ bổ sung bảng `AuditLog`, không xóa dữ liệu nghiệp 
 1. [database/AccountDatabaseObjects.sql](database/AccountDatabaseObjects.sql)
 2. [database/EntityViews.sql](database/EntityViews.sql)
 3. [database/EntityWriteProcedures.sql](database/EntityWriteProcedures.sql)
+4. [database/PhanQuyenRBAC.sql](database/PhanQuyenRBAC.sql) - Tạo bảng `VaiTro`, `ChucNang`, `PhanQuyen` và gán đầy đủ chức năng trên giao diện UI cho các vai trò Thu Ngân (`ThuNgan`), Điều Dưỡng (`DieuDuong`), Quản Lý Nhân Sự (`NhanSu`) cùng các vai trò liên quan.
 
 Các script trên dùng `CREATE OR ALTER` và không xóa dữ liệu bảng nghiệp vụ.
 

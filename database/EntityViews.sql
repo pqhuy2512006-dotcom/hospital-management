@@ -1,4 +1,4 @@
-CREATE OR ALTER VIEW dbo.vw_BenhNhan AS SELECT * FROM dbo.BenhNhan;
+﻿CREATE OR ALTER VIEW dbo.vw_BenhNhan AS SELECT * FROM dbo.BenhNhan;
 GO
 CREATE OR ALTER VIEW dbo.vw_AuditLog AS SELECT * FROM dbo.AuditLog;
 GO
@@ -35,4 +35,34 @@ GO
 CREATE OR ALTER VIEW dbo.vw_Thuoc AS SELECT * FROM dbo.Thuoc;
 GO
 CREATE OR ALTER VIEW dbo.vw_YeuCauChuyenKhoa AS SELECT * FROM dbo.YeuCauChuyenKhoa;
+GO
+CREATE OR ALTER VIEW dbo.vw_VaiTro AS SELECT * FROM dbo.VaiTro;
+GO
+CREATE OR ALTER VIEW dbo.vw_ChucNang AS SELECT * FROM dbo.ChucNang;
+GO
+CREATE OR ALTER VIEW dbo.vw_PhanQuyen AS SELECT * FROM dbo.PhanQuyen;
+GO
+CREATE OR ALTER VIEW dbo.vw_PhanQuyenChiTiet
+AS
+SELECT 
+    pq.MaPhanQuyen,
+    vt.MaVaiTro,
+    vt.TenVaiTro,
+    vt.TenTiengAnh,
+    cn.MaChucNang,
+    cn.TenChucNang,
+    cn.MaPhanHe,
+    cn.TenPhanHe,
+    cn.UrlTrang,
+    cn.PhuongThucApi,
+    cn.EndpointApi,
+    pq.QuyenXem,
+    pq.QuyenThem,
+    pq.QuyenSua,
+    pq.QuyenXoa,
+    pq.GhiChu,
+    pq.NgayCapNhat
+FROM dbo.PhanQuyen pq
+JOIN dbo.VaiTro vt ON pq.MaVaiTro = vt.MaVaiTro
+JOIN dbo.ChucNang cn ON pq.MaChucNang = cn.MaChucNang;
 GO

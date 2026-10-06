@@ -1,4 +1,4 @@
-package com.nhom12.hospital.controller;
+﻿package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.HoaDon;
 import com.nhom12.hospital.entity.PhieuKham;

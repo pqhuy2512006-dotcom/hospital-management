@@ -1,4 +1,4 @@
-package com.nhom12.hospital.config;
+﻿package com.nhom12.hospital.config;
 
 public final class SessionAttributes {
     public static final String ACCOUNT_ID = "accountId";

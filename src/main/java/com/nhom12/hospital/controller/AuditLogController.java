@@ -1,4 +1,4 @@
-package com.nhom12.hospital.controller;
+﻿package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.AuditLog;
 import com.nhom12.hospital.repository.AuditLogRepository;

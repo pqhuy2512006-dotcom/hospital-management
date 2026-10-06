@@ -1,4 +1,4 @@
-package com.nhom12.hospital.controller;
+﻿package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.BenhNhan;
 import com.nhom12.hospital.entity.GiuongBenh;
@@ -101,6 +101,34 @@ public class NoiTruController {
             });
 
             return ResponseEntity.ok(nt);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/chuyenkhoa")
+    public ResponseEntity<?> chuyenKhoa(@PathVariable String id, @RequestBody Map<String, String> payload) {
+        String maGiuongMoi = payload.get("maGiuongMoi");
+        if (maGiuongMoi == null || maGiuongMoi.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Cần chọn giường mới để chuyển đến."));
+        }
+        return noiTruRepository.findById(id).map(nt -> {
+            String giuongCu = nt.getMaGiuong();
+            // Trả giường cũ
+            giuongBenhRepository.findById(giuongCu).ifPresent(g -> {
+                g.setTrangThai("Trong");
+                giuongBenhRepository.save(g);
+            });
+            // Nhận giường mới
+            giuongBenhRepository.findById(maGiuongMoi).ifPresent(g -> {
+                g.setTrangThai("DangSuDung");
+                giuongBenhRepository.save(g);
+            });
+            nt.setMaGiuong(maGiuongMoi);
+            noiTruRepository.save(nt);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Chuyển bệnh nhân sang giường " + maGiuongMoi + " thành công!",
+                    "data", nt
+            ));
         }).orElse(ResponseEntity.notFound().build());
     }
 }
