@@ -1,4 +1,4 @@
-﻿USE QuanLyBenhVien;
+USE QuanLyBenhVien;
 GO
 
 -- =========================================================================
@@ -20,7 +20,7 @@ GO
 -- Thêm lại Constraint với trạng thái 'DangKham'
 ALTER TABLE dbo.LichHen
     ADD CONSTRAINT CK_LichHen_TrangThai
-    CHECK (TrangThai IN ('DaDatLich', 'DangKham', 'DaKham', 'DaHuy'));
+    CHECK (TrangThai IN ('DaDatLich', 'DangChoKham', 'DangKham', 'DaKham', 'DaHuy'));
 GO
 
 -- =========================================================================

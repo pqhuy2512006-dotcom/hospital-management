@@ -56,12 +56,16 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         String actorRole = null;
 
         try {
-                if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
-                    || "/api/v1/auth/register".equals(path)
-                    || !path.startsWith("/api/v1/")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+            if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
+                || "/api/v1/auth/register".equals(path)
+                || ("GET".equals(method) && "/api/v1/khoa".equals(path))
+                || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
+                || ("GET".equals(method) && "/api/v1/lichhen/available-slots".equals(path))
+                || ("POST".equals(method) && "/api/v1/lichhen".equals(path))
+                || !path.startsWith("/api/v1/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
             HttpSession session = request.getSession(false);
             Object accountId = session == null ? null : session.getAttribute(SessionAttributes.ACCOUNT_ID);
