@@ -132,6 +132,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                         || ("PUT".equals(method) && path.matches("/api/v1/hoadon/[^/]+/thanhtoan"))
                         || ("POST".equals(method) && "/api/v1/lichhen".equals(path))
                         || ("GET".equals(method) && "/api/v1/lichhen/me".equals(path))
+                        || ("GET".equals(method) && "/api/v1/lichhen/available-slots".equals(path))
                         || ("PUT".equals(method) && path.matches("/api/v1/lichhen/[^/]+/(cancel|reschedule)"))
                         || ("GET".equals(method) || "POST".equals(method) || "PUT".equals(method))
                             && ("/api/v1/benhnhan/me".equals(path)

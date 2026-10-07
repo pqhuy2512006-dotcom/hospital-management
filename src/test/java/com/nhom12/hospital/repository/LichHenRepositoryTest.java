@@ -30,7 +30,7 @@ class LichHenRepositoryTest {
 
         ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         verify(jdbcTemplate).query(sql.capture(), ArgumentMatchers.<RowMapper<LichHen>>any(), eq("BN-TEST"));
-        assertTrue(sql.getValue().contains("WHERE TrangThai = 'DaDatLich'"));
+        assertTrue(sql.getValue().contains("WHERE TrangThai = 'DangChoKham'"));
         assertTrue(sql.getValue().contains("PARTITION BY MaBacSi, NgayKham ORDER BY GioKham, MaLichHen"));
     }
 }
