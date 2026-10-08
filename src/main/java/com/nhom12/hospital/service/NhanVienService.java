@@ -133,6 +133,7 @@ public class NhanVienService {
         profile.put("soDienThoai", employee.getSoDienThoai());
         profile.put("email", employee.getEmail());
         profile.put("diaChi", employee.getDiaChi());
+        profile.put("maKhoa", employee.getMaKhoa());
         return profile;
     }
 

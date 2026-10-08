@@ -627,9 +627,28 @@
                     fetch('/api/v1/noitru')
                 ]);
 
-                const depts = deptsRes.ok ? await deptsRes.json() : [];
-                const beds = bedsRes.ok ? await bedsRes.json() : [];
+                let depts = deptsRes.ok ? await deptsRes.json() : [];
+                let beds = bedsRes.ok ? await bedsRes.json() : [];
                 activeInpatients = noiTruRes.ok ? await noiTruRes.json() : [];
+
+                // Lọc theo khoa của Điều dưỡng
+                let isNurse = false;
+                let nurseDeptName = "";
+                try {
+                    const currentUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+                    if (currentUser.vaiTro === 'DieuDuong' || currentUser.vaiTro === 'NURSE') {
+                        isNurse = true;
+                        const meRes = await fetch('/api/v1/nhanvien/me');
+                        if (meRes.ok) {
+                            const meData = await meRes.json();
+                            if (meData.maKhoa) {
+                                depts = depts.filter(d => d.maKhoa === meData.maKhoa);
+                                beds = beds.filter(b => b.maKhoa === meData.maKhoa);
+                                if (depts.length > 0) nurseDeptName = depts[0].tenKhoa;
+                            }
+                        }
+                    }
+                } catch (e) { console.warn("Lỗi lọc khoa: ", e); }
 
                 const inpatientMap = new Map();
                 activeInpatients.forEach(nt => {
@@ -638,9 +657,15 @@
                     }
                 });
 
-                // Cập nhật bộ lọc Khoa
+                // Cập nhật bộ lọc Khoa hoặc Hiển thị Tên Khoa cho Điều Dưỡng
+                const filterGroup = document.querySelector('.filter-group');
                 const selDept = document.getElementById('selDept');
-                if (selDept) {
+                
+                if (isNurse && nurseDeptName) {
+                    if (filterGroup) {
+                        filterGroup.innerHTML = `<h3 style="color: var(--primary); margin: 0; font-size: 16px;"><i class="fa-solid fa-house-medical"></i> ${nurseDeptName}</h3>`;
+                    }
+                } else if (selDept) {
                     let optHtml = '<option value="ALL">Tất cả các khoa điều trị</option>';
                     depts.forEach(d => {
                         optHtml += `<option value="${d.tenKhoa}">${d.tenKhoa}</option>`;
@@ -702,7 +727,8 @@
         }
 
         function renderRooms() {
-            const filterDept = document.getElementById('selDept').value;
+            const selDept = document.getElementById('selDept');
+            const filterDept = selDept ? selDept.value : 'ALL';
             const container = document.getElementById('roomsContainer');
             container.innerHTML = '';
 

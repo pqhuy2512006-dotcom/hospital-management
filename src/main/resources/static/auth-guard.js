@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEDICARE HIS - Authentication & Role-Based Access Control (RBAC) System
  * Phân quyền chi tiết theo vai trò chuẩn y tế (UC12 RBAC)
  */
@@ -7,7 +7,7 @@
     const ROLE_PERMISSIONS = {
         'dashboard.html': ['QuanTri', 'ADMIN'],
         'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
-        'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
+        'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'doctors.html': ['NhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
         'examination.html': ['BacSi', 'DOCTOR'],
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],

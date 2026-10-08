@@ -26,4 +26,5 @@ public class NhanVien {
     private LocalDate ngayVaoLam;
     private String vaiTro;
     private String trangThai;
+    private String maKhoa;
 }

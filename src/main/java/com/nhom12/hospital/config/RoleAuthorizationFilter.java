@@ -176,6 +176,15 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("DieuDuong".equals(role)) {
+                if (!isNurseRequestAllowed(path, method)) {
+                    writeForbidden(response, "Điều dưỡng không có quyền thực hiện thao tác này.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             boolean isAllowed = true;
             String requiredRoleDesc = "";
 
@@ -270,6 +279,23 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     || "/api/v1/chuyenkhoa".equals(path)
                     || path.matches("^/api/v1/lichhen/.+/start$")))
                 || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
+    }
+
+    private boolean isNurseRequestAllowed(String path, String method) {
+        if ("GET".equals(method)) {
+            return isPathOrChild(path, "/api/v1/khoa")
+                    || isPathOrChild(path, "/api/v1/giuongbenh")
+                    || isPathOrChild(path, "/api/v1/noitru")
+                    || isPathOrChild(path, "/api/v1/chuyenkhoa")
+                    || isPathOrChild(path, "/api/v1/benhnhan") // Cho phép xem thông tin bệnh nhân
+                    || "/api/v1/nhanvien/me".equals(path);
+        }
+        
+        return ("POST".equals(method) || "PUT".equals(method)) && 
+               (isPathOrChild(path, "/api/v1/noitru") 
+                || isPathOrChild(path, "/api/v1/chuyenkhoa")
+                || isPathOrChild(path, "/api/v1/giuongbenh")
+                || "/api/v1/nhanvien/me".equals(path));
     }
 
     private boolean isPathOrChild(String path, String basePath) {
