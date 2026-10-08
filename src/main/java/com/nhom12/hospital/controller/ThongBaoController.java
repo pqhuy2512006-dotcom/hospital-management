@@ -2,7 +2,7 @@ package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.entity.ThongBao;
-import com.nhom12.hospital.repository.ThongBaoRepository;
+import com.nhom12.hospital.service.ThongBaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +14,10 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ThongBaoController {
 
-    private final ThongBaoRepository thongBaoRepository;
+    private final ThongBaoService thongBaoService;
 
-    public ThongBaoController(ThongBaoRepository thongBaoRepository) {
-        this.thongBaoRepository = thongBaoRepository;
+    public ThongBaoController(ThongBaoService thongBaoService) {
+        this.thongBaoService = thongBaoService;
     }
 
     @GetMapping("/me")
@@ -26,7 +26,7 @@ public class ThongBaoController {
         if (accountId == null) {
             return ResponseEntity.status(401).body("Yêu cầu đăng nhập.");
         }
-        List<ThongBao> list = thongBaoRepository.findByMaTaiKhoan(accountId);
+        List<ThongBao> list = thongBaoService.getByMaTaiKhoan(accountId);
         return ResponseEntity.ok(list);
     }
 
@@ -36,7 +36,7 @@ public class ThongBaoController {
         if (accountId == null) {
             return ResponseEntity.status(401).body("Yêu cầu đăng nhập.");
         }
-        thongBaoRepository.markAsRead(id, accountId);
+        thongBaoService.markAsRead(id, accountId);
         return ResponseEntity.ok().build();
     }
 }

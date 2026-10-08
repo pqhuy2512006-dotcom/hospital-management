@@ -54,6 +54,7 @@ public class DonThuocRepository {
         columns.put("SoLuong", prescription.getSoLuong());
         columns.put("LieuDung", prescription.getLieuDung());
         columns.put("CachDung", prescription.getCachDung());
+        columns.put("TrangThai", prescription.getTrangThai());
         EntityProcedureSupport.save(jdbcTemplate, "DonThuoc", columns);
         return prescription;
     }

@@ -61,15 +61,21 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 || ("GET".equals(method) && "/api/v1/khoa".equals(path))
                 || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
                 || ("GET".equals(method) && "/api/v1/lichhen/available-slots".equals(path))
-                || ("POST".equals(method) && "/api/v1/lichhen".equals(path))
                 || !path.startsWith("/api/v1/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             HttpSession session = request.getSession(false);
             Object accountId = session == null ? null : session.getAttribute(SessionAttributes.ACCOUNT_ID);
+            
+            boolean isGuestAllowed = ("POST".equals(method) && "/api/v1/lichhen".equals(path));
+
             if (!(accountId instanceof Long id)) {
+                if (isGuestAllowed) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 writeForbidden(response, "Yêu cầu đăng nhập.");
                 return;
             }

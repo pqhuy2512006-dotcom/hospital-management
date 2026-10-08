@@ -17,4 +17,5 @@ public class DonThuoc {
     private Integer soLuong;
     private String lieuDung;
     private String cachDung;
+    private String trangThai = "PENDING";
 }

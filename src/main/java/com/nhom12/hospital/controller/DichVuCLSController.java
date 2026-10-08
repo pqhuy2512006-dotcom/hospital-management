@@ -1,7 +1,7 @@
 package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.DichVuCLS;
-import com.nhom12.hospital.repository.DichVuCLSRepository;
+import com.nhom12.hospital.service.DichVuCLSService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,14 +11,14 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class DichVuCLSController {
 
-    private final DichVuCLSRepository dichVuCLSRepository;
+    private final DichVuCLSService dichVuCLSService;
 
-    public DichVuCLSController(DichVuCLSRepository dichVuCLSRepository) {
-        this.dichVuCLSRepository = dichVuCLSRepository;
+    public DichVuCLSController(DichVuCLSService dichVuCLSService) {
+        this.dichVuCLSService = dichVuCLSService;
     }
 
     @GetMapping
     public List<DichVuCLS> getAll() {
-        return dichVuCLSRepository.findAll();
+        return dichVuCLSService.getAll();
     }
 }

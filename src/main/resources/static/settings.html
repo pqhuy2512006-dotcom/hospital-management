@@ -793,8 +793,6 @@
                 else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
                 else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
 
-                const roles = ['QuanTri', 'BacSi', 'DieuDuong', 'LeTan', 'DuocSi', 'KTV', 'ThuNgan'];
-                const roleOptions = roles.map(role => `<option value="${role}" ${u.role === role ? 'selected' : ''}>${role}</option>`).join('');
                 const isCurrentUser = (() => {
                     try { return JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').username === u.username; }
                     catch (error) { return false; }
@@ -803,7 +801,7 @@
                     <tr>
                         <td><strong>${escapeHtml(u.username)}</strong></td>
                         <td>${escapeHtml(u.fullName || u.username)}</td>
-                        <td><select onchange="updateAccount(${u.id}, this.value, ${u.enabled})" ${isCurrentUser ? 'disabled' : ''}>${roleOptions}</select></td>
+                        <td><span class="role-badge ${badgeClass}">${escapeHtml(u.role)}</span></td>
                         <td><span style="color:${u.enabled ? '#10b981' : '#ef4444'}; font-weight:600;">${u.enabled ? 'Hoạt động' : 'Bị khóa'}</span></td>
                         <td>
                             <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>

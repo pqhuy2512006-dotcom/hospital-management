@@ -1,7 +1,7 @@
 package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.entity.GiuongBenh;
-import com.nhom12.hospital.repository.GiuongBenhRepository;
+import com.nhom12.hospital.service.GiuongBenhService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,40 +12,33 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class GiuongBenhController {
 
-    private final GiuongBenhRepository giuongBenhRepository;
+    private final GiuongBenhService giuongBenhService;
 
-    public GiuongBenhController(GiuongBenhRepository giuongBenhRepository) {
-        this.giuongBenhRepository = giuongBenhRepository;
+    public GiuongBenhController(GiuongBenhService giuongBenhService) {
+        this.giuongBenhService = giuongBenhService;
     }
 
     @GetMapping
     public List<GiuongBenh> getAll(@RequestParam(required = false) String khoa) {
-        if (khoa != null && !khoa.trim().isEmpty() && !khoa.equalsIgnoreCase("ALL")) {
-            return giuongBenhRepository.findByMaKhoa(khoa);
-        }
-        return giuongBenhRepository.findAll();
+        return giuongBenhService.getAll(khoa);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<GiuongBenh> getById(@PathVariable String id) {
-        return giuongBenhRepository.findById(id)
+        return giuongBenhService.getById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public GiuongBenh create(@RequestBody GiuongBenh giuongBenh) {
-        return giuongBenhRepository.save(giuongBenh);
+        return giuongBenhService.create(giuongBenh);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<GiuongBenh> update(@PathVariable String id, @RequestBody GiuongBenh updated) {
-        return giuongBenhRepository.findById(id).map(g -> {
-            g.setSoGiuong(updated.getSoGiuong());
-            g.setTrangThai(updated.getTrangThai());
-            g.setDonGiaNgay(updated.getDonGiaNgay());
-            g.setMaKhoa(updated.getMaKhoa());
-            return ResponseEntity.ok(giuongBenhRepository.save(g));
-        }).orElse(ResponseEntity.notFound().build());
+        return giuongBenhService.update(id, updated)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -1,113 +1,37 @@
 package com.nhom12.hospital.controller;
 
-import com.nhom12.hospital.entity.DonThuoc;
-import com.nhom12.hospital.entity.PhieuKham;
-import com.nhom12.hospital.entity.Thuoc;
-import com.nhom12.hospital.repository.BenhNhanRepository;
-import com.nhom12.hospital.repository.DonThuocRepository;
-import com.nhom12.hospital.repository.NhanVienRepository;
-import com.nhom12.hospital.repository.PhieuKhamRepository;
-import com.nhom12.hospital.repository.ThuocRepository;
+import com.nhom12.hospital.service.DonThuocService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/v1/donthuoc")
 @CrossOrigin(origins = "*")
 public class DonThuocController {
 
-    private final DonThuocRepository donThuocRepository;
-    private final PhieuKhamRepository phieuKhamRepository;
-    private final ThuocRepository thuocRepository;
-    private final BenhNhanRepository benhNhanRepository;
-    private final NhanVienRepository nhanVienRepository;
-    private final com.nhom12.hospital.repository.ChiTietNhapKhoRepository chiTietNhapKhoRepository;
+    private final DonThuocService donThuocService;
 
-    public DonThuocController(DonThuocRepository donThuocRepository,
-                              PhieuKhamRepository phieuKhamRepository,
-                              ThuocRepository thuocRepository,
-                              BenhNhanRepository benhNhanRepository,
-                              NhanVienRepository nhanVienRepository,
-                              com.nhom12.hospital.repository.ChiTietNhapKhoRepository chiTietNhapKhoRepository) {
-        this.donThuocRepository = donThuocRepository;
-        this.phieuKhamRepository = phieuKhamRepository;
-        this.thuocRepository = thuocRepository;
-        this.benhNhanRepository = benhNhanRepository;
-        this.nhanVienRepository = nhanVienRepository;
-        this.chiTietNhapKhoRepository = chiTietNhapKhoRepository;
+    public DonThuocController(DonThuocService donThuocService) {
+        this.donThuocService = donThuocService;
     }
 
     @GetMapping
     public List<Map<String, Object>> getAll() {
-        List<DonThuoc> list = donThuocRepository.findAll();
-        List<Map<String, Object>> res = new ArrayList<>();
-
-        for (DonThuoc dt : list) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", dt.getMaDonThuoc());
-            map.put("maPhieuKham", dt.getMaPhieuKham());
-            map.put("drugId", dt.getMaThuoc());
-            map.put("qty", dt.getSoLuong());
-            map.put("lieuDung", dt.getLieuDung());
-            map.put("cachDung", dt.getCachDung());
-            map.put("status", "PENDING");
-
-            thuocRepository.findById(dt.getMaThuoc()).ifPresent(drug -> {
-                map.put("drugName", drug.getTenThuoc());
-                map.put("unit", drug.getDonViTinh());
-                map.put("stock", drug.getTonKhoHienTai());
-            });
-
-            phieuKhamRepository.findById(dt.getMaPhieuKham()).ifPresent(pk -> {
-                map.put("patientId", pk.getMaBenhNhan());
-                benhNhanRepository.findById(pk.getMaBenhNhan()).ifPresent(bn -> {
-                    map.put("patientName", bn.getHoTen());
-                });
-                nhanVienRepository.findById(pk.getMaBacSi()).ifPresent(nv -> {
-                    map.put("doctor", nv.getHoTen());
-                });
-            });
-
-            res.add(map);
-        }
-        return res;
+        return donThuocService.getAll();
     }
 
     @PostMapping("/{id}/xuat")
     public ResponseEntity<?> xuatThuoc(@PathVariable String id) {
-        return donThuocRepository.findById(id).map(dt -> {
-            Optional<Thuoc> drugOpt = thuocRepository.findById(dt.getMaThuoc());
-            if (drugOpt.isEmpty()) {
-                return ResponseEntity.badRequest().body("Thuốc không tồn tại!");
-            }
-            Thuoc drug = drugOpt.get();
-            if (drug.getTonKhoHienTai() < dt.getSoLuong()) {
-                return ResponseEntity.badRequest().body("Số lượng tồn kho không đủ để xuất!");
-            }
-            
-            // Thực hiện FEFO
-            int remainingToDispense = dt.getSoLuong();
-            List<com.nhom12.hospital.entity.ChiTietNhapKho> batches = chiTietNhapKhoRepository.findByMaThuocForFEFO(dt.getMaThuoc());
-            for (com.nhom12.hospital.entity.ChiTietNhapKho batch : batches) {
-                if (remainingToDispense <= 0) break;
-                
-                int batchStock = batch.getSoLuongTon();
-                if (batchStock >= remainingToDispense) {
-                    batch.setSoLuongTon(batchStock - remainingToDispense);
-                    chiTietNhapKhoRepository.save(batch);
-                    remainingToDispense = 0;
-                } else {
-                    batch.setSoLuongTon(0);
-                    chiTietNhapKhoRepository.save(batch);
-                    remainingToDispense -= batchStock;
-                }
-            }
-            
-            drug.setTonKhoHienTai(drug.getTonKhoHienTai() - dt.getSoLuong());
-            thuocRepository.save(drug);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã xuất thuốc thành công!", "tonKhoMoi", drug.getTonKhoHienTai()));
-        }).orElse(ResponseEntity.notFound().build());
+        try {
+            return ResponseEntity.ok(donThuocService.xuatThuoc(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

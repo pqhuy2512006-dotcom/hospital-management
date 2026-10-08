@@ -5,6 +5,7 @@ import com.nhom12.hospital.repository.AuditLogRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AuditLogService {
@@ -15,9 +16,15 @@ public class AuditLogService {
         this.auditLogRepository = auditLogRepository;
     }
 
+    public List<AuditLog> getRecentLogs() {
+        return auditLogRepository.findTop200ByOrderByOccurredAtDesc();
+    }
+
     public void record(String eventType, String username, String role, String method,
                        String path, int status, String remoteAddress, String details) {
+
         AuditLog auditLog = new AuditLog();
+
         auditLog.setEventType(eventType);
         auditLog.setUsername(truncate(username, 50));
         auditLog.setUserRole(truncate(role, 20));
@@ -27,6 +34,7 @@ public class AuditLogService {
         auditLog.setRemoteAddress(truncate(remoteAddress, 64));
         auditLog.setDetails(truncate(details, 500));
         auditLog.setOccurredAt(LocalDateTime.now());
+
         auditLogRepository.save(auditLog);
     }
 
@@ -34,6 +42,7 @@ public class AuditLogService {
         if (value == null || value.length() <= maxLength) {
             return value;
         }
+
         return value.substring(0, maxLength);
     }
 }
