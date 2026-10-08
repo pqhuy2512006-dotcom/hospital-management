@@ -707,10 +707,16 @@
                     if (!isHR) {
                         const addBtn = document.querySelector('.btn-add-doc');
                         if (addBtn) addBtn.style.display = 'none';
+                        
+                        const isLeTan = r.includes('LETAN') || r.includes('RECEPTIONIST');
                         document.querySelectorAll('.btn-tbl-edit').forEach(btn => {
-                            btn.innerHTML = '<i class="fa-solid fa-eye"></i> Xem';
-                            btn.style.background = '#f1f5f9';
-                            btn.style.color = '#475569';
+                            if (isLeTan) {
+                                btn.style.display = 'none';
+                            } else {
+                                btn.innerHTML = '<i class="fa-solid fa-eye"></i> Xem';
+                                btn.style.background = '#f1f5f9';
+                                btn.style.color = '#475569';
+                            }
                         });
                     }
                 } catch(e) {}

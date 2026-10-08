@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kho Dược & Quầy Cấp Phát Thuốc - MEDICARE HIS</title>
+    <title>Kho DÆ°á»£c & Quáº§y Cáº¥p PhÃ¡t Thuá»‘c - MEDICARE HIS</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -37,7 +37,7 @@
             color: var(--text-dark);
         }
 
-        /* SIDEBAR CHUẨN 10 PHÂN HỆ */
+        /* SIDEBAR CHUáº¨N 10 PHÃ‚N Há»† */
         .sidebar {
             width: 260px;
             background-color: var(--sidebar-bg);
@@ -427,23 +427,23 @@
 </head>
 <body>
 
-    <!-- Sidebar Menu chuẩn 10 phân hệ -->
+    <!-- Sidebar Menu chuáº©n 10 phÃ¢n há»‡ -->
     <aside class="sidebar">
         <div class="sidebar-brand">
             <i class="fa-solid fa-hospital"></i>
             <span>MEDICARE HIS</span>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
-            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
-            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
-            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
-            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
-            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
-            <li><a href="/pharmacy.html" class="active"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
-            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
-            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
-            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Báº£ng Ä‘iá»u khiá»ƒn</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Äáº·t lá»‹ch & Tiáº¿p Ä‘Ã³n</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quáº£n lÃ½ Bá»‡nh nhÃ¢n</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sÃ¡ch BÃ¡c sÄ©</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiáº¿p Ä‘Ã³n & KhÃ¡m bá»‡nh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cáº­n lÃ¢m sÃ ng (CLS)</a></li>
+            <li><a href="/pharmacy.html" class="active"><i class="fa-solid fa-pills"></i> Kho DÆ°á»£c & ÄÆ¡n thuá»‘c</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quáº£n lÃ½ GiÆ°á»ng bá»‡nh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> HÃ³a Ä‘Æ¡n Viá»‡n phÃ­</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cáº¥u hÃ¬nh há»‡ thá»‘ng</a></li>
         </ul>
     </aside>
 
@@ -452,41 +452,38 @@
         <!-- Top Header -->
         <header class="top-header">
             <div class="header-title">
-                <h2>Kho Dược Bệnh Viện & Quầy Xuất Thuốc Theo Đơn</h2>
+                <h2>Kho DÆ°á»£c Bá»‡nh Viá»‡n & Quáº§y Xuáº¥t Thuá»‘c Theo ÄÆ¡n</h2>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-profile" onclick="openProfileModal()">
-                    <i class="fa-solid fa-user-pen"></i> Thông tin cá nhân
-                </button>
                 <button class="btn-logout" onclick="logout()">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ÄÄƒng xuáº¥t
                 </button>
             </div>
         </header>
 
         <!-- Content Body -->
         <main class="content-body">
-            <!-- Tab chuyển đổi -->
+            <!-- Tab chuyá»ƒn Ä‘á»•i -->
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('inventoryTab', this)">
-                    <i class="fa-solid fa-boxes-stacked"></i> Danh Mục & Tồn Kho Thuốc (UC44)
+                    <i class="fa-solid fa-boxes-stacked"></i> Danh Má»¥c & Tá»“n Kho Thuá»‘c (UC44)
                 </button>
                 <button class="tab-btn" onclick="switchTab('dispenseTab', this)">
-                    <i class="fa-solid fa-receipt"></i> Cấp Phát Thuốc Theo Đơn (UC46, UC48)
+                    <i class="fa-solid fa-receipt"></i> Cáº¥p PhÃ¡t Thuá»‘c Theo ÄÆ¡n (UC46, UC48)
                 </button>
             </div>
 
-            <!-- TAB 1: DANH MỤC & TỒN KHO THUỐC (UC44, UC45, UC51) -->
+            <!-- TAB 1: DANH Má»¤C & Tá»’N KHO THUá»C (UC44, UC45, UC51) -->
             <div id="inventoryTab" class="tab-content active">
                 <div class="action-bar">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="drugSearchInput" class="search-input" 
-                               placeholder="Tìm tên thuốc, mã thuốc, hoạt chất..." 
+                               placeholder="TÃ¬m tÃªn thuá»‘c, mÃ£ thuá»‘c, hoáº¡t cháº¥t..." 
                                onkeyup="filterDrugs()">
                     </div>
                     <button class="btn-action btn-import" onclick="openImportModal()">
-                        <i class="fa-solid fa-file-import"></i> Nhập Kho Thuốc Mới (Mẫu QLDK_BM1)
+                        <i class="fa-solid fa-file-import"></i> Nháº­p Kho Thuá»‘c Má»›i (Máº«u QLDK_BM1)
                     </button>
                 </div>
 
@@ -494,40 +491,40 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Mã Thuốc</th>
-                                <th>Tên Thuốc / Biệt Dược</th>
-                                <th>Đơn Vị Tính</th>
-                                <th>Đơn Giá Bán (VNĐ)</th>
-                                <th>Số Lượng Tồn Kho</th>
-                                <th>Trạng Thái Kho</th>
+                                <th>MÃ£ Thuá»‘c</th>
+                                <th>TÃªn Thuá»‘c / Biá»‡t DÆ°á»£c</th>
+                                <th>ÄÆ¡n Vá»‹ TÃ­nh</th>
+                                <th>ÄÆ¡n GiÃ¡ BÃ¡n (VNÄ)</th>
+                                <th>Sá»‘ LÆ°á»£ng Tá»“n Kho</th>
+                                <th>Tráº¡ng ThÃ¡i Kho</th>
                             </tr>
                         </thead>
                         <tbody id="drugTableBody">
-                            <!-- Render bằng JavaScript -->
+                            <!-- Render báº±ng JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- TAB 2: CẤP PHÁT THUỐC THEO ĐƠN (UC46, UC48) -->
+            <!-- TAB 2: Cáº¤P PHÃT THUá»C THEO ÄÆ N (UC46, UC48) -->
             <div id="dispenseTab" class="tab-content">
                 <div class="table-card" style="padding: 20px;">
                     <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-clipboard-list" style="color:var(--primary);"></i> Danh Sách Đơn Thuốc Chờ Cấp Phát
+                        <i class="fa-solid fa-clipboard-list" style="color:var(--primary);"></i> Danh SÃ¡ch ÄÆ¡n Thuá»‘c Chá» Cáº¥p PhÃ¡t
                     </h3>
                     <table>
                         <thead>
                             <tr>
-                                <th>Mã Đơn Thuốc</th>
-                                <th>Bệnh Nhân</th>
-                                <th>Bác Sĩ Kê Đơn</th>
-                                <th>Chi Tiết Thuốc Kê</th>
-                                <th>Trạng Thái</th>
-                                <th>Thao Tác</th>
+                                <th>MÃ£ ÄÆ¡n Thuá»‘c</th>
+                                <th>Bá»‡nh NhÃ¢n</th>
+                                <th>BÃ¡c SÄ© KÃª ÄÆ¡n</th>
+                                <th>Chi Tiáº¿t Thuá»‘c KÃª</th>
+                                <th>Tráº¡ng ThÃ¡i</th>
+                                <th>Thao TÃ¡c</th>
                             </tr>
                         </thead>
                         <tbody id="prescriptionTableBody">
-                            <!-- Render danh sách đơn thuốc chờ xuất -->
+                            <!-- Render danh sÃ¡ch Ä‘Æ¡n thuá»‘c chá» xuáº¥t -->
                         </tbody>
                     </table>
                 </div>
@@ -535,107 +532,107 @@
         </main>
     </div>
 
-    <!-- MODAL NHẬP KHO THUỐC MẪU QLDK_BM1 (UC45, UC51) -->
+    <!-- MODAL NHáº¬P KHO THUá»C MáºªU QLDK_BM1 (UC45, UC51) -->
     <div class="modal-overlay" id="importModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-truck-ramp-box" style="color:var(--primary);"></i> Lập Phiếu Nhập Kho Thuốc (Mẫu QLDK_BM1)</h3>
+                <h3><i class="fa-solid fa-truck-ramp-box" style="color:var(--primary);"></i> Láº­p Phiáº¿u Nháº­p Kho Thuá»‘c (Máº«u QLDK_BM1)</h3>
                 <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeImportModal()">&times;</button>
             </div>
             <form onsubmit="handleImportDrug(event)">
                 <div class="modal-body">
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Mã Phiếu Nhập *</label>
+                            <label>MÃ£ Phiáº¿u Nháº­p *</label>
                             <input type="text" id="impCode" class="form-control" readonly style="background:#f1f5f9; font-weight:700; color:var(--primary);">
                         </div>
                         <div class="form-group">
-                            <label>Ngày Nhập Kho *</label>
+                            <label>NgÃ y Nháº­p Kho *</label>
                             <input type="date" id="impDate" class="form-control" required>
                         </div>
                     </div>
 
-                    <!-- Quản lý Nhà Cung Cấp (UC51) -->
+                    <!-- Quáº£n lÃ½ NhÃ  Cung Cáº¥p (UC51) -->
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Nhà Cung Cấp (UC51) *</label>
+                            <label>NhÃ  Cung Cáº¥p (UC51) *</label>
                             <select id="impSupplier" class="form-control" required>
-                                <option value="Công ty Cổ phần Dược Hậu Giang (DHG Pharma)">DHG Pharma (Dược Hậu Giang)</option>
-                                <option value="Công ty Cổ phần Traphaco">Traphaco</option>
-                                <option value="Công ty Dược phẩm Sanofi-Aventis VN">Sanofi-Aventis Việt Nam</option>
-                                <option value="Tổng Công ty Dược Việt Nam (Vinapharm)">Vinapharm</option>
+                                <option value="CÃ´ng ty Cá»• pháº§n DÆ°á»£c Háº­u Giang (DHG Pharma)">DHG Pharma (DÆ°á»£c Háº­u Giang)</option>
+                                <option value="CÃ´ng ty Cá»• pháº§n Traphaco">Traphaco</option>
+                                <option value="CÃ´ng ty DÆ°á»£c pháº©m Sanofi-Aventis VN">Sanofi-Aventis Viá»‡t Nam</option>
+                                <option value="Tá»•ng CÃ´ng ty DÆ°á»£c Viá»‡t Nam (Vinapharm)">Vinapharm</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Số Hóa Đơn NCC *</label>
-                            <input type="text" id="impInvoiceNo" class="form-control" placeholder="Ví dụ: HD-DHG-9982" required>
+                            <label>Sá»‘ HÃ³a ÄÆ¡n NCC *</label>
+                            <input type="text" id="impInvoiceNo" class="form-control" placeholder="VÃ­ dá»¥: HD-DHG-9982" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Chọn Thuốc Nhập Kho *</label>
+                        <label>Chá»n Thuá»‘c Nháº­p Kho *</label>
                         <select id="impDrugId" class="form-control" required>
-                            <option value="MED-001">Paracetamol 500mg (Viên nén)</option>
-                            <option value="MED-002">Amoxicillin 500mg (Kháng sinh viên nang)</option>
-                            <option value="MED-003">Panadol Extra (Viên nén)</option>
-                            <option value="MED-004">Berberin 100mg (Viên bao đường)</option>
-                            <option value="MED-005">Vitamin C 500mg (Viên sủi)</option>
+                            <option value="MED-001">Paracetamol 500mg (ViÃªn nÃ©n)</option>
+                            <option value="MED-002">Amoxicillin 500mg (KhÃ¡ng sinh viÃªn nang)</option>
+                            <option value="MED-003">Panadol Extra (ViÃªn nÃ©n)</option>
+                            <option value="MED-004">Berberin 100mg (ViÃªn bao Ä‘Æ°á»ng)</option>
+                            <option value="MED-005">Vitamin C 500mg (ViÃªn sá»§i)</option>
                         </select>
                     </div>
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Số Lô Sản Xuất *</label>
-                            <input type="text" id="impBatch" class="form-control" placeholder="Ví dụ: L2026-09A" required>
+                            <label>Sá»‘ LÃ´ Sáº£n Xuáº¥t *</label>
+                            <input type="text" id="impBatch" class="form-control" placeholder="VÃ­ dá»¥: L2026-09A" required>
                         </div>
                         <div class="form-group">
-                            <label>Hạn Sử Dụng *</label>
+                            <label>Háº¡n Sá»­ Dá»¥ng *</label>
                             <input type="date" id="impExpiry" class="form-control" required>
                         </div>
                     </div>
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Số Lượng Nhập *</label>
-                            <input type="number" id="impQty" class="form-control" min="1" placeholder="Nhập số lượng..." required>
+                            <label>Sá»‘ LÆ°á»£ng Nháº­p *</label>
+                            <input type="number" id="impQty" class="form-control" min="1" placeholder="Nháº­p sá»‘ lÆ°á»£ng..." required>
                         </div>
                         <div class="form-group">
-                            <label>Đơn Giá Nhập (VNĐ) *</label>
-                            <input type="number" id="impPrice" class="form-control" min="100" placeholder="Đơn giá nhập kho..." required>
+                            <label>ÄÆ¡n GiÃ¡ Nháº­p (VNÄ) *</label>
+                            <input type="number" id="impPrice" class="form-control" min="100" placeholder="ÄÆ¡n giÃ¡ nháº­p kho..." required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeImportModal()">Hủy Bỏ</button>
+                    <button type="button" class="btn-cancel" onclick="closeImportModal()">Há»§y Bá»</button>
                     <button type="submit" class="btn-save" style="background:#059669;">
-                        <i class="fa-solid fa-check"></i> Xác Nhận Nhập Kho (Tăng Tồn Kho)
+                        <i class="fa-solid fa-check"></i> XÃ¡c Nháº­n Nháº­p Kho (TÄƒng Tá»“n Kho)
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL THÔNG TIN CÁ NHÂN -->
+    <!-- MODAL THÃ”NG TIN CÃ NHÃ‚N -->
     <div class="modal-overlay" id="profileModal">
         <div class="modal-box" style="max-width: 500px;">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-user-pen" style="color:var(--primary);"></i> Cập Nhật Thông Tin & Mật Khẩu</h3>
+                <h3><i class="fa-solid fa-user-pen" style="color:var(--primary);"></i> Cáº­p Nháº­t ThÃ´ng Tin & Máº­t Kháº©u</h3>
                 <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeProfileModal()">&times;</button>
             </div>
             
             <div class="tab-bar" style="margin: 20px 24px 0;">
-                <button class="tab-btn active" onclick="switchProfileTab('infoTab', this)">Thông tin</button>
-                <button class="tab-btn" onclick="switchProfileTab('pwdTab', this)">Đổi mật khẩu</button>
+                <button class="tab-btn active" onclick="switchProfileTab('infoTab', this)">ThÃ´ng tin</button>
+                <button class="tab-btn" onclick="switchProfileTab('pwdTab', this)">Äá»•i máº­t kháº©u</button>
             </div>
 
             <!-- TAB INFO -->
             <form id="infoTab" class="tab-content active" onsubmit="handleUpdateProfile(event)" style="padding: 24px;">
                 <div class="form-group">
-                    <label>Họ Tên</label>
+                    <label>Há» TÃªn</label>
                     <input type="text" id="profName" class="form-control" readonly style="background:#f1f5f9; cursor:not-allowed;">
                 </div>
                 <div class="form-group">
-                    <label>Số Điện Thoại *</label>
+                    <label>Sá»‘ Äiá»‡n Thoáº¡i *</label>
                     <input type="text" id="profPhone" class="form-control" required>
                 </div>
                 <div class="form-group">
@@ -643,40 +640,40 @@
                     <input type="email" id="profEmail" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Địa Chỉ</label>
+                    <label>Äá»‹a Chá»‰</label>
                     <input type="text" id="profAddress" class="form-control">
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">Hủy</button>
-                    <button type="submit" class="btn-save">Lưu Thay Đổi</button>
+                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">Há»§y</button>
+                    <button type="submit" class="btn-save">LÆ°u Thay Äá»•i</button>
                 </div>
             </form>
 
             <!-- TAB PASSWORD -->
             <form id="pwdTab" class="tab-content" onsubmit="handleChangePassword(event)" style="padding: 24px;">
                 <div class="form-group">
-                    <label>Mật Khẩu Hiện Tại *</label>
+                    <label>Máº­t Kháº©u Hiá»‡n Táº¡i *</label>
                     <input type="password" id="oldPwd" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Mật Khẩu Mới *</label>
+                    <label>Máº­t Kháº©u Má»›i *</label>
                     <input type="password" id="newPwd" class="form-control" required minlength="6">
                 </div>
                 <div class="form-group">
-                    <label>Xác Nhận Mật Khẩu Mới *</label>
+                    <label>XÃ¡c Nháº­n Máº­t Kháº©u Má»›i *</label>
                     <input type="password" id="confirmPwd" class="form-control" required minlength="6">
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">Hủy</button>
-                    <button type="submit" class="btn-save">Đổi Mật Khẩu</button>
+                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">Há»§y</button>
+                    <button type="submit" class="btn-save">Äá»•i Máº­t Kháº©u</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT NGHIỆP VỤ DƯỢC & KHO THUỐC -->
+    <!-- SCRIPT NGHIá»†P Vá»¤ DÆ¯á»¢C & KHO THUá»C -->
     <script>
-        // Dữ liệu kho thuốc và đơn thuốc được tải từ hệ thống; không còn dữ liệu mẫu.
+        // Dá»¯ liá»‡u kho thuá»‘c vÃ  Ä‘Æ¡n thuá»‘c Ä‘Æ°á»£c táº£i tá»« há»‡ thá»‘ng; khÃ´ng cÃ²n dá»¯ liá»‡u máº«u.
         let drugs = [];
         let prescriptions = [];
 
@@ -706,14 +703,14 @@
                     renderPrescriptions();
                 }
             } catch (err) {
-                console.error("Lỗi tải dữ liệu kho thuốc:", err);
+                console.error("Lá»—i táº£i dá»¯ liá»‡u kho thuá»‘c:", err);
             }
         }
 
         function updateImportDrugSelect() {
             const sel = document.getElementById('impDrugId');
             if (!sel || drugs.length === 0) return;
-            sel.innerHTML = drugs.map(d => `<option value="${d.id}">${d.name} (${d.unit}) - Tồn: ${d.stock}</option>`).join('');
+            sel.innerHTML = drugs.map(d => `<option value="${d.id}">${d.name} (${d.unit}) - Tá»“n: ${d.stock}</option>`).join('');
         }
 
         function switchTab(tabId, btn) {
@@ -724,15 +721,15 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        // Render danh mục thuốc (UC44)
+        // Render danh má»¥c thuá»‘c (UC44)
         function renderDrugs(list = drugs) {
             const tbody = document.getElementById('drugTableBody');
             tbody.innerHTML = '';
 
             list.forEach(d => {
-                let statusText = '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Đầy đủ</span>';
+                let statusText = '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Äáº§y Ä‘á»§</span>';
                 if (d.stock <= (d.warningLimit || 20)) {
-                    statusText = '<span style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết</span>';
+                    statusText = '<span style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> Sáº¯p háº¿t</span>';
                 }
 
                 tbody.innerHTML += `
@@ -740,7 +737,7 @@
                         <td><span class="badge-code">${d.id}</span></td>
                         <td><strong>${d.name}</strong></td>
                         <td>${d.unit}</td>
-                        <td>${d.price.toLocaleString('vi-VN')} đ</td>
+                        <td>${d.price.toLocaleString('vi-VN')} Ä‘</td>
                         <td style="font-weight:700; font-size:14px;">${d.stock}</td>
                         <td>${statusText}</td>
                     </tr>
@@ -757,31 +754,31 @@
             renderDrugs(filtered);
         }
 
-        // Render đơn thuốc chờ cấp phát
+        // Render Ä‘Æ¡n thuá»‘c chá» cáº¥p phÃ¡t
         function renderPrescriptions() {
             const tbody = document.getElementById('prescriptionTableBody');
             tbody.innerHTML = '';
 
             if (prescriptions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Chưa có đơn thuốc nào cần xử lý.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">ChÆ°a cÃ³ Ä‘Æ¡n thuá»‘c nÃ o cáº§n xá»­ lÃ½.</td></tr>';
                 return;
             }
 
             prescriptions.forEach(p => {
                 const statusHtml = p.status === 'PENDING'
-                    ? '<span class="badge-status status-pending">Chờ xuất thuốc</span>'
-                    : '<span class="badge-status status-dispensed">Đã phát thuốc</span>';
+                    ? '<span class="badge-status status-pending">Chá» xuáº¥t thuá»‘c</span>'
+                    : '<span class="badge-status status-dispensed">ÄÃ£ phÃ¡t thuá»‘c</span>';
 
                 const actionHtml = p.status === 'PENDING'
-                    ? `<button class="btn-dispense" onclick="dispenseDrug('${p.id}')"><i class="fa-solid fa-box-open"></i> Xuất Thuốc (Trừ Tồn)</button>`
-                    : '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check-double"></i> Đã hoàn tất</span>';
+                    ? `<button class="btn-dispense" onclick="dispenseDrug('${p.id}')"><i class="fa-solid fa-box-open"></i> Xuáº¥t Thuá»‘c (Trá»« Tá»“n)</button>`
+                    : '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check-double"></i> ÄÃ£ hoÃ n táº¥t</span>';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="badge-code">${p.id}</span></td>
-                        <td><strong>${p.patientName || p.patientId || 'Bệnh nhân'}</strong></td>
-                        <td>${p.doctor || 'Bác sĩ kê đơn'}</td>
-                        <td><strong>${p.drugName || p.drugId}</strong>: ${p.qty} viên</td>
+                        <td><strong>${p.patientName || p.patientId || 'Bá»‡nh nhÃ¢n'}</strong></td>
+                        <td>${p.doctor || 'BÃ¡c sÄ© kÃª Ä‘Æ¡n'}</td>
+                        <td><strong>${p.drugName || p.drugId}</strong>: ${p.qty} viÃªn</td>
                         <td>${statusHtml}</td>
                         <td>${actionHtml}</td>
                     </tr>
@@ -789,7 +786,7 @@
             });
         }
 
-        // Cấp phát thuốc & tự động trừ tồn kho (UC46, UC48)
+        // Cáº¥p phÃ¡t thuá»‘c & tá»± Ä‘á»™ng trá»« tá»“n kho (UC46, UC48)
         async function dispenseDrug(prescriptionId) {
             try {
                 const res = await fetch(`/api/v1/donthuoc/${encodeURIComponent(prescriptionId)}/xuat`, {
@@ -798,19 +795,19 @@
 
                 if (!res.ok) {
                     const err = await res.text();
-                    alert("Lỗi xuất thuốc: " + err);
+                    alert("Lá»—i xuáº¥t thuá»‘c: " + err);
                     return;
                 }
 
-                alert(`Xuất thuốc thành công cho đơn ${prescriptionId}!\nĐã trừ số lượng khỏi kho dược trên SQL Server.`);
+                alert(`Xuáº¥t thuá»‘c thÃ nh cÃ´ng cho Ä‘Æ¡n ${prescriptionId}!\nÄÃ£ trá»« sá»‘ lÆ°á»£ng khá»i kho dÆ°á»£c trÃªn SQL Server.`);
                 await loadPharmacyData();
             } catch (err) {
                 console.error(err);
-                alert("Lỗi kết nối khi xuất thuốc!");
+                alert("Lá»—i káº¿t ná»‘i khi xuáº¥t thuá»‘c!");
             }
         }
 
-        // Modal Nhập kho thuốc (UC45, UC51)
+        // Modal Nháº­p kho thuá»‘c (UC45, UC51)
         function openImportModal() {
             document.getElementById('impCode').value = `PN2026-${String(Date.now()).slice(-4)}`;
             document.getElementById('impDate').valueAsDate = new Date();
@@ -855,16 +852,16 @@
 
                 if (!res.ok) {
                     const err = await res.text();
-                    alert("Lỗi nhập kho: " + err);
+                    alert("Lá»—i nháº­p kho: " + err);
                     return;
                 }
 
-                alert(`Nhập kho thành công!\nSố lượng nhập thêm: +${qty}\nĐã cập nhật tồn kho và tạo phiếu nhập vào CSDL SQL Server!`);
+                alert(`Nháº­p kho thÃ nh cÃ´ng!\nSá»‘ lÆ°á»£ng nháº­p thÃªm: +${qty}\nÄÃ£ cáº­p nháº­t tá»“n kho vÃ  táº¡o phiáº¿u nháº­p vÃ o CSDL SQL Server!`);
                 closeImportModal();
                 await loadPharmacyData();
             } catch (err) {
                 console.error(err);
-                alert("Không thể kết nối đến máy chủ Backend!");
+                alert("KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§ Backend!");
             }
         }
 
@@ -885,7 +882,7 @@
                     document.getElementById('profAddress').value = data.diaChi || '';
                 }
             } catch (err) {
-                console.error("Lỗi tải thông tin:", err);
+                console.error("Lá»—i táº£i thÃ´ng tin:", err);
             }
             document.getElementById('profileModal').style.display = 'flex';
         }
@@ -916,14 +913,14 @@
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    alert('Cập nhật thông tin thành công!');
+                    alert('Cáº­p nháº­t thÃ´ng tin thÃ nh cÃ´ng!');
                     closeProfileModal();
                 } else {
                     const err = await res.json();
-                    alert('Lỗi: ' + (err.message || 'Không thể cập nhật'));
+                    alert('Lá»—i: ' + (err.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t'));
                 }
             } catch (err) {
-                alert('Lỗi kết nối');
+                alert('Lá»—i káº¿t ná»‘i');
             }
         }
 
@@ -934,7 +931,7 @@
             const confirmPwd = document.getElementById('confirmPwd').value;
 
             if (newPwd !== confirmPwd) {
-                alert('Mật khẩu xác nhận không khớp!');
+                alert('Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p!');
                 return;
             }
 
@@ -945,14 +942,14 @@
                     body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
                 });
                 if (res.ok) {
-                    alert('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.');
+                    alert('Äá»•i máº­t kháº©u thÃ nh cÃ´ng! Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.');
                     logout();
                 } else {
                     const err = await res.json();
-                    alert('Lỗi: ' + (err.message || 'Không thể đổi mật khẩu'));
+                    alert('Lá»—i: ' + (err.message || 'KhÃ´ng thá»ƒ Ä‘á»•i máº­t kháº©u'));
                 }
             } catch (err) {
-                alert('Lỗi kết nối');
+                alert('Lá»—i káº¿t ná»‘i');
             }
         }
 

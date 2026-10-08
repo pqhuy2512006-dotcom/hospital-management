@@ -20,6 +20,7 @@ public class BenhNhanService {
     private final DonThuocRepository donThuocRepository;
     private final ThuocRepository thuocRepository;
     private final KetQuaCLSRepository ketQuaCLSRepository;
+    private final ChiTietKetQuaCLSRepository chiTietKetQuaCLSRepository;
 
     public BenhNhanService(BenhNhanRepository benhNhanRepository,
                            PhieuKhamRepository phieuKhamRepository,
@@ -27,7 +28,8 @@ public class BenhNhanService {
                            KhoaRepository khoaRepository,
                            DonThuocRepository donThuocRepository,
                            ThuocRepository thuocRepository,
-                           KetQuaCLSRepository ketQuaCLSRepository) {
+                           KetQuaCLSRepository ketQuaCLSRepository,
+                           ChiTietKetQuaCLSRepository chiTietKetQuaCLSRepository) {
         this.benhNhanRepository = benhNhanRepository;
         this.phieuKhamRepository = phieuKhamRepository;
         this.nhanVienRepository = nhanVienRepository;
@@ -35,6 +37,7 @@ public class BenhNhanService {
         this.donThuocRepository = donThuocRepository;
         this.thuocRepository = thuocRepository;
         this.ketQuaCLSRepository = ketQuaCLSRepository;
+        this.chiTietKetQuaCLSRepository = chiTietKetQuaCLSRepository;
     }
 
     public List<BenhNhan> getAll() {
@@ -126,7 +129,17 @@ public class BenhNhanService {
             List<KetQuaCLS> kqs = ketQuaCLSRepository.findByMaPhieuKham(pk.getMaPhieuKham());
             List<String> clsNames = new ArrayList<>();
             for (KetQuaCLS kq : kqs) {
-                clsNames.add(kq.getLoaiXetNghiem() + (kq.getKetLuan() != null ? ": " + kq.getKetLuan() : ""));
+                String kqStr = kq.getLoaiXetNghiem() + (kq.getKetLuan() != null ? ": " + kq.getKetLuan() : "");
+                List<com.nhom12.hospital.entity.ChiTietKetQuaCLS> chiTiets = chiTietKetQuaCLSRepository.findByMaKetQua(kq.getMaKetQua());
+                if (chiTiets != null && !chiTiets.isEmpty()) {
+                    List<String> ctStrs = new ArrayList<>();
+                    for(com.nhom12.hospital.entity.ChiTietKetQuaCLS ct : chiTiets) {
+                        String danhGia = (ct.getDanhGia() != null && !ct.getDanhGia().isEmpty()) ? " (" + ct.getDanhGia() + ")" : "";
+                        ctStrs.add(ct.getTenChiSo() + ": " + ct.getGiaTri() + " " + ct.getDonVi() + danhGia);
+                    }
+                    kqStr += " [" + String.join(", ", ctStrs) + "]";
+                }
+                clsNames.add(kqStr);
             }
             map.put("cls", String.join("; ", clsNames));
 

@@ -48,4 +48,30 @@ public class ChuyenKhoaController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+    @GetMapping("/khoa-nhan")
+    public ResponseEntity<?> getIncomingRequests(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            return ResponseEntity.ok(chuyenKhoaService.getIncomingRequests(accountId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{maYeuCau}/tiep-nhan")
+    public ResponseEntity<?> acceptTransfer(@org.springframework.web.bind.annotation.PathVariable String maYeuCau, @RequestBody Map<String, String> payload, HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            String maGiuongMoi = payload.get("maGiuongMoi");
+            YeuCauChuyenKhoa saved = chuyenKhoaService.acceptTransfer(maYeuCau, maGiuongMoi, accountId);
+            request.setAttribute(SessionAttributes.AUDIT_DETAIL,
+                    "Tiếp nhận yêu cầu chuyển khoa mã=" + saved.getMaYeuCau() + " vào giường mới=" + maGiuongMoi);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
 }

@@ -83,6 +83,8 @@ public class BenhNhanController {
             return ResponseEntity.ok(benhNhanService.create(benhNhan));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi máy chủ (chi tiết): " + e.getMessage());
         }
     }
 

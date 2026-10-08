@@ -28,6 +28,14 @@ public class YeuCauChuyenKhoaRepository {
         );
     }
 
+    public List<YeuCauChuyenKhoa> findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(String maKhoaNhan, String trangThai) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaKhoaNhan = ? AND TrangThai = ? ORDER BY NgayTao DESC",
+                ROW_MAPPER,
+                maKhoaNhan, trangThai
+        );
+    }
+
     public Optional<YeuCauChuyenKhoa> findById(String id) {
         List<YeuCauChuyenKhoa> rows = jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaYeuCau = ?",

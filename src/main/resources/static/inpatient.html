@@ -464,6 +464,17 @@
             font-weight: 600;
             cursor: pointer;
         }
+    
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; }
+        .tab-btn.active { background: var(--primary); color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .transfer-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .transfer-table th, .transfer-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .transfer-table th { background: #f8fafc; font-weight: 600; font-size: 13px; color: var(--slate-900); }
+        .btn-accept { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
     </style>
 </head>
 <body>
@@ -502,6 +513,17 @@
 
         <!-- Body -->
         <main class="content-body">
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchInpatientTab('bedsTab', this)">
+                    <i class="fa-solid fa-bed"></i> Quản lý giường bệnh
+                </button>
+                <button class="tab-btn" onclick="switchInpatientTab('transferTab', this)">
+                    <i class="fa-solid fa-exchange-alt"></i> Yêu cầu chuyển khoa
+                </button>
+            </div>
+            
+            <div id="bedsTab" class="tab-content active">
+
             <!-- Thống kê tổng số giường -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -570,7 +592,53 @@
             <div class="rooms-container" id="roomsContainer">
                 <!-- Render bằng Javascript -->
             </div>
-        </main>
+        
+            </div>
+            
+            <div id="transferTab" class="tab-content">
+                <div class="controls-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h3 style="margin: 0; font-size: 16px;">Danh sách bệnh nhân xin chuyển đến</h3>
+                    <button class="btn-save-assign" onclick="loadIncomingRequests()"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
+                </div>
+                <table class="transfer-table">
+                    <thead>
+                        <tr>
+                            <th>Mã Yêu Cầu</th>
+                            <th>Mã Bệnh Nhân</th>
+                            <th>Lý Do</th>
+                            <th>Ngày Tạo</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transferList">
+                        <tr><td colspan="5" style="text-align: center;">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Modal chon giuong -->
+            <div class="modal-overlay" id="acceptTransferModal">
+                <div class="modal-box">
+                    <div class="modal-header">
+                        <h3><i class="fa-solid fa-bed"></i> Chọn giường cho bệnh nhân</h3>
+                        <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeAcceptModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="acceptMaYeuCau" />
+                        <div class="form-group">
+                            <label>Chọn giường trống:</label>
+                            <select id="selNewBed" class="form-control">
+                                <option value="">-- Chọn giường --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" onclick="closeAcceptModal()">Hủy</button>
+                        <button class="btn-save-assign" onclick="submitAcceptTransfer()">Tiếp nhận</button>
+                    </div>
+                </div>
+            </div>
+</main>
     </div>
 
     <!-- MODAL XẾP GIƯỜNG BỆNH NHÂN -->
@@ -909,5 +977,113 @@
         };
     </script>
     <script src="/auth-guard.js"></script>
+
+    <script>
+        function switchInpatientTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            if (tabId === 'transferTab') {
+                loadIncomingRequests();
+            }
+        }
+
+        async function loadIncomingRequests() {
+            try {
+                const res = await fetch('/api/v1/chuyenkhoa/khoa-nhan');
+                const tbody = document.getElementById('transferList');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Không có yêu cầu chuyển khoa nào.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(yc => `
+                        <tr>
+                            <td>${yc.maYeuCau}</td>
+                            <td>${yc.maBenhNhan}</td>
+                            <td>${yc.lyDo}</td>
+                            <td>${new Date(yc.ngayTao).toLocaleString('vi-VN')}</td>
+                            <td>
+                                <button class="btn-accept" onclick="openAcceptModal('${yc.maYeuCau}')">
+                                    <i class="fa-solid fa-check"></i> Tiếp nhận
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Lỗi tải dữ liệu.</td></tr>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function openAcceptModal(maYeuCau) {
+            document.getElementById('acceptMaYeuCau').value = maYeuCau;
+            document.getElementById('acceptTransferModal').style.display = 'flex';
+            
+            const selBed = document.getElementById('selNewBed');
+            selBed.innerHTML = '<option value="">-- Đang tải --</option>';
+            
+            try {
+                const meRes = await fetch('/api/v1/nhanvien/me');
+                if (!meRes.ok) throw new Error("Khong the lay thong tin nhan vien");
+                const meData = await meRes.json();
+                const maKhoa = meData.maKhoa;
+                
+                const res = await fetch(`/api/v1/giuongbenh?khoa=${maKhoa}`);
+                if (res.ok) {
+                    const beds = await res.json();
+                    const emptyBeds = beds.filter(b => b.trangThai === 'Trong');
+                    selBed.innerHTML = '<option value="">-- Chọn giường --</option>' + emptyBeds.map(b => `<option value="${b.maGiuong}">${b.soGiuong}</option>`).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                selBed.innerHTML = '<option value="">Lỗi tải giường</option>';
+            }
+        }
+
+        function closeAcceptModal() {
+            document.getElementById('acceptTransferModal').style.display = 'none';
+            document.getElementById('acceptMaYeuCau').value = '';
+            document.getElementById('selNewBed').innerHTML = '<option value="">-- Chọn giường --</option>';
+        }
+
+        async function submitAcceptTransfer() {
+            const maYeuCau = document.getElementById('acceptMaYeuCau').value;
+            const maGiuongMoi = document.getElementById('selNewBed').value;
+            
+            if (!maGiuongMoi) {
+                alert('Vui lòng chọn một giường!');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/v1/chuyenkhoa/${maYeuCau}/tiep-nhan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maGiuongMoi: maGiuongMoi })
+                });
+                
+                if (res.ok) {
+                    alert('Tiếp nhận bệnh nhân thành công!');
+                    closeAcceptModal();
+                    loadIncomingRequests();
+                    if(typeof fetchAndRenderBeds === 'function') fetchAndRenderBeds(); 
+                    if(typeof loadInpatientData === 'function') loadInpatientData();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Lỗi tiếp nhận');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Lỗi kết nối');
+            }
+        }
+    </script>
+
 </body>
 </html>

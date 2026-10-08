@@ -551,7 +551,7 @@
                             <label>Giới Tính *</label>
                             <select id="fGioiTinh" class="form-control" required>
                                 <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
+                                <option value="Nu">Nữ</option>
                             </select>
                         </div>
                     </div>
@@ -836,7 +836,7 @@
                         <td><span class="badge-code">${p.maBN}</span></td>
                         <td><strong>${p.hoTen}</strong>${doctorStatus}</td>
                         <td>${p.ngaySinh} <small>(${age} tuổi)</small></td>
-                        <td>${p.gioiTinh}</td>
+                        <td>${p.gioiTinh === 'Nu' ? 'Nữ' : p.gioiTinh}</td>
                         <td>${p.cccd}</td>
                         <td>${p.sdt}</td>
                         <td>${bhytBadge}</td>
@@ -984,7 +984,7 @@
             const diUng = document.getElementById('fDiUng').value.trim();
 
             const payload = {
-                maBenhNhan: maBN,
+                maBenhNhan: isEditMode ? maBN : "",
                 hoTen: hoTen,
                 ngaySinh: ngaySinh,
                 gioiTinh: gioiTinh,

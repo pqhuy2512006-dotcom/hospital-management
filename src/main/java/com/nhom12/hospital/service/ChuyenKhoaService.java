@@ -7,7 +7,12 @@ import com.nhom12.hospital.repository.KhoaRepository;
 import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.PhieuKhamRepository;
 import com.nhom12.hospital.repository.YeuCauChuyenKhoaRepository;
+import com.nhom12.hospital.repository.NoiTruRepository;
+import com.nhom12.hospital.repository.GiuongBenhRepository;
+import com.nhom12.hospital.entity.NoiTru;
+import com.nhom12.hospital.entity.GiuongBenh;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -20,15 +25,21 @@ public class ChuyenKhoaService {
     private final NhanVienRepository nhanVienRepository;
     private final KhoaRepository khoaRepository;
     private final PhieuKhamRepository phieuKhamRepository;
+    private final NoiTruRepository noiTruRepository;
+    private final GiuongBenhRepository giuongBenhRepository;
 
     public ChuyenKhoaService(YeuCauChuyenKhoaRepository requestRepository,
                              NhanVienRepository nhanVienRepository,
                              KhoaRepository khoaRepository,
-                             PhieuKhamRepository phieuKhamRepository) {
+                             PhieuKhamRepository phieuKhamRepository,
+                             NoiTruRepository noiTruRepository,
+                             GiuongBenhRepository giuongBenhRepository) {
         this.requestRepository = requestRepository;
         this.nhanVienRepository = nhanVienRepository;
         this.khoaRepository = khoaRepository;
         this.phieuKhamRepository = phieuKhamRepository;
+        this.noiTruRepository = noiTruRepository;
+        this.giuongBenhRepository = giuongBenhRepository;
     }
 
     public List<YeuCauChuyenKhoa> getMyRequests(Long accountId) {
@@ -93,6 +104,52 @@ public class ChuyenKhoaService {
         referral.setTrangThai("CHO_TIEP_NHAN");
 
         return requestRepository.save(referral);
+    }
+
+    public List<YeuCauChuyenKhoa> getIncomingRequests(Long accountId) {
+        Optional<NhanVien> nurse = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(emp -> "DieuDuong".equalsIgnoreCase(emp.getVaiTro()));
+        if (nurse.isEmpty() || nurse.get().getMaKhoa() == null) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ điều dưỡng hoặc bạn không thuộc khoa nào.");
+        }
+        return requestRepository.findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(nurse.get().getMaKhoa(), "CHO_TIEP_NHAN");
+    }
+
+    @Transactional
+    public YeuCauChuyenKhoa acceptTransfer(String maYeuCau, String maGiuongMoi, Long accountId) {
+        Optional<NhanVien> nurse = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(emp -> "DieuDuong".equalsIgnoreCase(emp.getVaiTro()));
+        if (nurse.isEmpty() || nurse.get().getMaKhoa() == null) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ điều dưỡng hoặc bạn không thuộc khoa nào.");
+        }
+
+        YeuCauChuyenKhoa request = requestRepository.findById(maYeuCau)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu chuyển khoa."));
+
+        if (!"CHO_TIEP_NHAN".equals(request.getTrangThai())) {
+            throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+        }
+        if (!nurse.get().getMaKhoa().equals(request.getMaKhoaNhan())) {
+            throw new IllegalArgumentException("Yêu cầu này không gửi đến khoa của bạn.");
+        }
+
+        List<GiuongBenh> availableBeds = giuongBenhRepository.findByMaKhoaAndTrangThai(nurse.get().getMaKhoa(), "Trong");
+        GiuongBenh newBed = availableBeds.stream()
+                .filter(b -> b.getMaGiuong().equals(maGiuongMoi))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Giường không tồn tại hoặc không còn trống trong khoa của bạn."));
+
+        Optional<NoiTru> noiTruOpt = noiTruRepository.findActiveByMaBenhNhan(request.getMaBenhNhan());
+        if (noiTruOpt.isPresent()) {
+            NoiTru noiTru = noiTruOpt.get();
+            noiTru.setMaGiuong(maGiuongMoi);
+            noiTruRepository.save(noiTru);
+        } else {
+            throw new IllegalArgumentException("Bệnh nhân này hiện không nằm nội trú.");
+        }
+
+        request.setTrangThai("DA_TIEP_NHAN");
+        return requestRepository.save(request);
     }
 
     private Optional<NhanVien> findCurrentDoctor(Long accountId) {

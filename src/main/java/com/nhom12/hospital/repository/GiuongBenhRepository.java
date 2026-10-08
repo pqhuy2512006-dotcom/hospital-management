@@ -32,6 +32,14 @@ public class GiuongBenhRepository {
         );
     }
 
+    public List<GiuongBenh> findByMaKhoaAndTrangThai(String maKhoa, String trangThai) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_GiuongBenh WHERE MaKhoa = ? AND TrangThai = ? ORDER BY SoGiuong",
+                ROW_MAPPER,
+                maKhoa, trangThai
+        );
+    }
+
     public List<GiuongBenh> findByTrangThai(String trangThai) {
         return jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_GiuongBenh WHERE TrangThai = ? ORDER BY SoGiuong",

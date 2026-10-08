@@ -40,6 +40,15 @@ public class NoiTruRepository {
         );
     }
 
+    public Optional<NoiTru> findActiveByMaBenhNhan(String maBenhNhan) {
+        List<NoiTru> result = jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_NoiTru WHERE MaBenhNhan = ? AND TrangThai = 'DangNam'",
+                ROW_MAPPER,
+                maBenhNhan
+        );
+        return result.stream().findFirst();
+    }
+
     public Optional<NoiTru> findById(String id) {
         List<NoiTru> rows = jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_NoiTru WHERE MaNoiTru = ?",
