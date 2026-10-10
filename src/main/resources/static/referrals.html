@@ -380,7 +380,10 @@
             try {
                 const res = await fetch('/api/v1/chuyenkhoa/hoi-chan-den');
                 if (res.ok) {
-                    const myConsultations = await res.json();
+                    let myConsultations = await res.json();
+                    
+                    // Lọc chỉ những yêu cầu đang chờ tiếp nhận
+                    myConsultations = myConsultations.filter(req => req.trangThai === 'CHO_TIEP_NHAN');
                     
                     if (myConsultations.length > 0) {
                         document.getElementById('consultationSection').style.display = 'block';
