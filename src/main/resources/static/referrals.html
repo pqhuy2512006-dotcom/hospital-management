@@ -302,10 +302,22 @@
                 try {
                     const res = await fetch('/api/v1/nhanvien/doctors');
                     if(res.ok) {
-                        const doctors = await res.json();
-                        doctors.forEach(doctor => doctorSelect.add(new Option(doctor.name + ' - ' + (doctor.specialty || ''), doctor.id)));
+                        window.allDoctors = await res.json();
                     }
                 } catch(e) {}
+            }
+
+            if (departmentSelect && doctorSelect) {
+                departmentSelect.addEventListener('change', function() {
+                    doctorSelect.replaceChildren(new Option('Chọn bác sĩ', '')); 
+                    const selectedMaKhoa = this.value;
+                    if (!selectedMaKhoa || !window.allDoctors) return;
+
+                    const filteredDoctors = window.allDoctors.filter(d => d.specialty === selectedMaKhoa);
+                    filteredDoctors.forEach(doctor => {
+                        doctorSelect.add(new Option(doctor.name + ' - ' + (doctor.specialty || ''), doctor.id));
+                    });
+                });
             }
         }
 

@@ -648,8 +648,7 @@
                 if (!response.ok) throw new Error('Không thể tải danh sách bác sĩ.');
                 doctors = await response.json();
                 const department = departments.find(item => item.maKhoa === departmentId);
-                const available = doctors.filter(doctor => doctor.specialty
-                    && department.tenKhoa.toLowerCase().includes(doctor.specialty.toLowerCase()));
+                const available = doctors.filter(doc => doc.specialty === departmentId);
                 doctorSelect.innerHTML = available.length
                     ? '<option value="">Chọn bác sĩ</option>' + available.map(doctor =>
                         `<option value="${doctor.id}">${doctor.name}</option>`).join('')
@@ -975,8 +974,7 @@
                 if (!response.ok) throw new Error('Không thể tải danh sách bác sĩ.');
                 const allDoctors = await response.json();
                 const department = departments.find(item => item.maKhoa === departmentId);
-                const available = allDoctors.filter(doc => doc.specialty
-                    && department.tenKhoa.toLowerCase().includes(doc.specialty.toLowerCase()));
+                const available = allDoctors.filter(doc => doc.specialty === departmentId);
                 doctorSelect.innerHTML = available.length
                     ? '<option value="">Chọn bác sĩ</option>' + available.map(doc =>
                         `<option value="${doc.id}">${doc.name}</option>`).join('')

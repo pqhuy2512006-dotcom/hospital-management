@@ -464,7 +464,7 @@
                 <button class="tab-btn" onclick="switchTab('rosterTab', this)">
                     <i class="fa-solid fa-calendar-week"></i> Bảng Phân Công Lịch Trực (Mẫu QLNV_BM2)
                 </button>
-                <button class="tab-btn" onclick="switchTab('truongKhoaTab', this)">
+                    <button id="btnTabTruongKhoa" class="tab-btn" onclick="switchTab('truongKhoaTab', this)">
                     <i class="fa-solid fa-user-tie"></i> Quản Lý Trưởng Khoa
                 </button>
             </div>
@@ -746,7 +746,8 @@
                     if (!isHR) {
                         const addBtn = document.querySelector('.btn-add-doc');
                         if (addBtn) addBtn.style.display = 'none';
-                        
+                        const tabTruongKhoa = document.getElementById('btnTabTruongKhoa');
+                        if (tabTruongKhoa) tabTruongKhoa.style.display = 'none';
                         const isLeTan = r.includes('LETAN') || r.includes('RECEPTIONIST');
                         document.querySelectorAll('.btn-tbl-edit').forEach(btn => {
                             if (isLeTan) {

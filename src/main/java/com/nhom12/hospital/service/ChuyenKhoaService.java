@@ -52,7 +52,7 @@ public class ChuyenKhoaService {
         }
         return requestRepository.findByMaBacSiGuiOrderByNgayTaoDesc(doctor.get().getMaNhanVien());
     }
-
+    @Transactional
     public YeuCauChuyenKhoa createRequest(Map<String, String> payload, Long accountId) {
         Optional<NhanVien> doctorOpt = findCurrentDoctor(accountId);
         if (doctorOpt.isEmpty()) {
@@ -84,6 +84,7 @@ public class ChuyenKhoaService {
         if (examOpt.isEmpty() || !doctor.getMaNhanVien().equals(examOpt.get().getMaBacSi())) {
             throw new IllegalStateException("Chỉ được chuyển khoa/hội chẩn trên phiếu khám của chính bác sĩ.");
         }
+
         if (!khoaRepository.existsById(departmentId)) {
             throw new IllegalArgumentException("Khoa nhận không tồn tại.");
         }
@@ -96,11 +97,10 @@ public class ChuyenKhoaService {
         }
 
         if ("CHUYEN_KHOA".equals(type)) {
-            List<GiuongBenh> emptyBeds = giuongBenhRepository.findByMaKhoaAndTrangThai(departmentId, "Trong");
-            if (emptyBeds.isEmpty() && !"true".equals(payload.get("choXepGiuong"))) {
-                com.nhom12.hospital.entity.Khoa targetKhoa = khoaRepository.findById(departmentId).orElse(null);
-                String tenKhoa = targetKhoa != null ? targetKhoa.getTenKhoa() : "Khoa";
-                throw new IllegalArgumentException(tenKhoa + " hiện không còn giường trống. Vui lòng chọn phương án khác.");
+            boolean hasPendingTransfer = requestRepository.existsPendingTransfer(examId);
+            
+            if (hasPendingTransfer) {
+                throw new IllegalStateException("Phiếu khám này đã được tạo yêu cầu chuyển khoa hoặc đã chuyển thành công, không thể tạo thêm!");
             }
         }
 
@@ -251,7 +251,12 @@ public class ChuyenKhoaService {
             throw new IllegalArgumentException("Yêu cầu này không gửi đến khoa của bạn.");
         }
 
-        boolean isNoiTru = noiTruRepository.findActiveByMaBenhNhan(request.getMaBenhNhan()).isPresent(); if (isNoiTru) { request.setTrangThai("CHO_XEP_GIUONG"); } else { request.setTrangThai("DA_TIEP_NHAN"); }
+        boolean isNoiTru = noiTruRepository.findActiveByMaBenhNhan(request.getMaBenhNhan()).isPresent(); 
+        if (isNoiTru) { 
+            request.setTrangThai("CHO_XEP_GIUONG"); 
+        } else { 
+            request.setTrangThai("DA_TIEP_NHAN"); 
+        }
         request.prePersist();
         YeuCauChuyenKhoa saved = requestRepository.save(request);
 
@@ -260,6 +265,16 @@ public class ChuyenKhoaService {
         if (sendingDoctor.isPresent() && sendingDoctor.get().getMaTaiKhoan() != null) {
             String noiDung = "Yêu cầu chuyển khoa (Mã: " + saved.getMaYeuCau() + ") của bạn đã được xác nhận. Trạng thái: " + (isNoiTru ? "Chờ xếp giường" : "Đã tiếp nhận") + ".";
             thongBaoService.createThongBao(sendingDoctor.get().getMaTaiKhoan(), "Xác nhận chuyển khoa", noiDung, "CHUYEN_KHOA");
+        }
+        if (isNoiTru) {
+            List<NhanVien> dsNhanVienKhoaNhan = nhanVienRepository.findByMaKhoa(request.getMaKhoaNhan());
+            for (NhanVien nv : dsNhanVienKhoaNhan) {
+                if ("DieuDuong".equalsIgnoreCase(nv.getVaiTro()) && nv.getMaTaiKhoan() != null) {
+                    String noiDungDieuDuong = "Có bệnh nhân nội trú mới (Mã YC: " + saved.getMaYeuCau() 
+                                            + ") vừa được duyệt chuyển đến khoa. Vui lòng chuẩn bị tiếp nhận và xếp giường.";
+                    thongBaoService.createThongBao(nv.getMaTaiKhoan(), "Bệnh nhân chuyển đến chờ xếp giường", noiDungDieuDuong, "CHUYEN_KHOA");
+                }
+            }
         }
 
         return saved;
