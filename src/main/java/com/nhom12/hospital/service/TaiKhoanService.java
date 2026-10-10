@@ -18,7 +18,7 @@ public class TaiKhoanService {
 
     private static final Set<String> STAFF_ROLES = Set.of(
             "QuanTri", "BacSi", "DieuDuong", "LeTan",
-            "DuocSi", "KTV", "ThuNgan"
+            "DuocSi", "KTV", "ThuNgan", "QuanLyNhanSu"
     );
 
     private final TaiKhoanRepository taiKhoanRepository;

@@ -44,7 +44,7 @@ public class NhanVienService {
                     Map<String, String> doctor = new LinkedHashMap<>();
                     doctor.put("id", employee.getMaNhanVien());
                     doctor.put("name", employee.getHoTen());
-                    doctor.put("specialty", employee.getChuyenKhoa());
+                    doctor.put("specialty", employee.getMaKhoa());
                     return doctor;
                 })
                 .collect(Collectors.toList());
@@ -107,18 +107,39 @@ public class NhanVienService {
         if (nhanVien.getTrangThai() == null) {
             nhanVien.setTrangThai("DangLamViec");
         }
+        
+        // Auto-link Account by Phone Number or Email
+        if (nhanVien.getMaTaiKhoan() == null) {
+            if (nhanVien.getSoDienThoai() != null && !nhanVien.getSoDienThoai().trim().isEmpty()) {
+                taiKhoanRepository.findBySoDienThoai(nhanVien.getSoDienThoai())
+                        .ifPresent(tk -> nhanVien.setMaTaiKhoan(tk.getMaTaiKhoan()));
+                if (nhanVien.getMaTaiKhoan() == null) {
+                    taiKhoanRepository.findByTenDangNhap(nhanVien.getSoDienThoai())
+                            .ifPresent(tk -> nhanVien.setMaTaiKhoan(tk.getMaTaiKhoan()));
+                }
+            }
+            if (nhanVien.getMaTaiKhoan() == null && nhanVien.getEmail() != null && !nhanVien.getEmail().trim().isEmpty()) {
+                taiKhoanRepository.findByEmail(nhanVien.getEmail())
+                        .ifPresent(tk -> nhanVien.setMaTaiKhoan(tk.getMaTaiKhoan()));
+            }
+        }
+
         return nhanVienRepository.save(nhanVien);
     }
 
     public Optional<NhanVien> update(String id, NhanVien updated) {
         return nhanVienRepository.findById(id).map(nv -> {
+            if (updated.getSoDienThoai() != null && nhanVienRepository.existsBySoDienThoaiAndMaNhanVienNot(updated.getSoDienThoai(), id)) {
+                throw new IllegalArgumentException("S? di?n tho?i d� du?c nh�n vi�n kh�c s? d?ng.");
+            }
             nv.setHoTen(updated.getHoTen());
             nv.setTrinhDoChuyenMon(updated.getTrinhDoChuyenMon());
-            nv.setChuyenKhoa(updated.getChuyenKhoa());
+            nv.setMaKhoa(updated.getMaKhoa());
             nv.setDiaChi(updated.getDiaChi());
             nv.setSoDienThoai(updated.getSoDienThoai());
             nv.setChungChiHanhNghe(updated.getChungChiHanhNghe());
             nv.setTrangThai(updated.getTrangThai());
+            nv.setVaiTro(updated.getVaiTro());
             return nhanVienRepository.save(nv);
         });
     }
@@ -128,7 +149,7 @@ public class NhanVienService {
         profile.put("maNhanVien", employee.getMaNhanVien());
         profile.put("hoTen", employee.getHoTen());
         profile.put("vaiTro", employee.getVaiTro());
-        profile.put("chuyenKhoa", employee.getChuyenKhoa());
+        profile.put("chuyenKhoa", employee.getMaKhoa());
         profile.put("chungChiHanhNghe", employee.getChungChiHanhNghe());
         profile.put("soDienThoai", employee.getSoDienThoai());
         profile.put("email", employee.getEmail());
@@ -141,4 +162,7 @@ public class NhanVienService {
         return value == null || value.trim().isEmpty() ? null : value.trim();
     }
 }
+
+
+
 

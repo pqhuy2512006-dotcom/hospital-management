@@ -27,19 +27,22 @@ public class ChuyenKhoaService {
     private final PhieuKhamRepository phieuKhamRepository;
     private final NoiTruRepository noiTruRepository;
     private final GiuongBenhRepository giuongBenhRepository;
+    private final ThongBaoService thongBaoService;
 
     public ChuyenKhoaService(YeuCauChuyenKhoaRepository requestRepository,
                              NhanVienRepository nhanVienRepository,
                              KhoaRepository khoaRepository,
                              PhieuKhamRepository phieuKhamRepository,
                              NoiTruRepository noiTruRepository,
-                             GiuongBenhRepository giuongBenhRepository) {
+                             GiuongBenhRepository giuongBenhRepository,
+                             ThongBaoService thongBaoService) {
         this.requestRepository = requestRepository;
         this.nhanVienRepository = nhanVienRepository;
         this.khoaRepository = khoaRepository;
         this.phieuKhamRepository = phieuKhamRepository;
         this.noiTruRepository = noiTruRepository;
         this.giuongBenhRepository = giuongBenhRepository;
+        this.thongBaoService = thongBaoService;
     }
 
     public List<YeuCauChuyenKhoa> getMyRequests(Long accountId) {
@@ -92,6 +95,15 @@ public class ChuyenKhoaService {
             }
         }
 
+        if ("CHUYEN_KHOA".equals(type)) {
+            List<GiuongBenh> emptyBeds = giuongBenhRepository.findByMaKhoaAndTrangThai(departmentId, "Trong");
+            if (emptyBeds.isEmpty() && !"true".equals(payload.get("choXepGiuong"))) {
+                com.nhom12.hospital.entity.Khoa targetKhoa = khoaRepository.findById(departmentId).orElse(null);
+                String tenKhoa = targetKhoa != null ? targetKhoa.getTenKhoa() : "Khoa";
+                throw new IllegalArgumentException(tenKhoa + " hiện không còn giường trống. Vui lòng chọn phương án khác.");
+            }
+        }
+
         YeuCauChuyenKhoa referral = new YeuCauChuyenKhoa();
         referral.setMaYeuCau("YC" + String.format("%013d", System.currentTimeMillis()));
         referral.setLoaiYeuCau(type);
@@ -101,7 +113,12 @@ public class ChuyenKhoaService {
         referral.setMaKhoaNhan(departmentId);
         referral.setMaBacSiDuocMoi(invitedDoctorId);
         referral.setLyDo(reason.trim());
-        referral.setTrangThai("CHO_TIEP_NHAN");
+        if ("CHUYEN_KHOA".equals(type)) {
+            referral.setTrangThai("CHO_DUYET");
+        } else {
+            referral.setTrangThai("CHO_TIEP_NHAN");
+        }
+        referral.prePersist();
 
         return requestRepository.save(referral);
     }
@@ -112,7 +129,7 @@ public class ChuyenKhoaService {
         if (nurse.isEmpty() || nurse.get().getMaKhoa() == null) {
             throw new IllegalStateException("Không tìm thấy hồ sơ điều dưỡng hoặc bạn không thuộc khoa nào.");
         }
-        return requestRepository.findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(nurse.get().getMaKhoa(), "CHO_TIEP_NHAN");
+        return requestRepository.findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(nurse.get().getMaKhoa(), "CHO_XEP_GIUONG");
     }
 
     @Transactional
@@ -126,8 +143,8 @@ public class ChuyenKhoaService {
         YeuCauChuyenKhoa request = requestRepository.findById(maYeuCau)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu chuyển khoa."));
 
-        if (!"CHO_TIEP_NHAN".equals(request.getTrangThai())) {
-            throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+        if (!"CHO_XEP_GIUONG".equals(request.getTrangThai())) {
+            throw new IllegalArgumentException("Yêu cầu này đã được xử lý hoặc chưa được duyệt.");
         }
         if (!nurse.get().getMaKhoa().equals(request.getMaKhoaNhan())) {
             throw new IllegalArgumentException("Yêu cầu này không gửi đến khoa của bạn.");
@@ -150,6 +167,102 @@ public class ChuyenKhoaService {
 
         request.setTrangThai("DA_TIEP_NHAN");
         return requestRepository.save(request);
+    }
+
+    
+    public List<YeuCauChuyenKhoa> getIncomingConsultations(Long accountId) {
+        Optional<NhanVien> doctor = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(emp -> "BacSi".equalsIgnoreCase(emp.getVaiTro()));
+        if (doctor.isEmpty()) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ bác sĩ.");
+        }
+        return requestRepository.findByMaBacSiDuocMoiAndLoaiYeuCauOrderByNgayTaoDesc(doctor.get().getMaNhanVien(), "HOI_CHAN");
+    }
+
+    @Transactional
+    public YeuCauChuyenKhoa acceptConsultation(String maYeuCau, Long accountId) {
+        Optional<NhanVien> doctor = nhanVienRepository.findByMaTaiKhoan(accountId)
+                .filter(emp -> "BacSi".equalsIgnoreCase(emp.getVaiTro()));
+        if (doctor.isEmpty()) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ bác sĩ.");
+        }
+
+        YeuCauChuyenKhoa request = requestRepository.findById(maYeuCau)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu hội chẩn."));
+
+        if (!"CHO_TIEP_NHAN".equals(request.getTrangThai())) {
+            throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+        }
+        if (!doctor.get().getMaNhanVien().equals(request.getMaBacSiDuocMoi())) {
+            throw new IllegalArgumentException("Yêu cầu này không gửi đến bạn.");
+        }
+
+        request.setTrangThai("DA_TIEP_NHAN");
+        request.prePersist();
+        YeuCauChuyenKhoa saved = requestRepository.save(request);
+
+        // Thông báo cho bác sĩ gửi
+        Optional<NhanVien> sendingDoctor = nhanVienRepository.findById(saved.getMaBacSiGui());
+        if (sendingDoctor.isPresent() && sendingDoctor.get().getMaTaiKhoan() != null) {
+            String noiDung = "Yêu cầu hội chẩn (Mã: " + saved.getMaYeuCau() + ") của bạn đã được xác nhận bởi bác sĩ " + doctor.get().getHoTen() + ".";
+            thongBaoService.createThongBao(sendingDoctor.get().getMaTaiKhoan(), "Xác nhận hội chẩn", noiDung, "HOI_CHAN");
+        }
+
+        return saved;
+    }
+
+    public List<YeuCauChuyenKhoa> getApprovalRequests(Long accountId) {
+        Optional<NhanVien> headDoctor = findCurrentDoctor(accountId);
+        if (headDoctor.isEmpty() || headDoctor.get().getMaKhoa() == null) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ bác sĩ hoặc không thuộc khoa nào.");
+        }
+        
+        com.nhom12.hospital.entity.Khoa khoa = khoaRepository.findById(headDoctor.get().getMaKhoa())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy khoa."));
+                
+        if (!headDoctor.get().getMaNhanVien().equals(khoa.getMaTruongKhoa())) {
+            throw new IllegalStateException("Chỉ Trưởng khoa mới có quyền duyệt yêu cầu chuyển khoa.");
+        }
+        
+        return requestRepository.findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(khoa.getMaKhoa(), "CHO_DUYET");
+    }
+
+    @Transactional
+    public YeuCauChuyenKhoa approveTransfer(String maYeuCau, Long accountId) {
+        Optional<NhanVien> headDoctor = findCurrentDoctor(accountId);
+        if (headDoctor.isEmpty() || headDoctor.get().getMaKhoa() == null) {
+            throw new IllegalStateException("Không tìm thấy hồ sơ bác sĩ hoặc không thuộc khoa nào.");
+        }
+        
+        com.nhom12.hospital.entity.Khoa khoa = khoaRepository.findById(headDoctor.get().getMaKhoa())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy khoa."));
+                
+        if (!headDoctor.get().getMaNhanVien().equals(khoa.getMaTruongKhoa())) {
+            throw new IllegalStateException("Chỉ Trưởng khoa mới có quyền duyệt yêu cầu chuyển khoa.");
+        }
+
+        YeuCauChuyenKhoa request = requestRepository.findById(maYeuCau)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu."));
+
+        if (!"CHO_DUYET".equals(request.getTrangThai())) {
+            throw new IllegalArgumentException("Yêu cầu này không ở trạng thái CHỜ DUYỆT.");
+        }
+        if (!khoa.getMaKhoa().equals(request.getMaKhoaNhan())) {
+            throw new IllegalArgumentException("Yêu cầu này không gửi đến khoa của bạn.");
+        }
+
+        boolean isNoiTru = noiTruRepository.findActiveByMaBenhNhan(request.getMaBenhNhan()).isPresent(); if (isNoiTru) { request.setTrangThai("CHO_XEP_GIUONG"); } else { request.setTrangThai("DA_TIEP_NHAN"); }
+        request.prePersist();
+        YeuCauChuyenKhoa saved = requestRepository.save(request);
+
+        // Thông báo cho bác sĩ gửi
+        Optional<NhanVien> sendingDoctor = nhanVienRepository.findById(saved.getMaBacSiGui());
+        if (sendingDoctor.isPresent() && sendingDoctor.get().getMaTaiKhoan() != null) {
+            String noiDung = "Yêu cầu chuyển khoa (Mã: " + saved.getMaYeuCau() + ") của bạn đã được xác nhận. Trạng thái: " + (isNoiTru ? "Chờ xếp giường" : "Đã tiếp nhận") + ".";
+            thongBaoService.createThongBao(sendingDoctor.get().getMaTaiKhoan(), "Xác nhận chuyển khoa", noiDung, "CHUYEN_KHOA");
+        }
+
+        return saved;
     }
 
     private Optional<NhanVien> findCurrentDoctor(Long accountId) {

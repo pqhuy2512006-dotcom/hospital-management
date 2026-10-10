@@ -35,9 +35,11 @@ public class LichHenController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LichHen>> getAll(HttpServletRequest request) {
+    public ResponseEntity<List<LichHen>> getAll(
+            @RequestParam(required = false) String date,
+            HttpServletRequest request) {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
-        return ResponseEntity.ok(lichHenService.getAllAppointments(accountId));
+        return ResponseEntity.ok(lichHenService.getAllAppointments(accountId, date));
     }
 
     @GetMapping("/me")

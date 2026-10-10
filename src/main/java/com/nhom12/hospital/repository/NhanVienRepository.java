@@ -70,11 +70,11 @@ public class NhanVienRepository {
 		columns.put("SoDienThoai", employee.getSoDienThoai());
 		columns.put("Email", employee.getEmail());
 		columns.put("DiaChi", employee.getDiaChi());
-		columns.put("ChuyenKhoa", employee.getChuyenKhoa());
 		columns.put("ChungChiHanhNghe", employee.getChungChiHanhNghe());
 		columns.put("TrinhDoChuyenMon", employee.getTrinhDoChuyenMon());
 		columns.put("NgayVaoLam", employee.getNgayVaoLam());
 		columns.put("VaiTro", employee.getVaiTro());
+		columns.put("MaKhoa", employee.getMaKhoa());
 		columns.put("TrangThai", employee.getTrangThai());
 		EntityProcedureSupport.save(jdbcTemplate, "NhanVien", columns);
 		return employee;

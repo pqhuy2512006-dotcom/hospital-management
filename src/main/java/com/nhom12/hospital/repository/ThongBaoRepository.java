@@ -30,4 +30,11 @@ public class ThongBaoRepository {
                 maThongBao, maTaiKhoan
         );
     }
+
+    public void create(Long maTaiKhoan, String tieuDe, String noiDung, String loaiThongBao) {
+        jdbcTemplate.update(
+                "INSERT INTO ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao) VALUES (?, ?, ?, ?, 0, GETDATE())",
+                maTaiKhoan, tieuDe, noiDung, loaiThongBao
+        );
+    }
 }

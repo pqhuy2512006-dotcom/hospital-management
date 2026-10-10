@@ -39,7 +39,7 @@ CREATE TABLE TaiKhoan (
     Email           VARCHAR(100)         NULL UNIQUE,
     SoDienThoai     VARCHAR(15)          NOT NULL,
     VaiTro          VARCHAR(20)          NOT NULL 
-                    CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','BenhNhan')),
+                    CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','QuanLyNhanSu','BenhNhan')),
     TrangThai       BIT                  NOT NULL DEFAULT 1,
     NgayTao         DATETIME             NOT NULL DEFAULT GETDATE()
 );
@@ -51,7 +51,9 @@ GO
 CREATE TABLE Khoa (
     MaKhoa          VARCHAR(10)          NOT NULL PRIMARY KEY,
     TenKhoa         NVARCHAR(100)        NOT NULL,
-    MoTa            NVARCHAR(300)        NULL
+    MoTa            NVARCHAR(300)        NULL,
+    MaTruongKhoa    VARCHAR(15)          NULL,
+    CONSTRAINT FK_Khoa_TruongKhoa FOREIGN KEY (MaTruongKhoa) REFERENCES NhanVien(MaNhanVien)
 );
 GO
 
@@ -81,12 +83,11 @@ CREATE TABLE NhanVien (
     SoDienThoai         VARCHAR(15)      NOT NULL,
     Email               VARCHAR(100)     NULL,
     DiaChi              NVARCHAR(200)    NULL,
-    ChuyenKhoa          NVARCHAR(100)    NULL,
     ChungChiHanhNghe    VARCHAR(50)      NULL,
     TrinhDoChuyenMon    NVARCHAR(100)    NULL,
     NgayVaoLam          DATE             NULL,
     VaiTro              VARCHAR(20)      NOT NULL 
-                        CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri')),
+                        CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','QuanLyNhanSu')),
     TrangThai           VARCHAR(20)      NOT NULL DEFAULT 'DangLamViec' 
                         CHECK (TrangThai IN ('DangLamViec','DaNghi')),
     CONSTRAINT FK_NhanVien_TaiKhoan FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan),

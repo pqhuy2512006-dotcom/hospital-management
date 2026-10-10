@@ -65,6 +65,10 @@ public class TaiKhoanRepository {
         return queryOne("SELECT * FROM dbo.vw_TaiKhoan WHERE Email = ?", email);
     }
 
+    public Optional<TaiKhoan> findBySoDienThoai(String soDienThoai) {
+        return queryOne("SELECT * FROM dbo.vw_TaiKhoan WHERE SoDienThoai = ?", soDienThoai);
+    }
+
     public List<TaiKhoan> findAll() {
         return jdbcTemplate.query("SELECT * FROM dbo.vw_TaiKhoan", ROW_MAPPER);
     }

@@ -36,6 +36,15 @@ public class YeuCauChuyenKhoaRepository {
         );
     }
 
+    
+    public List<YeuCauChuyenKhoa> findByMaBacSiDuocMoiAndLoaiYeuCauOrderByNgayTaoDesc(String maBacSiDuocMoi, String loaiYeuCau) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaBacSiDuocMoi = ? AND LoaiYeuCau = ? ORDER BY NgayTao DESC",
+                ROW_MAPPER,
+                maBacSiDuocMoi, loaiYeuCau
+        );
+    }
+
     public Optional<YeuCauChuyenKhoa> findById(String id) {
         List<YeuCauChuyenKhoa> rows = jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaYeuCau = ?",

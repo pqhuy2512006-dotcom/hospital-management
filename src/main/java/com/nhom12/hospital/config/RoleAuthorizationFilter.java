@@ -29,7 +29,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         if (rawRole == null || rawRole.trim().isEmpty()) return "";
         String r = rawRole.trim().toUpperCase();
         if (r.contains("GIAMDOC") || r.contains("BGD") || r.contains("DIRECTOR") || r.contains("EXECUTIVE")) return "GiamDoc";
-        if (r.contains("NHANSU") || r.contains("HR")) return "NhanSu";
+        if (r.contains("NHANSU") || r.contains("HR")) return "QuanLyNhanSu";
         if (r.contains("ADMIN") || r.contains("QUANTRI")) return "QuanTri";
         if (r.contains("DOC") || r.contains("BACSI")) return "BacSi";
         if (r.contains("CASHIER") || r.contains("THUNGAN")) return "ThuNgan";
@@ -225,7 +225,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
             }
             // 6. Phân hệ Quản lý nhân sự: Thêm/Sửa nhân sự & Phân công lịch trực (4.8 Quản lý nhân sự)
             else if (( (path.startsWith("/api/v1/nhanvien") && !path.equals("/api/v1/nhanvien/me")) || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
-                if (!"NhanSu".equals(role)) {
+                if (!"QuanLyNhanSu".equals(role)) {
                     isAllowed = false;
                     requiredRoleDesc = "Quản Lý Nhân Sự (HR MANAGER)";
                 }
@@ -272,11 +272,12 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     || "/api/v1/khoa".equals(path)
                     || "/api/v1/nhanvien/me".equals(path)
                     || "/api/v1/nhanvien/doctors".equals(path)
-                    || "/api/v1/chuyenkhoa/me".equals(path);
+                    || "/api/v1/chuyenkhoa/me".equals(path) || isPathOrChild(path, "/api/v1/chuyenkhoa");
         }
 
         return ("POST".equals(method) && ("/api/v1/phieukham".equals(path)
                     || "/api/v1/chuyenkhoa".equals(path)
+                    || path.matches("^/api/v1/chuyenkhoa/.+$")
                     || path.matches("^/api/v1/lichhen/.+/start$")))
                 || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
     }
@@ -302,3 +303,4 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         return path.equals(basePath) || path.startsWith(basePath + "/");
     }
 }
+

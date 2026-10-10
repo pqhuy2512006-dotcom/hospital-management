@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh Sách Bác Sĩ & Lịch Trực - MEDICARE HIS</title>
+    <title>Danh Sách Nhân Viên & Lịch Trực - MEDICARE HIS</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -431,13 +431,14 @@
             <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
             <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
             <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
-            <li><a href="/doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Danh sách Nhân viên</a></li>
             <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
             <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
             <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
             <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
             <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
             <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+            <li><a href="/referrals.html"><i class="fa-solid fa-arrows-turn-right"></i> Chuyển khoa & Hội chẩn</a></li>
         </ul>
     </aside>
 
@@ -458,11 +459,37 @@
             <!-- Tab chuyển đổi giữa Danh sách và Lịch trực -->
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('docListTab', this)">
-                    <i class="fa-solid fa-user-doctor"></i> Danh Sách Bác Sĩ & Nhân Viên (UC63)
+                    <i class="fa-solid fa-user-doctor"></i> Danh Sách Nhân Viên (UC63)
                 </button>
                 <button class="tab-btn" onclick="switchTab('rosterTab', this)">
                     <i class="fa-solid fa-calendar-week"></i> Bảng Phân Công Lịch Trực (Mẫu QLNV_BM2)
                 </button>
+                <button class="tab-btn" onclick="switchTab('truongKhoaTab', this)">
+                    <i class="fa-solid fa-user-tie"></i> Quản Lý Trưởng Khoa
+                </button>
+            </div>
+
+
+            
+            <!-- TAB 3: QUẢN LÝ TRƯỞNG KHOA -->
+            <div id="truongKhoaTab" class="tab-content">
+                <div class="table-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Khoa</th>
+                                <th>Tên Khoa</th>
+                                <th>Mã Trưởng Khoa</th>
+                                <th>Tên Trưởng Khoa</th>
+                                <th>Học Vị</th>
+                                <th style="text-align:right;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="truongKhoaTbody">
+                            <!-- Dữ liệu quản lý trưởng khoa -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- TAB 1: DANH SÁCH BÁC SĨ (UC63) -->
@@ -471,11 +498,11 @@
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="docSearchInput" class="search-input" 
-                               placeholder="Tìm bác sĩ theo tên, chuyên khoa, phòng khám..." 
+                               placeholder="tìm nhân viên theo tên, khoa, phòng khám..." 
                                onkeyup="filterDoctors()">
                     </div>
                     <button class="btn-add-doc" onclick="openAddDocModal()">
-                        <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên / Bác Sĩ Mới (UC64)
+                        <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên Mới (UC64)
                     </button>
                 </div>
 
@@ -486,7 +513,7 @@
                                 <th>Mã NV</th>
                                 <th>Họ và Tên</th>
                                 <th>Học Vị / Chức Danh</th>
-                                <th>Chuyên Khoa</th>
+                                <th>Khoa</th>
                                 <th>Phòng Khám</th>
                                 <th>Số Điện Thoại</th>
                                 <th>Trạng Thái Ca</th>
@@ -569,13 +596,14 @@
         </main>
     </div>
 
-    <!-- MODAL THÊM / CẬP NHẬT HỒ SƠ NHÂN VIÊN BÁC SĨ (MẪU QLNV_BM1) -->
+    <!-- MODAL THÊM / CẬP NHẬT HỒ SƠ NHÂN VIÊN (MẪU QLNV_BM1) -->
     <div class="modal-overlay" id="doctorModal">
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="modalTitle"><i class="fa-solid fa-user-doctor" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế (Mẫu QLNV_BM1)</h3>
                 <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeDoctorModal()">&times;</button>
             </div>
+
             <form onsubmit="handleSaveDoctor(event)">
                 <div class="modal-body">
                     <div class="form-grid-2">
@@ -584,7 +612,7 @@
                             <input type="text" id="dMaNV" class="form-control" readonly style="background:#f1f5f9; font-weight:700; color:var(--primary);">
                         </div>
                         <div class="form-group">
-                            <label>Họ và Tên Bác Sĩ / Nhân Viên *</label>
+                            <label>Họ và Tên Nhân Viên *</label>
                             <input type="text" id="dHoTen" class="form-control" placeholder="Ví dụ: Trần Văn Hùng" required>
                         </div>
                     </div>
@@ -601,13 +629,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Chuyên Khoa Làm Việc *</label>
+                            <label>Khoa Làm Việc *</label>
                             <select id="dChuyenKhoa" class="form-control" required>
-                                <option value="Khoa Nội Tổng Hợp">Khoa Nội Tổng Hợp</option>
-                                <option value="Khoa Tai Mũi Họng">Khoa Tai Mũi Họng</option>
-                                <option value="Khoa Ngoại Tiêu Hóa">Khoa Ngoại Tiêu Hóa</option>
-                                <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
-                                <option value="Khoa Chẩn Đoán Hình Ảnh">Khoa Cận Lâm Sàng</option>
+                                <option value="">-- Chọn Khoa --</option>
                             </select>
                         </div>
                     </div>
@@ -615,7 +639,9 @@
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Phòng Khám Phụ Trách *</label>
-                            <input type="text" id="dPhongKham" class="form-control" placeholder="Ví dụ: P.204" required>
+                            <select id="dPhongKham" class="form-control" required>
+                                <option value="">-- Chọn Phòng Khám --</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Số Điện Thoại Liên Lạc *</label>
@@ -669,6 +695,18 @@
 
         async function loadDoctors() {
             try {
+                // Fetch khoas to map maKhoa to tenKhoa
+                let khoaMap = {};
+                try {
+                    const resKhoa = await fetch('/api/v1/khoa');
+                    if (resKhoa.ok) {
+                        const khoas = await resKhoa.json();
+                        khoas.forEach(k => {
+                            khoaMap[k.maKhoa] = k.tenKhoa;
+                        });
+                    }
+                } catch(e) { console.error("Could not load khoa", e); }
+
                 const response = await fetch('/api/v1/nhanvien');
                 if (!response.ok) throw new Error('Failed to load doctors');
                 const data = await response.json();
@@ -676,8 +714,9 @@
                 doctors = data.map(item => ({
                     maNV: item.maNhanVien,
                     hoTen: item.hoTen,
-                    hocVi: item.trinhDoChuyenMon || 'Bác sĩ CKI',
-                    chuyenKhoa: item.chuyenKhoa || 'Chưa xác định',
+                    hocVi: item.trinhDoChuyenMon || 'Bác sĩ',
+                      maKhoa: item.maKhoa,
+                    chuyenKhoa: khoaMap[item.maKhoa] || 'Chưa xác định',
                     phongKham: item.diaChi || 'Phòng khám',
                     sdt: item.soDienThoai || '',
                     cchn: item.chungChiHanhNghe || '',
@@ -729,6 +768,10 @@
 
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+            
+            if (tabId === 'truongKhoaTab') {
+                loadTruongKhoaList();
+            }
         }
 
         function renderDoctors(list = doctors) {
@@ -736,7 +779,7 @@
             tbody.innerHTML = '';
 
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Không tìm thấy nhân viên/bác sĩ phù hợp</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Không tìm thấy nhân viên phù hợp</td></tr>`;
                 return;
             }
 
@@ -781,7 +824,58 @@
             renderDoctors(filtered);
         }
 
-        function openAddDocModal() {
+        
+        // Load Khoa and Phong dynamic data
+        async function loadKhoaForDoctor() {
+            try {
+                const response = await fetch('/api/v1/khoa');
+                if (response.ok) {
+                    const khoas = await response.json();
+                    const dChuyenKhoa = document.getElementById('dChuyenKhoa');
+                    dChuyenKhoa.innerHTML = '<option value="">-- Chọn Khoa --</option>';
+                    khoas.forEach(k => {
+                        const option = document.createElement('option');
+                        option.value = k.tenKhoa;
+                        option.dataset.makhoa = k.maKhoa;
+                        option.textContent = k.tenKhoa;
+                        dChuyenKhoa.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading khoa:', err);
+            }
+        }
+
+        document.getElementById('dChuyenKhoa').addEventListener('change', async function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const maKhoa = selectedOption ? selectedOption.dataset.makhoa : null;
+            const dPhongKham = document.getElementById('dPhongKham');
+            
+            dPhongKham.innerHTML = '<option value="">-- Chọn Phòng Khám --</option>';
+            
+            if (maKhoa) {
+                try {
+                    const response = await fetch('/api/v1/phong?maKhoa=' + maKhoa);
+                    if (response.ok) {
+                        const phongs = await response.json();
+                        const phongKhams = phongs.filter(p => p.loaiPhong && p.loaiPhong.toLowerCase().includes('khám'));
+                        const listToRender = phongKhams.length > 0 ? phongKhams : phongs;
+                        
+                        listToRender.forEach(p => {
+                            const option = document.createElement('option');
+                            option.value = p.tenPhong; 
+                            option.textContent = p.tenPhong + ' (' + p.loaiPhong + ')';
+                            dPhongKham.appendChild(option);
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error loading phong:', err);
+                }
+            }
+        });
+
+        async function openAddDocModal() {
+            await loadKhoaForDoctor();
             isEditDoc = false;
             document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế Mới (UC64)';
             document.getElementById('dMaNV').value = `NV-DOC${String(doctors.length + 1).padStart(2, '0')}`;
@@ -794,16 +888,34 @@
             document.getElementById('doctorModal').style.display = 'flex';
         }
 
-        function openEditDocModal(maNV) {
+        async function openEditDocModal(maNV) {
             const doc = doctors.find(d => d.maNV === maNV);
             if (!doc) return;
 
             isEditDoc = true;
-            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Nhân Sự / Bác Sĩ (UC65)';
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Nhân Viên (UC65)';
             document.getElementById('dMaNV').value = doc.maNV;
             document.getElementById('dHoTen').value = doc.hoTen;
             document.getElementById('dHocVi').value = doc.hocVi;
-            document.getElementById('dChuyenKhoa').value = doc.chuyenKhoa;
+            
+            await loadKhoaForDoctor();
+            const dChk = document.getElementById('dChuyenKhoa');
+            for (let i = 0; i < dChk.options.length; i++) {
+                if (dChk.options[i].dataset.makhoa === doc.maKhoa) {
+                    dChk.selectedIndex = i;
+                    break;
+                }
+            }
+            // trigger change to load Phong Khams
+            const dChuyenKhoa = document.getElementById('dChuyenKhoa');
+            const event = new Event('change');
+            dChuyenKhoa.dispatchEvent(event);
+            
+            // wait a bit for phong to load, then set phongKham value
+            setTimeout(() => {
+                document.getElementById('dPhongKham').value = doc.diaChi;
+            }, 500);
+
             document.getElementById('dPhongKham').value = doc.phongKham;
             document.getElementById('dSDT').value = doc.sdt;
             document.getElementById('dCCHN').value = doc.cchn;
@@ -822,7 +934,8 @@
             const maNV = document.getElementById('dMaNV').value;
             const hoTen = document.getElementById('dHoTen').value.trim();
             const hocVi = document.getElementById('dHocVi').value;
-            const chuyenKhoa = document.getElementById('dChuyenKhoa').value;
+            const dChuyenKhoa = document.getElementById('dChuyenKhoa');
+            const maKhoa = dChuyenKhoa.options[dChuyenKhoa.selectedIndex].dataset.makhoa;
             const phongKham = document.getElementById('dPhongKham').value.trim();
             const sdt = document.getElementById('dSDT').value.trim();
             const cchn = document.getElementById('dCCHN').value.trim();
@@ -833,7 +946,7 @@
                 maNhanVien: maNV,
                 hoTen: hoTen,
                 trinhDoChuyenMon: hocVi,
-                chuyenKhoa: chuyenKhoa,
+                maKhoa: maKhoa,
                 diaChi: phongKham,
                 soDienThoai: sdt,
                 chungChiHanhNghe: cchn,
@@ -884,7 +997,161 @@
         window.onload = function() {
             loadDoctors();
         };
-    </script>
-    <script src="/auth-guard.js"></script>
+    
+        // --- QUẢN LÝ TRƯỞNG KHOA JS ---
+        async function loadTruongKhoaList() {
+            try {
+                const response = await fetch('/api/v1/truongkhoa/khoa-list');
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('truongKhoaTbody');
+                    tbody.innerHTML = '';
+                    data.forEach(item => {
+                        const hasTruongKhoa = item.maTruongKhoa != null;
+                        
+                        let actions = '';
+                        if (hasTruongKhoa) {
+                            actions = `
+                                <button class="btn-tbl-edit" title="Thay đổi Trưởng khoa" onclick="openBoNhiemModal('${item.maKhoa}', '${item.tenKhoa}', '${item.tenTruongKhoa}')"><i class="fa-solid fa-user-pen"></i></button>
+                                <button class="btn-tbl-delete" title="Miễn nhiệm Trưởng khoa" onclick="mienNhiemTruongKhoa('${item.maKhoa}', '${item.tenKhoa}', '${item.tenTruongKhoa}')"><i class="fa-solid fa-user-minus"></i></button>
+                            `;
+                        } else {
+                            actions = `
+                                <button class="btn-add-doc" style="padding: 5px 10px; font-size:12px;" onclick="openBoNhiemModal('${item.maKhoa}', '${item.tenKhoa}', null)"><i class="fa-solid fa-user-plus"></i> Bổ Nhiệm</button>
+                            `;
+                        }
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${item.maKhoa}</td>
+                                <td><strong>${item.tenKhoa}</strong></td>
+                                <td>${item.maTruongKhoa || '<span style="color:#999;">Chưa có</span>'}</td>
+                                <td>${item.tenTruongKhoa || '-'}</td>
+                                <td>${item.hocViTruongKhoa || '-'}</td>
+                                <td style="text-align:right;">${actions}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error("Lỗi tải danh sách trưởng khoa", err);
+            }
+        }
+
+        async function openBoNhiemModal(maKhoa, tenKhoa, tenTruongKhoaHienTai) {
+            document.getElementById('bnMaKhoa').value = maKhoa;
+            document.getElementById('bnTenKhoa').innerText = tenKhoa;
+            
+            if (tenTruongKhoaHienTai && tenTruongKhoaHienTai !== 'null') {
+                document.getElementById('boNhiemModalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Thay Đổi Trưởng Khoa';
+                document.getElementById('bnHienTai').innerText = 'Trưởng khoa hiện tại: ' + tenTruongKhoaHienTai;
+            } else {
+                document.getElementById('boNhiemModalTitle').innerHTML = '<i class="fa-solid fa-user-tie" style="color:var(--primary);"></i> Bổ Nhiệm Trưởng Khoa';
+                document.getElementById('bnHienTai').innerText = 'Hiện chưa có trưởng khoa.';
+            }
+
+            const select = document.getElementById('bnNhanVien');
+            select.innerHTML = '<option value="">-- Đang tải danh sách --</option>';
+            document.getElementById('boNhiemModal').style.display = 'flex';
+
+            try {
+                const response = await fetch(`/api/v1/truongkhoa/khoa/${maKhoa}/ung-vien`);
+                if (response.ok) {
+                    const ungViens = await response.json();
+                    select.innerHTML = '<option value="">-- Chọn Nhân Viên --</option>';
+                    ungViens.forEach(uv => {
+                        const opt = document.createElement('option');
+                        opt.value = uv.maNhanVien;
+                        opt.textContent = `${uv.maNhanVien} - ${uv.hoTen} (${uv.trinhDoChuyenMon})`;
+                        select.appendChild(opt);
+                    });
+                    if (ungViens.length === 0) {
+                        select.innerHTML = '<option value="">(Không có nhân viên đủ điều kiện)</option>';
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                select.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            }
+        }
+
+        function closeBoNhiemModal() {
+            document.getElementById('boNhiemModal').style.display = 'none';
+        }
+
+        async function submitBoNhiem(e) {
+            e.preventDefault();
+            const maKhoa = document.getElementById('bnMaKhoa').value;
+            const maNhanVien = document.getElementById('bnNhanVien').value;
+            if (!maNhanVien) { alert("Vui lòng chọn nhân viên!"); return; }
+
+            try {
+                const response = await fetch(`/api/v1/truongkhoa/khoa/${maKhoa}/bo-nhiem`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maNhanVien: maNhanVien })
+                });
+                if (response.ok) {
+                    alert("Thành công!");
+                    closeBoNhiemModal();
+                    loadTruongKhoaList();
+                } else {
+                    alert("Có lỗi xảy ra!");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function mienNhiemTruongKhoa(maKhoa, tenKhoa, tenHienTai) {
+            if (confirm(`Bạn có chắc muốn miễn nhiệm chức vụ Trưởng khoa của [${tenHienTai}] thuộc ${tenKhoa}?`)) {
+                try {
+                    const response = await fetch(`/api/v1/truongkhoa/khoa/${maKhoa}/mien-nhiem`, { method: 'POST' });
+                    if (response.ok) {
+                        alert("Đã miễn nhiệm thành công!");
+                        loadTruongKhoaList();
+                    } else {
+                        alert("Lỗi khi miễn nhiệm!");
+                    }
+                } 
+                catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
+</script>
+    <script src="/auth-guard.js?v=2"></script>
+
+    <!-- MODAL BỔ NHIỆM / THAY ĐỔI TRƯỞNG KHOA -->
+    <div class="modal-overlay" id="boNhiemModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="boNhiemModalTitle"><i class="fa-solid fa-user-tie" style="color:var(--primary);"></i> Bổ Nhiệm Trưởng Khoa</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeBoNhiemModal()">&times;</button>
+            </div>
+            <form id="boNhiemForm" onsubmit="submitBoNhiem(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="bnMaKhoa">
+                    <p style="margin-bottom:15px;">Khoa: <strong id="bnTenKhoa"></strong></p>
+                    <p style="margin-bottom:15px; color:var(--text-muted);" id="bnHienTai"></p>
+                    
+                    <div class="form-group">
+                        <label>Chọn Nhân Viên Đủ Điều Kiện *</label>
+                        <select id="bnNhanVien" class="form-control" required>
+                            <option value="">-- Chọn Nhân Viên --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeBoNhiemModal()">Hủy Bỏ</button>
+                    <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Xác Nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
+
+

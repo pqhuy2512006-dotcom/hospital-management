@@ -59,6 +59,51 @@ public class ChuyenKhoaController {
         }
     }
 
+    @GetMapping("/cho-duyet")
+    public ResponseEntity<?> getApprovalRequests(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            return ResponseEntity.ok(chuyenKhoaService.getApprovalRequests(accountId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{maYeuCau}/duyet")
+    public ResponseEntity<?> approveTransfer(@org.springframework.web.bind.annotation.PathVariable String maYeuCau, HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            YeuCauChuyenKhoa saved = chuyenKhoaService.approveTransfer(maYeuCau, accountId);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+    @GetMapping("/hoi-chan-den")
+    public ResponseEntity<?> getIncomingConsultations(HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            return ResponseEntity.ok(chuyenKhoaService.getIncomingConsultations(accountId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{maYeuCau}/tiep-nhan-hoi-chan")
+    public ResponseEntity<?> acceptConsultation(@org.springframework.web.bind.annotation.PathVariable String maYeuCau, HttpServletRequest request) {
+        Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+        try {
+            YeuCauChuyenKhoa saved = chuyenKhoaService.acceptConsultation(maYeuCau, accountId);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{maYeuCau}/tiep-nhan")
     public ResponseEntity<?> acceptTransfer(@org.springframework.web.bind.annotation.PathVariable String maYeuCau, @RequestBody Map<String, String> payload, HttpServletRequest request) {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);

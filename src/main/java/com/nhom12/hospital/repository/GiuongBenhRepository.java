@@ -69,7 +69,7 @@ public class GiuongBenhRepository {
     private String serializeEntity(GiuongBenh entity) {
         StringBuilder json = new StringBuilder("{");
         json.append("\"MaGiuong\":").append(toJsonValue(entity.getMaGiuong())).append(',');
-        json.append("\"MaKhoa\":").append(toJsonValue(entity.getMaKhoa())).append(',');
+        json.append("\"MaPhong\":").append(toJsonValue(entity.getMaPhong())).append(',');
         json.append("\"SoGiuong\":").append(toJsonValue(entity.getSoGiuong())).append(',');
         json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
         json.append("\"DonGiaNgay\":").append(toJsonValue(entity.getDonGiaNgay()));

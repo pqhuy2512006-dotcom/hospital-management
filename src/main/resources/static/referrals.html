@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển khoa & Hội chẩn - MEDICARE HIS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --sidebar-bg: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: var(--bg-main); color: var(--text-dark); }
+        
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1e293b; color: #ffffff; font-size: 18px; font-weight: 700; }
+        .sidebar-brand i { color: #38bdf8; font-size: 24px; }
+        .sidebar-menu { list-style: none; padding: 16px 10px; flex-grow: 1; }
+        .sidebar-menu li { margin-bottom: 4px; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background-color: var(--primary); color: #ffffff; }
+        .sidebar-menu a i { width: 20px; text-align: center; font-size: 16px; }
+
+        .main-container { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .top-header { background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+        .header-title h2 { font-size: 20px; font-weight: 700; }
+        .btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        .content-body { padding: 24px 32px; display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+        
+        .section-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .section-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;}
+        .section-title i { color: var(--primary); }
+
+        .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .form-control { height: 38px; padding: 0 10px; border: 1.5px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; }
+        .form-control:focus { border-color: var(--primary); }
+        textarea.form-control { height: 80px; padding: 10px; resize: vertical; }
+
+        .btn-add-item { background: var(--primary); color: #ffffff; border: none; border-radius: 6px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-add-item:hover { background: var(--primary-hover); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; margin-top: 10px; }
+        th { background-color: #f8fafc; padding: 12px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-weight: 600; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-hospital"></i><span>MEDICARE HIS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
+            <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
+            <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
+            <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
+            <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
+            <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
+            <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
+            <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+            <li><a href="/referrals.html" class="active"><i class="fa-solid fa-arrows-turn-right"></i> Chuyển khoa & Hội chẩn</a></li>
+        </ul>
+    </aside>
+
+    <div class="main-container">
+        <header class="top-header">
+            <div class="header-title"><h2>Chuyển khoa & Hội chẩn</h2></div>
+            <div style="display:flex; align-items:center; gap: 24px;">
+                <div class="notification-wrapper" style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                    <i class="fa-solid fa-bell" style="font-size:22px; color:#64748b;"></i>
+                    <span id="notifBadge" style="position:absolute; top:-6px; right:-10px; background:var(--danger); color:white; font-size:11px; font-weight:700; padding:2px 6px; border-radius:12px; display:none;">0</span>
+                    <div id="notifDropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border:1px solid var(--border-color); border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); z-index:1000; overflow:hidden;">
+                        <div style="padding:12px 16px; border-bottom:1px solid var(--border-color); font-weight:700; background:#f8fafc; font-size:14px;">Thông báo của bạn</div>
+                        <div id="notifList" style="max-height:300px; overflow-y:auto; padding:0; font-size:13px;">
+                            <div style="padding:16px; text-align:center; color:var(--text-muted);">Đang tải...</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</button>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="section-box">
+                <div class="section-title">
+                    <span><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu Chuyển khoa / Hội chẩn</span>
+                </div>
+                <form onsubmit="submitReferral(event)">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Loại yêu cầu *</label>
+                            <select id="referralType" class="form-control" onchange="toggleInvitedDoctor()" required>
+                                <option value="CHUYEN_KHOA">Chuyển khoa</option>
+                                <option value="HOI_CHAN">Hội chẩn</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Phiếu khám *</label>
+                            <select id="referralExam" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa nhận *</label>
+                            <select id="referralDepartment" class="form-control" required></select>
+                        </div>
+                        <div class="form-group" id="invitedDoctorGroup" style="display:none;">
+                            <label>Bác sĩ được mời *</label>
+                            <select id="invitedDoctor" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Lý do chuyển khoa / nội dung hội chẩn *</label>
+                        <textarea id="referralReason" class="form-control" maxlength="500" required placeholder="Nhập lý do..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-add-item"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button>
+                </form>
+            </section>
+
+            <section class="section-box" style="margin-top: 10px;">
+                <div class="section-title">
+                    <span><i class="fa-solid fa-list-ol"></i> Danh sách yêu cầu đã gửi</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ngày gửi</th>
+                                <th>Loại</th>
+                                <th>Mã phiếu khám</th>
+                                <th>Khoa nhận / BS mời</th>
+                                <th>Lý do</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="referralTableBody">
+                            <tr><td colspan="6" style="text-align:center;">Chưa có yêu cầu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-box" id="approvalSection" style="display:none; margin-top: 10px;">
+                <div class="section-title">
+                    <span><i class="fa-solid fa-clipboard-check"></i> Duyệt yêu cầu Chuyển khoa (Trưởng khoa)</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã yêu cầu</th>
+                                <th>Ngày gửi</th>
+                                <th>Phiếu khám</th>
+                                <th>Bác sĩ gửi</th>
+                                <th>Lý do</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-box" id="consultationSection" style="display:none; margin-top: 10px;">
+                <div class="section-title">
+                    <span><i class="fa-solid fa-handshake"></i> Yêu cầu hội chẩn đến (Cần xác nhận)</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã yêu cầu</th>
+                                <th>Mã bệnh nhân</th>
+                                <th>Lý do</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consultationTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let notifications = [];
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/v1/thongbao/me');
+                if (res.ok) {
+                    notifications = await res.json();
+                    renderNotifications();
+                }
+            } catch (err) {}
+        }
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const unreadCount = notifications.filter(n => !n.daDoc).length;
+            if (unreadCount > 0) { badge.style.display = 'block'; badge.innerText = unreadCount > 9 ? '9+' : unreadCount; } 
+            else { badge.style.display = 'none'; }
+            if (notifications.length === 0) {
+                list.innerHTML = '<div style="padding:16px; text-align:center; color:#64748b;">Không có thông báo nào.</div>';
+                return;
+            }
+            list.innerHTML = notifications.map(n => `
+                <div onclick="markNotifAsRead(${n.maThongBao}, event)" style="padding:12px 16px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:${n.daDoc ? '#ffffff' : '#f0f9ff'};">
+                    <div style="font-weight:700; color:#0f172a; margin-bottom:4px; font-size:13px;">${n.tieuDe}</div>
+                    <div style="color:#475569; font-size:12.5px; line-height:1.4;">${n.noiDung}</div>
+                    <div style="color:#94a3b8; font-size:11px; margin-top:6px;"><i class="fa-regular fa-clock"></i> ${new Date(n.ngayTao).toLocaleString('vi-VN')}</div>
+                </div>
+            `).join('');
+        }
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+        async function markNotifAsRead(id, event) {
+            event.stopPropagation();
+            try { await fetch('/api/v1/thongbao/' + id + '/read', { method: 'PUT' }); fetchNotifications(); } catch (err) {}
+        }
+        setInterval(fetchNotifications, 30000);
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedUser');
+            window.location.href = '/login.html';
+        }
+
+        window.onload = async function() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+                const title = document.querySelector('.top-header .header-title h2');
+                if (title && (user.hoTen || user.username)) {
+                    title.textContent = `Chuyển khoa & Hội chẩn - ${user.hoTen || user.username}`;
+                }
+                
+                await Promise.all([
+                    loadReferralOptions(),
+                    loadMyReferrals()
+                ]);
+                
+                if (user.vaiTro === 'BacSi' || user.vaiTro === 'TruongKhoa' || user.vaiTro === 'DOCTOR') {
+                    await loadIncomingConsultations();
+                    await loadApprovalRequests();
+                }
+            } catch (error) {
+                console.error(error);
+                if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
+                    logout();
+                }
+            }
+        };
+
+        function toggleInvitedDoctor() {
+            const isConsult = document.getElementById('referralType').value === 'HOI_CHAN';
+            document.getElementById('invitedDoctorGroup').style.display = isConsult ? 'block' : 'none';
+            document.getElementById('invitedDoctor').required = isConsult;
+        }
+
+        async function loadReferralOptions() {
+            const examSelect = document.getElementById('referralExam');
+            if (examSelect) {
+                examSelect.replaceChildren(new Option('Chọn phiếu khám', ''));
+                try {
+                    const res = await fetch('/api/v1/phieukham/me');
+                    if (res.ok) {
+                        const exams = await res.json();
+                        exams.forEach(e => examSelect.add(new Option(e.maPhieuKham + ' - BN: ' + e.maBenhNhan, e.maPhieuKham)));
+                    }
+                } catch(e) {}
+            }
+            
+            const departmentSelect = document.getElementById('referralDepartment');
+            if (departmentSelect) {
+                departmentSelect.replaceChildren(new Option('Chọn khoa nhận', ''));
+                try {
+                    const res = await fetch('/api/v1/khoa');
+                    if(res.ok) {
+                        const departments = await res.json();
+                        departments.forEach(d => departmentSelect.add(new Option(d.tenKhoa, d.maKhoa)));
+                    }
+                } catch(e) {}
+            }
+
+            const doctorSelect = document.getElementById('invitedDoctor');
+            if (doctorSelect) {
+                doctorSelect.replaceChildren(new Option('Chọn bác sĩ', ''));
+                try {
+                    const res = await fetch('/api/v1/nhanvien/doctors');
+                    if(res.ok) {
+                        const doctors = await res.json();
+                        doctors.forEach(doctor => doctorSelect.add(new Option(doctor.name + ' - ' + (doctor.specialty || ''), doctor.id)));
+                    }
+                } catch(e) {}
+            }
+        }
+
+        async function loadMyReferrals() {
+            try {
+                const response = await fetch('/api/v1/chuyenkhoa/me');
+                if (!response.ok) throw new Error('Lỗi tải danh sách');
+                const referrals = await response.json();
+                const body = document.getElementById('referralTableBody');
+                body.replaceChildren();
+                if (referrals.length === 0) {
+                    const row = body.insertRow();
+                    row.insertCell().colSpan = 6;
+                    row.cells[0].textContent = 'Chưa có yêu cầu.';
+                    row.cells[0].style.textAlign = 'center';
+                    return;
+                }
+                referrals.forEach(referral => {
+                    const row = body.insertRow();
+                    let statusMap = {
+                        'CHO_DUYET': 'Chờ duyệt',
+                        'CHO_XEP_GIUONG': 'Chờ xếp giường',
+                        'CHO_TIEP_NHAN': 'Chờ tiếp nhận',
+                        'DA_TIEP_NHAN': 'Đã tiếp nhận'
+                    };
+                    let displayStatus = statusMap[referral.trangThai] || referral.trangThai;
+                    let recvInfo = referral.maKhoaNhan;
+                    if(referral.loaiYeuCau === 'HOI_CHAN' && referral.maBacSiDuocMoi) {
+                        recvInfo = referral.maBacSiDuocMoi;
+                    }
+                    
+                    [new Date(referral.ngayTao).toLocaleString('vi-VN'), referral.loaiYeuCau === 'HOI_CHAN' ? 'Hội chẩn' : 'Chuyển khoa',
+                        referral.maPhieuKham, recvInfo, referral.lyDo, displayStatus]
+                        .forEach(value => {
+                            let td = row.insertCell();
+                            td.textContent = String(value || '');
+                        });
+                });
+            } catch (e) {}
+        }
+        
+        async function submitReferral(event) {
+            event.preventDefault();
+            const type = document.getElementById('referralType').value;
+            try {
+                const response = await fetch('/api/v1/chuyenkhoa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        loaiYeuCau: type,
+                        maPhieuKham: document.getElementById('referralExam').value,
+                        maKhoaNhan: document.getElementById('referralDepartment').value,
+                        maBacSiDuocMoi: type === 'HOI_CHAN' ? document.getElementById('invitedDoctor').value : null,
+                        lyDo: document.getElementById('referralReason').value.trim()
+                    })
+                });
+                if (response.ok) {
+                    alert('Đã gửi yêu cầu thành công!');
+                    event.target.reset();
+                    toggleInvitedDoctor();
+                    loadMyReferrals();
+                } else {
+                    const error = await response.json();
+                    alert('Lỗi: ' + error.message);
+                }
+            } catch (e) {
+                alert('Lỗi hệ thống');
+            }
+        }
+
+        async function loadIncomingConsultations() {
+            try {
+                const res = await fetch('/api/v1/chuyenkhoa/hoi-chan-den');
+                if (res.ok) {
+                    const myConsultations = await res.json();
+                    
+                    if (myConsultations.length > 0) {
+                        document.getElementById('consultationSection').style.display = 'block';
+                        const body = document.getElementById('consultationTableBody');
+                        body.replaceChildren();
+                        
+                        myConsultations.forEach(req => {
+                            const row = body.insertRow();
+                            row.innerHTML = `
+                                <td>${req.maYeuCau}</td>
+                                <td>${req.maBenhNhan || req.maPhieuKham}</td>
+                                <td>${req.lyDo}</td>
+                                <td>
+                                    <button type="button" class="btn-add-item" style="padding:6px 12px; font-size:12px;" onclick="acceptConsult('${req.maYeuCau}')">
+                                        <i class="fa-solid fa-check"></i> Xác nhận hội chẩn
+                                    </button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        document.getElementById('consultationSection').style.display = 'none';
+                    }
+                }
+            } catch (err) {}
+        }
+
+        async function acceptConsult(maYeuCau) {
+            if(!confirm('Xác nhận tiếp nhận hội chẩn?')) return;
+            try {
+                const res = await fetch(`/api/v1/chuyenkhoa/${maYeuCau}/tiep-nhan-hoi-chan`, { method: 'POST' });
+                if(res.ok) {
+                    alert('Đã xác nhận hội chẩn!');
+                    loadIncomingConsultations();
+                    loadMyReferrals();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) {}
+        }
+
+        async function loadApprovalRequests() {
+            try {
+                const res = await fetch('/api/v1/chuyenkhoa/cho-duyet');
+                if (res.ok) {
+                    const requests = await res.json();
+                    if (requests.length > 0) {
+                        document.getElementById('approvalSection').style.display = 'block';
+                        const body = document.getElementById('approvalTableBody');
+                        body.replaceChildren();
+                        
+                        requests.forEach(req => {
+                            const row = body.insertRow();
+                            row.innerHTML = `
+                                <td>${req.maYeuCau}</td>
+                                <td>${new Date(req.ngayTao).toLocaleString('vi-VN')}</td>
+                                <td>${req.maPhieuKham}</td>
+                                <td>${req.maBacSiGui}</td>
+                                <td>${req.lyDo}</td>
+                                <td>
+                                    <button type="button" class="btn-add-item" style="padding:6px 12px; font-size:12px; background:var(--success);" onclick="approveTransferReq('${req.maYeuCau}')">
+                                        <i class="fa-solid fa-check-double"></i> Duyệt
+                                    </button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        document.getElementById('approvalSection').style.display = 'none';
+                    }
+                }
+            } catch (err) {}
+        }
+
+        async function approveTransferReq(maYeuCau) {
+            if(!confirm('Xác nhận duyệt yêu cầu chuyển khoa này?')) return;
+            try {
+                const res = await fetch(`/api/v1/chuyenkhoa/${maYeuCau}/duyet`, { method: 'POST' });
+                if(res.ok) {
+                    alert('Đã duyệt yêu cầu chuyển khoa!');
+                    loadApprovalRequests();
+                    loadMyReferrals();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) {}
+        }
+    </script>
+    <script src="/auth-guard.js"></script>
+</body>
+</html>

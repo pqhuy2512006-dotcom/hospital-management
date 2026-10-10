@@ -389,13 +389,14 @@
             <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
             <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
             <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
-            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Nhân viên</a></li>
             <li><a href="/examination.html" class="active"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
             <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
             <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
             <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
             <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
             <li><a href="/settings.html"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+            <li><a href="/referrals.html"><i class="fa-solid fa-arrows-turn-right"></i> Chuyển khoa & Hội chẩn</a></li>
         </ul>
     </aside>
 
@@ -565,45 +566,7 @@
                     </button>
                 </form>
 
-                <section class="section-box" style="margin-top:20px;">
-                    <div class="section-title">
-                        <span><i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển khoa / Hội chẩn</span>
-                    </div>
-                    <form onsubmit="submitReferral(event)">
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label>Loại yêu cầu *</label>
-                                <select id="referralType" class="form-control" onchange="toggleInvitedDoctor()" required>
-                                    <option value="CHUYEN_KHOA">Chuyển khoa</option>
-                                    <option value="HOI_CHAN">Hội chẩn</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Phiếu khám *</label>
-                                <select id="referralExam" class="form-control" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Khoa nhận *</label>
-                                <select id="referralDepartment" class="form-control" required></select>
-                            </div>
-                            <div class="form-group" id="invitedDoctorGroup" style="display:none;">
-                                <label>Bác sĩ được mời *</label>
-                                <select id="invitedDoctor" class="form-control"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Lý do chuyển khoa / nội dung hội chẩn *</label>
-                            <textarea id="referralReason" class="form-control" maxlength="500" required></textarea>
-                        </div>
-                        <button type="submit" class="btn-add-item"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button>
-                    </form>
-                    <div style="margin-top:16px; overflow-x:auto;">
-                        <table>
-                            <thead><tr><th>Ngày gửi</th><th>Loại</th><th>Phiếu khám</th><th>Khoa nhận</th><th>Lý do</th><th>Trạng thái</th></tr></thead>
-                            <tbody id="referralTableBody"><tr><td colspan="6">Chưa có yêu cầu.</td></tr></tbody>
-                        </table>
-                    </div>
-                </section>
+                
             </div>
         </main>
     </div>
@@ -689,8 +652,9 @@
                 const patientMap = new Map(patients.map(p => [p.maBenhNhan, p]));
 
                 // Lọc bỏ những lịch đã hủy hoặc đã khám xong, chỉ hiển thị Đã đặt lịch và Đang khám
+                const todayStr = new Date().toLocaleDateString('en-CA');
                 const filteredAppointments = appointments.filter(item => 
-                    item.trangThai === 'DangChoKham' || item.trangThai === 'DangKham'
+                    item.ngayKham === todayStr && (item.trangThai === 'DangChoKham' || item.trangThai === 'DangKham')
                 );
 
                 patientQueue = filteredAppointments.map((item, index) => {
@@ -1097,6 +1061,6 @@
             }
         };
     </script>
-    <script src="/auth-guard.js"></script>
+    <script src="/auth-guard.js?v=2"></script>
 </body>
 </html>

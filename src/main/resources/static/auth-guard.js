@@ -8,20 +8,21 @@
         'dashboard.html': ['QuanTri', 'ADMIN'],
         'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
-        'doctors.html': ['NhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
+        'doctors.html': ['QuanLyNhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
         'examination.html': ['BacSi', 'DOCTOR'],
+        'referrals.html': ['BacSi', 'DOCTOR', 'DieuDuong', 'NURSE', 'TruongKhoa'],
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
         'inpatient.html': ['DieuDuong', 'NURSE'],
         'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER']
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER', 'QuanLyNhanSu', 'HR']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
     const ROLE_LANDING_PAGES = {
         'QuanTri': '/dashboard.html',
         'ADMIN': '/dashboard.html',
-        'NhanSu': '/doctors.html',
+        'QuanLyNhanSu': '/doctors.html',
         'HR': '/doctors.html',
         'BacSi': '/examination.html',
         'DOCTOR': '/examination.html',
@@ -43,7 +44,7 @@
     const ROLE_META = {
         'QuanTri': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
         'ADMIN': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
-        'NhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
+        'QuanLyNhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'HR': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'BacSi': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },
         'DOCTOR': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },

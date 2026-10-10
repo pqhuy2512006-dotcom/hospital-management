@@ -20,7 +20,6 @@ public class NhanVien {
     private String soDienThoai;
     private String email;
     private String diaChi;
-    private String chuyenKhoa;
     private String chungChiHanhNghe;
     private String trinhDoChuyenMon;
     private LocalDate ngayVaoLam;

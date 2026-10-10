@@ -87,18 +87,28 @@ public class LichHenService {
         }
     }
 
-    public List<LichHen> getAllAppointments(Long accountId) {
+    public List<LichHen> getAllAppointments(Long accountId, String dateParam) {
         if (accountId != null && isDoctor(accountId)) {
-            return findCurrentDoctor(accountId)
+            List<LichHen> list = findCurrentDoctor(accountId)
                     .map(doctor -> lichHenRepository.findByMaBacSi(doctor.getMaNhanVien()))
                     .orElseGet(List::of);
+            if (dateParam != null && !dateParam.isBlank()) {
+                list = list.stream().filter(lh -> java.time.LocalDate.parse(dateParam).equals(lh.getNgayKham())).toList();
+            }
+            return list;
         }
         if (accountId != null && isReceptionist(accountId)) {
+            java.time.LocalDate targetDate = (dateParam != null && !dateParam.isBlank()) 
+                    ? java.time.LocalDate.parse(dateParam) : java.time.LocalDate.now();
             return lichHenRepository.findAll().stream()
-                    .filter(lh -> LocalDate.now().equals(lh.getNgayKham()))
+                    .filter(lh -> targetDate.equals(lh.getNgayKham()))
                     .toList();
         }
-        return lichHenRepository.findAll();
+        List<LichHen> all = lichHenRepository.findAll();
+        if (dateParam != null && !dateParam.isBlank()) {
+            all = all.stream().filter(lh -> java.time.LocalDate.parse(dateParam).equals(lh.getNgayKham())).toList();
+        }
+        return all;
     }
 
     public List<LichHen> getMyAppointments(Long accountId) {

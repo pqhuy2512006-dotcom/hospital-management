@@ -30,7 +30,7 @@ public class LichTrucService {
             map.put("maNhanVien", lt.getMaNhanVien());
             nhanVienRepository.findById(lt.getMaNhanVien()).ifPresent(nv -> {
                 map.put("tenNhanVien", nv.getHoTen());
-                map.put("chuyenKhoa", nv.getChuyenKhoa());
+                map.put("chuyenKhoa", nv.getMaKhoa());
             });
             res.add(map);
         }

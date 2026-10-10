@@ -1,0 +1,10 @@
+﻿CREATE TABLE LichSuTruongKhoa (
+    MaLichSu INT IDENTITY(1,1) PRIMARY KEY,
+    MaKhoa VARCHAR(10) NOT NULL,
+    MaNhanVien VARCHAR(15) NOT NULL,
+    NgayBoNhiem DATETIME DEFAULT GETDATE(),
+    NgayMienNhiem DATETIME NULL,
+    CONSTRAINT FK_LichSu_Khoa FOREIGN KEY (MaKhoa) REFERENCES Khoa(MaKhoa),
+    CONSTRAINT FK_LichSu_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien)
+);
+GO

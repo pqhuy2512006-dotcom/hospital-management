@@ -24,5 +24,9 @@ public class ThongBaoService {
     public void markAsRead(Integer id, Long accountId) {
         thongBaoRepository.markAsRead(id, accountId);
     }
+
+    public void createThongBao(Long accountId, String tieuDe, String noiDung, String loaiThongBao) {
+        thongBaoRepository.create(accountId, tieuDe, noiDung, loaiThongBao);
+    }
 }
 
