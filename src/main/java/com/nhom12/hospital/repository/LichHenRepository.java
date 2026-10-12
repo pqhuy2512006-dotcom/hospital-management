@@ -55,11 +55,11 @@ public class LichHenRepository {
             "SELECT appointment.*, queue.ViTriHangDoi "
                 + "FROM dbo.vw_LichHen appointment "
                 + "LEFT JOIN ( "
-                + "    SELECT MaLichHen, CAST(ROW_NUMBER() OVER ( "
+                        + "    SELECT MaLichHen, CAST(ROW_NUMBER() OVER ( "
                 + "        PARTITION BY MaBacSi, NgayKham ORDER BY GioKham, MaLichHen "
-                + "    ) AS INT) AS ViTriHangDoi "
+                        + "    ) AS INT) AS ViTriHangDoi "
                 + "    FROM dbo.vw_LichHen "
-                + "    WHERE TrangThai = 'DangChoKham' AND MaBacSi IS NOT NULL "
+                        + "    WHERE TrangThai = 'DangChoKham' AND MaBacSi IS NOT NULL "
                 + ") queue ON queue.MaLichHen = appointment.MaLichHen "
                 + "WHERE appointment.MaBenhNhan = ? "
                 + "ORDER BY appointment.NgayKham DESC, appointment.GioKham DESC",
@@ -119,7 +119,6 @@ public class LichHenRepository {
         json.append("\"ThoiGianKhamDuKien\":").append(toJsonValue(entity.getThoiGianKhamDuKien())).append(',');
         json.append("\"HinhThucDat\":").append(toJsonValue(entity.getHinhThucDat())).append(',');
         json.append("\"LyDoKham\":").append(toJsonValue(entity.getLyDoKham())).append(',');
-        json.append("\"GhiChu\":").append(toJsonValue(entity.getGhiChu())).append(',');
         json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
         json.append("\"NgayDatLich\":").append(toJsonValue(entity.getNgayDatLich()));
         return json.append('}').toString();
@@ -149,3 +148,4 @@ public class LichHenRepository {
                 .replace("\t", "\\t") + '"';
     }
 }
+

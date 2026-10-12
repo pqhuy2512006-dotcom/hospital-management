@@ -12,4 +12,5 @@ public class Khoa {
     private String maKhoa;
     private String tenKhoa;
     private String moTa;
+    private String maTruongKhoa;
 }

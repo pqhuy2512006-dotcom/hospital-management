@@ -1,0 +1,4 @@
+ALTER TABLE dbo.DonThuoc ADD TrangThai VARCHAR(20) DEFAULT 'PENDING';
+GO
+CREATE OR ALTER VIEW dbo.vw_DonThuoc AS SELECT * FROM dbo.DonThuoc;
+GO

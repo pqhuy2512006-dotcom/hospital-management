@@ -5,26 +5,24 @@
 (function () {
     // 1. Ma trận phân quyền các phân hệ (Module Permission Matrix - Chuẩn 11 tác nhân y tế)
     const ROLE_PERMISSIONS = {
-        'dashboard.html': ['QuanTri', 'ADMIN', 'GiamDoc', 'DIRECTOR', 'BGD'],
+        'dashboard.html': ['QuanTri', 'ADMIN'],
         'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
-        'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
-        'doctors.html': ['NhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
+        'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
+        'doctors.html': ['QuanLyNhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
         'examination.html': ['BacSi', 'DOCTOR'],
+        'referrals.html': ['BacSi', 'DOCTOR', 'DieuDuong', 'NURSE', 'TruongKhoa'],
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
-        'inpatient.html': ['DieuDuong', 'NURSE', 'LeTan', 'RECEPTIONIST'],
-        'billing.html': ['ThuNgan', 'CASHIER', 'DieuDuong', 'NURSE', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'ThuNgan', 'CASHIER', 'DieuDuong', 'NURSE', 'NhanSu', 'HR', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'LeTan', 'RECEPTIONIST']
+        'inpatient.html': ['DieuDuong', 'NURSE'],
+        'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
+        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER', 'QuanLyNhanSu', 'HR']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
     const ROLE_LANDING_PAGES = {
         'QuanTri': '/dashboard.html',
         'ADMIN': '/dashboard.html',
-        'GiamDoc': '/dashboard.html',
-        'DIRECTOR': '/dashboard.html',
-        'BGD': '/dashboard.html',
-        'NhanSu': '/doctors.html',
+        'QuanLyNhanSu': '/doctors.html',
         'HR': '/doctors.html',
         'BacSi': '/examination.html',
         'DOCTOR': '/examination.html',
@@ -46,10 +44,7 @@
     const ROLE_META = {
         'QuanTri': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
         'ADMIN': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
-        'GiamDoc': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
-        'DIRECTOR': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
-        'BGD': { name: 'Ban Giám Đốc (EXECUTIVE / DIRECTOR)', short: 'Ban Giám Đốc', color: '#1e40af', bg: '#dbeafe', icon: 'fa-crown' },
-        'NhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
+        'QuanLyNhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'HR': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'BacSi': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },
         'DOCTOR': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },
@@ -187,14 +182,16 @@
             }
         });
 
-        const isAdmin = ['QUANTRi', 'ADMIN'].includes(userRole.toUpperCase());
-        if (!isAdmin && currentPage === 'settings.html') {
-            document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
-            document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
-            const title = document.querySelector('.top-header .header-title h2');
-            if (title) title.textContent = 'Thông tin cá nhân & Đổi mật khẩu';
+        if (userRole !== 'QuanTri' && userRole !== 'ADMIN') {
             const profileLink = document.querySelector('.sidebar-menu a[href="/settings.html"]');
             if (profileLink) profileLink.innerHTML = '<i class="fa-solid fa-user-pen"></i> Thông tin cá nhân';
+            
+            if (currentPage === 'settings.html') {
+                document.querySelectorAll('.tab-btn:not(:first-child)').forEach(button => button.remove());
+                document.querySelectorAll('.tab-content:not(#profileTab)').forEach(tab => tab.remove());
+                const title = document.querySelector('.top-header .header-title h2');
+                if (title) title.textContent = 'Thông tin cá nhân';
+            }
         }
 
         if (userRole === 'BenhNhan' || userRole === 'PATIENT') {
@@ -231,41 +228,6 @@
                 document.querySelector('.btn-create-patient')?.remove();
                 document.getElementById('patientModal')?.remove();
             }
-        }
-
-        if (userRole === 'ThuNgan' || userRole === 'CASHIER') {
-            const menuLabels = {
-                '/billing.html': 'Quản lý Viện phí & Hóa đơn',
-                '/settings.html': 'Thông tin cá nhân'
-            };
-            Object.entries(menuLabels).forEach(([href, label]) => {
-                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
-                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : 'fa-solid fa-cash-register'}"></i> ${label}`;
-            });
-        }
-
-        if (userRole === 'DieuDuong' || userRole === 'NURSE') {
-            const menuLabels = {
-                '/inpatient.html': 'Quản lý Giường & Nội trú',
-                '/patients.html': 'Hồ sơ Bệnh nhân',
-                '/billing.html': 'Tra cứu Viện phí',
-                '/settings.html': 'Thông tin cá nhân'
-            };
-            Object.entries(menuLabels).forEach(([href, label]) => {
-                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
-                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : href === '/billing.html' ? 'fa-solid fa-file-invoice-dollar' : href === '/inpatient.html' ? 'fa-solid fa-bed-pulse' : 'fa-solid fa-hospital-user'}"></i> ${label}`;
-            });
-        }
-
-        if (userRole === 'NhanSu' || userRole === 'HR') {
-            const menuLabels = {
-                '/doctors.html': 'Quản lý Nhân sự & Bác sĩ',
-                '/settings.html': 'Thông tin cá nhân'
-            };
-            Object.entries(menuLabels).forEach(([href, label]) => {
-                const link = document.querySelector(`.sidebar-menu a[href="${href}"]`);
-                if (link) link.innerHTML = `<i class="${href === '/settings.html' ? 'fa-solid fa-user-pen' : 'fa-solid fa-users-gear'}"></i> ${label}`;
-            });
         }
     });
 

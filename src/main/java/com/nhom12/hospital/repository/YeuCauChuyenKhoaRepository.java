@@ -1,4 +1,4 @@
-﻿package com.nhom12.hospital.repository;
+package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.YeuCauChuyenKhoa;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -20,11 +20,37 @@ public class YeuCauChuyenKhoaRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean existsPendingTransfer(String maPhieuKham) {
+        
+        String sql = "SELECT COUNT(1) FROM dbo.vw_YeuCauChuyenKhoa " +
+                     "WHERE MaPhieuKham = ? AND TrangThai IN ('CHO_DUYET', 'CHO_XEP_GIUONG', 'CHO_TIEP_NHAN', 'DA_TIEP_NHAN') AND LoaiYeuCau = 'CHUYEN_KHOA'";
+                     
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, maPhieuKham);
+        return count != null && count > 0;
+    }
+
     public List<YeuCauChuyenKhoa> findByMaBacSiGuiOrderByNgayTaoDesc(String maBacSiGui) {
         return jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaBacSiGui = ? ORDER BY NgayTao DESC",
                 ROW_MAPPER,
                 maBacSiGui
+        );
+    }
+
+    public List<YeuCauChuyenKhoa> findByMaKhoaNhanAndTrangThaiOrderByNgayTaoDesc(String maKhoaNhan, String trangThai) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaKhoaNhan = ? AND TrangThai = ? ORDER BY NgayTao DESC",
+                ROW_MAPPER,
+                maKhoaNhan, trangThai
+        );
+    }
+
+    
+    public List<YeuCauChuyenKhoa> findByMaBacSiDuocMoiAndLoaiYeuCauOrderByNgayTaoDesc(String maBacSiDuocMoi, String loaiYeuCau) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_YeuCauChuyenKhoa WHERE MaBacSiDuocMoi = ? AND LoaiYeuCau = ? ORDER BY NgayTao DESC",
+                ROW_MAPPER,
+                maBacSiDuocMoi, loaiYeuCau
         );
     }
 

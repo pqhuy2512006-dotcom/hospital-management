@@ -355,13 +355,14 @@
             <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
             <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
             <li><a href="/patients.html"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
-            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Bác sĩ</a></li>
+            <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Nhân viên</a></li>
             <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
             <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
             <li><a href="/pharmacy.html"><i class="fa-solid fa-pills"></i> Kho Dược & Đơn thuốc</a></li>
             <li><a href="/inpatient.html"><i class="fa-solid fa-bed-pulse"></i> Quản lý Giường bệnh</a></li>
             <li><a href="/billing.html"><i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn Viện phí</a></li>
             <li><a href="/settings.html" class="active"><i class="fa-solid fa-gear"></i> Cấu hình hệ thống</a></li>
+            <li><a href="/referrals.html"><i class="fa-solid fa-arrows-turn-right"></i> Chuyển khoa & Hội chẩn</a></li>
         </ul>
     </aside>
 
@@ -722,7 +723,6 @@
                             <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
                             <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
                             <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
-                            <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
                         </select>
                     </div>
 
@@ -793,10 +793,7 @@
                 else if (r.includes('NURSE') || r.includes('DIEUDUONG')) badgeClass = 'role-nurse';
                 else if (r.includes('TECH') || r.includes('KYTHUAT') || r.includes('CLS')) badgeClass = 'role-lab';
                 else if (r.includes('RECEPT') || r.includes('TIEPDON')) badgeClass = 'role-doc';
-                else if (r.includes('NHANSU') || r.includes('HR')) badgeClass = 'role-pharmacy';
 
-                const roles = ['QuanTri', 'BacSi', 'DieuDuong', 'LeTan', 'DuocSi', 'KTV', 'ThuNgan', 'NhanSu'];
-                const roleOptions = roles.map(role => `<option value="${role}" ${u.role === role ? 'selected' : ''}>${role}</option>`).join('');
                 const isCurrentUser = (() => {
                     try { return JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}').username === u.username; }
                     catch (error) { return false; }
@@ -805,7 +802,7 @@
                     <tr>
                         <td><strong>${escapeHtml(u.username)}</strong></td>
                         <td>${escapeHtml(u.fullName || u.username)}</td>
-                        <td><select onchange="updateAccount(${u.id}, this.value, ${u.enabled})" ${isCurrentUser ? 'disabled' : ''}>${roleOptions}</select></td>
+                        <td><span class="role-badge ${badgeClass}">${escapeHtml(u.role)}</span></td>
                         <td><span style="color:${u.enabled ? '#10b981' : '#ef4444'}; font-weight:600;">${u.enabled ? 'Hoạt động' : 'Bị khóa'}</span></td>
                         <td>
                             <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
@@ -1001,6 +998,6 @@
             await loadUsers();
         };
     </script>
-    <script src="/auth-guard.js"></script>
+    <script src="/auth-guard.js?v=2"></script>
 </body>
 </html>

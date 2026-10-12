@@ -23,7 +23,6 @@ public class LichHen {
     private Integer thoiGianKhamDuKien;
     private String hinhThucDat;
     private String lyDoKham;
-    private String ghiChu;
     private String trangThai;
     private LocalDateTime ngayDatLich;
     private Integer viTriHangDoi;

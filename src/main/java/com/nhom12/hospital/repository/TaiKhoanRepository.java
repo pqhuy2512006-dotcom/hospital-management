@@ -1,4 +1,4 @@
-﻿package com.nhom12.hospital.repository;
+package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.TaiKhoan;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -63,6 +63,10 @@ public class TaiKhoanRepository {
 
     public Optional<TaiKhoan> findByEmail(String email) {
         return queryOne("SELECT * FROM dbo.vw_TaiKhoan WHERE Email = ?", email);
+    }
+
+    public Optional<TaiKhoan> findBySoDienThoai(String soDienThoai) {
+        return queryOne("SELECT * FROM dbo.vw_TaiKhoan WHERE SoDienThoai = ?", soDienThoai);
     }
 
     public List<TaiKhoan> findAll() {

@@ -22,6 +22,14 @@ public class NhanVienRepository {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
+	public List<NhanVien> findByMaKhoa(String maKhoa) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_NhanVien WHERE MaKhoa = ?",
+                ROW_MAPPER,
+                maKhoa
+        );
+    }
+	
 	public List<NhanVien> findAll() {
 		return jdbcTemplate.query("SELECT * FROM dbo.vw_NhanVien", ROW_MAPPER);
 	}
@@ -70,11 +78,11 @@ public class NhanVienRepository {
 		columns.put("SoDienThoai", employee.getSoDienThoai());
 		columns.put("Email", employee.getEmail());
 		columns.put("DiaChi", employee.getDiaChi());
-		columns.put("ChuyenKhoa", employee.getChuyenKhoa());
 		columns.put("ChungChiHanhNghe", employee.getChungChiHanhNghe());
 		columns.put("TrinhDoChuyenMon", employee.getTrinhDoChuyenMon());
 		columns.put("NgayVaoLam", employee.getNgayVaoLam());
 		columns.put("VaiTro", employee.getVaiTro());
+		columns.put("MaKhoa", employee.getMaKhoa());
 		columns.put("TrangThai", employee.getTrangThai());
 		EntityProcedureSupport.save(jdbcTemplate, "NhanVien", columns);
 		return employee;

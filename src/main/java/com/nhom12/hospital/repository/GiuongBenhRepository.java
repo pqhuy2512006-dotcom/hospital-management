@@ -1,4 +1,4 @@
-﻿package com.nhom12.hospital.repository;
+package com.nhom12.hospital.repository;
 
 import com.nhom12.hospital.entity.GiuongBenh;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -32,6 +32,14 @@ public class GiuongBenhRepository {
         );
     }
 
+    public List<GiuongBenh> findByMaKhoaAndTrangThai(String maKhoa, String trangThai) {
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_GiuongBenh WHERE MaKhoa = ? AND TrangThai = ? ORDER BY SoGiuong",
+                ROW_MAPPER,
+                maKhoa, trangThai
+        );
+    }
+
     public List<GiuongBenh> findByTrangThai(String trangThai) {
         return jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_GiuongBenh WHERE TrangThai = ? ORDER BY SoGiuong",
@@ -61,7 +69,7 @@ public class GiuongBenhRepository {
     private String serializeEntity(GiuongBenh entity) {
         StringBuilder json = new StringBuilder("{");
         json.append("\"MaGiuong\":").append(toJsonValue(entity.getMaGiuong())).append(',');
-        json.append("\"MaKhoa\":").append(toJsonValue(entity.getMaKhoa())).append(',');
+        json.append("\"MaPhong\":").append(toJsonValue(entity.getMaPhong())).append(',');
         json.append("\"SoGiuong\":").append(toJsonValue(entity.getSoGiuong())).append(',');
         json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
         json.append("\"DonGiaNgay\":").append(toJsonValue(entity.getDonGiaNgay()));

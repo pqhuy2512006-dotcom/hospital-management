@@ -29,7 +29,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         if (rawRole == null || rawRole.trim().isEmpty()) return "";
         String r = rawRole.trim().toUpperCase();
         if (r.contains("GIAMDOC") || r.contains("BGD") || r.contains("DIRECTOR") || r.contains("EXECUTIVE")) return "GiamDoc";
-        if (r.contains("NHANSU") || r.contains("HR")) return "NhanSu";
+        if (r.contains("NHANSU") || r.contains("HR")) return "QuanLyNhanSu";
         if (r.contains("ADMIN") || r.contains("QUANTRI")) return "QuanTri";
         if (r.contains("DOC") || r.contains("BACSI")) return "BacSi";
         if (r.contains("CASHIER") || r.contains("THUNGAN")) return "ThuNgan";
@@ -56,16 +56,26 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         String actorRole = null;
 
         try {
-                if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
-                    || "/api/v1/auth/register".equals(path)
-                    || !path.startsWith("/api/v1/")) {
+            if ("OPTIONS".equals(method) || "/api/v1/auth/login".equals(path)
+                || "/api/v1/auth/register".equals(path)
+                || ("GET".equals(method) && "/api/v1/khoa".equals(path))
+                || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
+                || ("GET".equals(method) && "/api/v1/lichhen/available-slots".equals(path))
+                || !path.startsWith("/api/v1/")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             HttpSession session = request.getSession(false);
             Object accountId = session == null ? null : session.getAttribute(SessionAttributes.ACCOUNT_ID);
+            
+            boolean isGuestAllowed = ("POST".equals(method) && "/api/v1/lichhen".equals(path));
+
             if (!(accountId instanceof Long id)) {
+                if (isGuestAllowed) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 writeForbidden(response, "Yêu cầu đăng nhập.");
                 return;
             }
@@ -107,10 +117,6 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if ("/api/v1/nhanvien/me".equals(path) && ("GET".equals(method) || "PUT".equals(method))) {
-                filterChain.doFilter(request, response);
-                return;
-            }
             if (path.startsWith("/api/v1/taikhoan")) {
                 if (path.equals("/api/v1/taikhoan/change-password")) {
                     filterChain.doFilter(request, response);
@@ -129,16 +135,6 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if (path.startsWith("/api/v1/phanquyen")) {
-                if ("POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method)) {
-                    if (!"QuanTri".equals(role)) {
-                        writeForbidden(response, "Chỉ Admin có quyền chỉnh sửa phân quyền.");
-                        return;
-                    }
-                }
-                filterChain.doFilter(request, response);
-                return;
-            }
             if ("BenhNhan".equals(role)) {
                 boolean allowed = ("GET".equals(method) && "/api/v1/khoa".equals(path))
                         || ("GET".equals(method) && "/api/v1/nhanvien/doctors".equals(path))
@@ -146,6 +142,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                         || ("PUT".equals(method) && path.matches("/api/v1/hoadon/[^/]+/thanhtoan"))
                         || ("POST".equals(method) && "/api/v1/lichhen".equals(path))
                         || ("GET".equals(method) && "/api/v1/lichhen/me".equals(path))
+                        || ("GET".equals(method) && "/api/v1/lichhen/available-slots".equals(path))
                         || ("PUT".equals(method) && path.matches("/api/v1/lichhen/[^/]+/(cancel|reschedule)"))
                         || ("GET".equals(method) || "POST".equals(method) || "PUT".equals(method))
                             && ("/api/v1/benhnhan/me".equals(path)
@@ -179,6 +176,15 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("DieuDuong".equals(role)) {
+                if (!isNurseRequestAllowed(path, method)) {
+                    writeForbidden(response, "Điều dưỡng không có quyền thực hiện thao tác này.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             boolean isAllowed = true;
             String requiredRoleDesc = "";
 
@@ -196,26 +202,11 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     requiredRoleDesc = "Dược Sĩ Kho Dược (PHARMACIST)";
                 }
             }
-            // 3. Phân hệ Viện phí: Thu ngân toàn quyền; Điều dưỡng chỉ xem; Bệnh nhân thanh toán online; Nhân sự & các role khác bị từ chối
-            else if (path.startsWith("/api/v1/hoadon")) {
-                if ("GET".equals(method)) {
-                    if (!"ThuNgan".equals(role) && !"DieuDuong".equals(role) && !"GiamDoc".equals(role)) {
-                        isAllowed = false;
-                        requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Điều Dưỡng (NURSE)";
-                    }
-                } else if (path.endsWith("/thanhtoan") && "PUT".equals(method)) {
-                    if (!"ThuNgan".equals(role) && !"BenhNhan".equals(role)) {
-                        isAllowed = false;
-                        requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Bệnh Nhân (Online)";
-                    }
-                } else if ((path.endsWith("/tinh-tu-dong") || path.endsWith("/ap-dung-bhyt") || path.endsWith("/hoan-ung")) && "POST".equals(method)) {
-                    if (!"ThuNgan".equals(role)) {
-                        isAllowed = false;
-                        requiredRoleDesc = "Thu Ngân (CASHIER)";
-                    }
-                } else if (!"ThuNgan".equals(role)) {
+            // 3. Phân hệ Viện phí: Thu tiền & Đóng hóa đơn (4.6 Thu ngân, 4.1 Bệnh nhân thanh toán online)
+            else if (path.startsWith("/api/v1/hoadon") && path.endsWith("/thanhtoan") && method.equals("PUT")) {
+                if (!"ThuNgan".equals(role) && !"BenhNhan".equals(role)) {
                     isAllowed = false;
-                    requiredRoleDesc = "Thu Ngân (CASHIER)";
+                    requiredRoleDesc = "Thu Ngân (CASHIER) hoặc Bệnh Nhân (Online)";
                 }
             }
             // 4. Phân hệ Cận lâm sàng: Nhập & trả kết quả xét nghiệm (4.4 KTV)
@@ -233,8 +224,8 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 }
             }
             // 6. Phân hệ Quản lý nhân sự: Thêm/Sửa nhân sự & Phân công lịch trực (4.8 Quản lý nhân sự)
-            else if (((path.startsWith("/api/v1/nhanvien") && !path.equals("/api/v1/nhanvien/me")) || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
-                if (!"NhanSu".equals(role)) {
+            else if (( (path.startsWith("/api/v1/nhanvien") && !path.equals("/api/v1/nhanvien/me")) || path.startsWith("/api/v1/lichtruc")) && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
+                if (!"QuanLyNhanSu".equals(role)) {
                     isAllowed = false;
                     requiredRoleDesc = "Quản Lý Nhân Sự (HR MANAGER)";
                 }
@@ -281,16 +272,35 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                     || "/api/v1/khoa".equals(path)
                     || "/api/v1/nhanvien/me".equals(path)
                     || "/api/v1/nhanvien/doctors".equals(path)
-                    || "/api/v1/chuyenkhoa/me".equals(path);
+                    || "/api/v1/chuyenkhoa/me".equals(path) || isPathOrChild(path, "/api/v1/chuyenkhoa");
         }
 
         return ("POST".equals(method) && ("/api/v1/phieukham".equals(path)
                     || "/api/v1/chuyenkhoa".equals(path)
+                    || path.matches("^/api/v1/chuyenkhoa/.+$")
                     || path.matches("^/api/v1/lichhen/.+/start$")))
                 || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
+    }
+
+    private boolean isNurseRequestAllowed(String path, String method) {
+        if ("GET".equals(method)) {
+            return isPathOrChild(path, "/api/v1/khoa")
+                    || isPathOrChild(path, "/api/v1/giuongbenh")
+                    || isPathOrChild(path, "/api/v1/noitru")
+                    || isPathOrChild(path, "/api/v1/chuyenkhoa")
+                    || isPathOrChild(path, "/api/v1/benhnhan") // Cho phép xem thông tin bệnh nhân
+                    || "/api/v1/nhanvien/me".equals(path);
+        }
+        
+        return ("POST".equals(method) || "PUT".equals(method)) && 
+               (isPathOrChild(path, "/api/v1/noitru") 
+                || isPathOrChild(path, "/api/v1/chuyenkhoa")
+                || isPathOrChild(path, "/api/v1/giuongbenh")
+                || "/api/v1/nhanvien/me".equals(path));
     }
 
     private boolean isPathOrChild(String path, String basePath) {
         return path.equals(basePath) || path.startsWith(basePath + "/");
     }
 }
+
