@@ -5,7 +5,7 @@
 (function () {
     // 1. Ma trận phân quyền các phân hệ (Module Permission Matrix - Chuẩn 11 tác nhân y tế)
     const ROLE_PERMISSIONS = {
-        'dashboard.html': ['QuanTri', 'ADMIN'],
+        'dashboard.html': ['QuanTri', 'ADMIN', 'GiamDoc', 'DIRECTOR'],
         'appointments.html': ['LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'doctors.html': ['QuanLyNhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
@@ -15,13 +15,15 @@
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
         'inpatient.html': ['DieuDuong', 'NURSE'],
         'billing.html': ['ThuNgan', 'CASHIER', 'BenhNhan', 'PATIENT'],
-        'settings.html': ['QuanTri', 'ADMIN', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER', 'QuanLyNhanSu', 'HR']
+        'settings.html': ['QuanTri', 'ADMIN', 'GiamDoc', 'DIRECTOR', 'BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'DuocSi', 'PHARMACIST', 'KTV', 'TECHNICIAN', 'DieuDuong', 'NURSE', 'ThuNgan', 'CASHIER', 'QuanLyNhanSu', 'HR']
     };
 
     // 2. Trang làm việc mặc định theo từng vai trò (Role Landing Pages)
     const ROLE_LANDING_PAGES = {
         'QuanTri': '/dashboard.html',
         'ADMIN': '/dashboard.html',
+        'GiamDoc': '/dashboard.html',
+        'DIRECTOR': '/dashboard.html',
         'QuanLyNhanSu': '/doctors.html',
         'HR': '/doctors.html',
         'BacSi': '/examination.html',
@@ -44,6 +46,8 @@
     const ROLE_META = {
         'QuanTri': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
         'ADMIN': { name: 'Quản Trị Viên Hệ Thống (ADMIN)', short: 'Quản Trị', color: '#991b1b', bg: '#fee2e2', icon: 'fa-shield-halved' },
+        'GiamDoc': { name: 'Ban Giám Đốc (DIRECTOR)', short: 'Ban Giám Đốc', color: '#1d4ed8', bg: '#dbeafe', icon: 'fa-building-columns' },
+        'DIRECTOR': { name: 'Ban Giám Đốc (DIRECTOR)', short: 'Ban Giám Đốc', color: '#1d4ed8', bg: '#dbeafe', icon: 'fa-building-columns' },
         'QuanLyNhanSu': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'HR': { name: 'Quản Lý Nhân Sự (HR MANAGER)', short: 'Nhân Sự', color: '#c026d3', bg: '#fae8ff', icon: 'fa-users-gear' },
         'BacSi': { name: 'Bác Sĩ Điều Trị (DOCTOR)', short: 'Bác Sĩ', color: '#0369a1', bg: '#e0f2fe', icon: 'fa-user-doctor' },

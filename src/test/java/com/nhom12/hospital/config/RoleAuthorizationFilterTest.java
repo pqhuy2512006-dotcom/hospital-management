@@ -72,6 +72,83 @@ class RoleAuthorizationFilterTest {
         assertEquals(200, response.getStatus());
     }
 
+    @Test
+    void directorCanReadDashboardStatsAndExportReports() throws Exception {
+        TaiKhoan director = account(3L, "director", "GiamDoc", true);
+        when(taiKhoanRepository.findById(3L)).thenReturn(Optional.of(director));
+
+        MockHttpServletResponse statsResponse = new MockHttpServletResponse();
+        AtomicBoolean statsRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/dashboard/stats", 3L), statsResponse,
+                (req, res) -> statsRead.set(true));
+
+        MockHttpServletResponse reportResponse = new MockHttpServletResponse();
+        AtomicBoolean reportRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/dashboard/report", 3L), reportResponse,
+                (req, res) -> reportRead.set(true));
+
+        assertTrue(statsRead.get());
+        assertTrue(reportRead.get());
+        assertEquals(200, statsResponse.getStatus());
+        assertEquals(200, reportResponse.getStatus());
+    }
+
+    @Test
+    void directorCannotAccessOperationalOrAdministrativeApis() throws Exception {
+        TaiKhoan director = account(3L, "director", "GiamDoc", true);
+        when(taiKhoanRepository.findById(3L)).thenReturn(Optional.of(director));
+
+        MockHttpServletResponse patientsResponse = new MockHttpServletResponse();
+        AtomicBoolean patientsRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/benhnhan", 3L), patientsResponse,
+                (req, res) -> patientsRead.set(true));
+
+        MockHttpServletResponse accountsResponse = new MockHttpServletResponse();
+        AtomicBoolean accountsRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/taikhoan", 3L), accountsResponse,
+                (req, res) -> accountsRead.set(true));
+
+        MockHttpServletResponse dashboardWriteResponse = new MockHttpServletResponse();
+        AtomicBoolean dashboardWritten = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("POST", "/api/v1/dashboard/stats", 3L), dashboardWriteResponse,
+                (req, res) -> dashboardWritten.set(true));
+
+        assertEquals(403, patientsResponse.getStatus());
+        assertEquals(403, accountsResponse.getStatus());
+        assertEquals(403, dashboardWriteResponse.getStatus());
+        assertTrue(!patientsRead.get());
+        assertTrue(!accountsRead.get());
+        assertTrue(!dashboardWritten.get());
+    }
+
+    @Test
+    void directorCanReadAndUpdateOwnEmployeeProfile() throws Exception {
+        TaiKhoan director = account(3L, "director", "GiamDoc", true);
+        when(taiKhoanRepository.findById(3L)).thenReturn(Optional.of(director));
+
+        MockHttpServletResponse profileResponse = new MockHttpServletResponse();
+        AtomicBoolean profileRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/nhanvien/me", 3L), profileResponse,
+                (req, res) -> profileRead.set(true));
+
+        MockHttpServletResponse updateResponse = new MockHttpServletResponse();
+        AtomicBoolean profileUpdated = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("PUT", "/api/v1/nhanvien/me", 3L), updateResponse,
+                (req, res) -> profileUpdated.set(true));
+
+        MockHttpServletResponse staffListResponse = new MockHttpServletResponse();
+        AtomicBoolean staffListRead = new AtomicBoolean();
+        filter.doFilter(authenticatedRequest("GET", "/api/v1/nhanvien", 3L), staffListResponse,
+                (req, res) -> staffListRead.set(true));
+
+        assertTrue(profileRead.get());
+        assertTrue(profileUpdated.get());
+        assertEquals(200, profileResponse.getStatus());
+        assertEquals(200, updateResponse.getStatus());
+        assertEquals(403, staffListResponse.getStatus());
+        assertTrue(!staffListRead.get());
+    }
+
         @Test
         void doctorCanReadPatientsAndCreateExamination() throws Exception {
         TaiKhoan doctor = account(2L, "doctor", "BacSi", true);
