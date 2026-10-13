@@ -397,8 +397,3 @@ END;
 GO
 
 
-ALTER TABLE dbo.Khoa 
-ADD TrangThai NVARCHAR(20) NOT NULL DEFAULT N'HoatDong';
-
-alter table Khoa
-add constraint CK_Khoa_TrangThai check (TrangThai in ('HoatDong','NgungHoatDong'))

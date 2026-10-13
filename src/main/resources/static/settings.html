@@ -382,9 +382,6 @@
         <main class="content-body">
             <!-- Tabs chuyển đổi chức năng -->
             <div class="tab-bar">
-                <button class="tab-btn" onclick="switchTab('khoaTab', this)">
-                    <i class="fa-solid fa-hospital"></i> Quản Lý Danh Mục Khoa
-                </button>
                 <button class="tab-btn active" onclick="switchTab('profileTab', this)">
                     <i class="fa-solid fa-key"></i> Đổi Mật Khẩu
                 </button>
@@ -493,34 +490,6 @@
                     </table>
                 </div>
             </div>
-            <!-- TAB QUẢN LÝ DANH MỤC KHOA -->
-<div id="khoaTab" class="tab-content">
-    <div class="panel-card" style="padding: 20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h3 style="font-size: 16px; font-weight: 700;">
-                <i class="fa-solid fa-hospital" style="color:var(--primary);"></i> Danh Sách Khoa & Phòng Ban Chuyên Môn
-            </h3>
-            <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openCreateKhoaModal()">
-                <i class="fa-solid fa-plus"></i> Thêm Khoa Mới
-            </button>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 120px;">Mã Khoa</th>
-                    <th style="width: 220px;">Tên Khoa</th>
-                    <th>Mô Tả Chức Năng</th>
-                    <th style="width: 140px;">Trạng Thái</th>
-                    <th style="width: 160px;">Thao Tác</th>
-                </tr>
-            </thead>
-            <tbody id="khoaTableBody">
-                <tr><td colspan="5" style="text-align:center; padding:16px;">Đang tải danh sách khoa...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
             <!-- TAB NHẬT KÝ TRUY CẬP -->
             <div id="auditTab" class="tab-content">
@@ -743,37 +712,7 @@
                         <label>Email *</label>
                         <input type="email" id="nuEmail" class="form-control" maxlength="100" autocomplete="email" required>
                     </div>
-                    <!-- MODAL THÊM / CẬP NHẬT KHOA -->
-<div class="modal-overlay" id="khoaModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="khoaModalTitle"><i class="fa-solid fa-hospital" style="color:var(--primary);"></i> Thêm Khoa Mới</h3>
-            <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeKhoaModal()">&times;</button>
-        </div>
-        <form onsubmit="handleSaveKhoa(event)">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Mã Khoa *</label>
-                    <input type="text" id="kMaKhoa" class="form-control" placeholder="Ví dụ: KNT, KNG, TMH..." required maxlength="10">
-                </div>
-                <div class="form-group">
-                    <label>Tên Khoa *</label>
-                    <input type="text" id="kTenKhoa" class="form-control" placeholder="Ví dụ: Khoa Cấp Cứu, Khoa Mắt..." required maxlength="100">
-                </div>
-                <div class="form-group">
-                    <label>Mô Tả Chức Năng</label>
-                    <textarea id="kMoTa" class="form-control" rows="3" placeholder="Nhập mô tả chuyên môn của khoa..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-logout" style="background:#ffffff; color:#64748b; border:1px solid #cbd5e1;" onclick="closeKhoaModal()">Hủy</button>
-                <button type="submit" class="btn-submit">
-                    <i class="fa-solid fa-check"></i> Lưu Khoa
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+
                     <div class="form-group">
                         <label>Vai Trò Chức Năng (RBAC) *</label>
                         <select id="nuRole" class="form-control" required>
@@ -829,7 +768,6 @@
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
             if (tabId === 'auditTab') loadAuditLogs();
-            if (tabId === 'khoaTab') loadKhoa();
         }
 
         function escapeHtml(value) {
@@ -871,45 +809,11 @@
                             <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
                                 ${u.enabled ? 'Khóa' : 'Mở khóa'}
                             </button>
-                            <button type="button" style="padding:4px 8px; border:1px solid #f59e0b; background:#fef3c7; color:#b45309; border-radius:4px; cursor:pointer; font-size:12px; margin-left:6px;" 
-            onclick="handleResetPassword(${u.id}, '${escapeHtml(u.username)}')" ${isCurrentUser ? 'disabled' : ''}
-            title="Đặt lại mật khẩu về mặc định (123456)">
-        <i class="fa-solid fa-rotate-left"></i> Đặt lại MK
-    </button>
                         </td>
                     </tr>
                 `;
             });
         }
-
-        async function handleResetPassword(id, username) {
-    if (!confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456) không?`)) {
-        return;
-    }
-
-    try {
-        // Lấy ID tài khoản của người đang đăng nhập từ mảng users
-        const authUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
-        const currentAccount = users.find(u => u.username === authUser.username);
-        const currentAccountId = currentAccount ? currentAccount.id : 0;
-
-        // Gọi API reset-password với tham số currentAccountId
-        const response = await fetch(`/api/v1/taikhoan/${id}/reset-password?currentAccountId=${currentAccountId}`, {
-            method: 'POST'
-        });
-
-        const data = await response.json().catch(() => ({}));
-
-        if (response.ok && data.success) {
-            alert(data.message || 'Đặt lại mật khẩu thành công!');
-        } else {
-            alert('Lỗi đặt lại mật khẩu: ' + (data.message || response.statusText));
-        }
-    } catch (error) {
-        console.error('Lỗi khi reset mật khẩu:', error);
-        alert('Lỗi kết nối tới máy chủ khi đặt lại mật khẩu!');
-    }
-}
 
         async function updateAccount(id, role, enabled) {
             const response = await fetch(`/api/v1/taikhoan/${id}`, {
@@ -1078,155 +982,6 @@
             sessionStorage.removeItem('authenticatedUser');
             window.location.href = '/login.html';
         }
-            let danhSachKhoa = [];
-let isEditingKhoa = false;
-
-async function loadKhoa() {
-    try {
-        const res = await fetch('/api/v1/khoa?all=true');
-        if (res.ok) {
-            danhSachKhoa = await res.json();
-            renderKhoa();
-        }
-    } catch (err) {
-        console.error("Lỗi tải danh mục khoa:", err);
-    }
-}
-
-function renderKhoa() {
-    const tbody = document.getElementById('khoaTableBody');
-    tbody.innerHTML = '';
-
-    if (danhSachKhoa.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">Chưa có khoa nào.</td></tr>';
-        return;
-    }
-
-    danhSachKhoa.forEach(k => {
-        const isActive = k.trangThai === 'HoatDong' || !k.trangThai;
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>${escapeHtml(k.maKhoa)}</strong></td>
-                <td>${escapeHtml(k.tenKhoa)}</td>
-                <td><small style="color:var(--text-muted);">${escapeHtml(k.moTa || 'Không có mô tả')}</small></td>
-                <td>
-                    <span style="color:${isActive ? '#10b981' : '#ef4444'}; font-weight:600;">
-                        ${isActive ? 'Hoạt động' : 'Tạm ngưng'}
-                    </span>
-                </td>
-                <td>
-                    <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#0284c7; border-radius:4px; cursor:pointer; font-size:12px; margin-right:4px;" 
-                            onclick="openEditKhoaModal('${escapeHtml(k.maKhoa)}')">
-                        <i class="fa-solid fa-pen"></i> Sửa
-                    </button>
-                    <button type="button" style="padding:4px 8px; border:1px solid ${isActive ? '#fca5a5' : '#86efac'}; background:${isActive ? '#fee2e2' : '#f0fdf4'}; color:${isActive ? '#ef4444' : '#16a34a'}; border-radius:4px; cursor:pointer; font-size:12px;" 
-                            onclick="toggleKhoaStatus('${escapeHtml(k.maKhoa)}', '${escapeHtml(k.tenKhoa)}', ${isActive})">
-                        ${isActive ? 'Khóa' : 'Mở lại'}
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-function openCreateKhoaModal() {
-    isEditingKhoa = false;
-    document.getElementById('khoaModalTitle').innerHTML = '<i class="fa-solid fa-plus" style="color:var(--primary);"></i> Thêm Khoa Mới';
-    document.getElementById('kMaKhoa').value = '';
-    document.getElementById('kMaKhoa').readOnly = false;
-    document.getElementById('kTenKhoa').value = '';
-    document.getElementById('kMoTa').value = '';
-    document.getElementById('khoaModal').style.display = 'flex';
-}
-
-function openEditKhoaModal(maKhoa) {
-    const k = danhSachKhoa.find(item => item.maKhoa === maKhoa);
-    if (!k) return;
-    isEditingKhoa = true;
-    document.getElementById('khoaModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Cập Nhật Khoa';
-    document.getElementById('kMaKhoa').value = k.maKhoa;
-    document.getElementById('kMaKhoa').readOnly = true; // Không cho sửa mã khi cập nhật
-    document.getElementById('kTenKhoa').value = k.tenKhoa || '';
-    document.getElementById('kMoTa').value = k.moTa || '';
-    document.getElementById('khoaModal').style.display = 'flex';
-}
-
-function closeKhoaModal() {
-    document.getElementById('khoaModal').style.display = 'none';
-}
-
-async function handleSaveKhoa(e) {
-    e.preventDefault();
-    const maKhoa = document.getElementById('kMaKhoa').value.trim();
-    const tenKhoa = document.getElementById('kTenKhoa').value.trim();
-    const moTa = document.getElementById('kMoTa').value.trim();
-
-    const url = isEditingKhoa ? `/api/v1/khoa/${maKhoa}` : '/api/v1/khoa';
-    const method = isEditingKhoa ? 'PUT' : 'POST';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ maKhoa, tenKhoa, moTa })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-            alert(data.message || (isEditingKhoa ? "Cập nhật thành công!" : "Thêm khoa thành công!"));
-            closeKhoaModal();
-            await loadKhoa();
-        } else {
-            alert("Lỗi: " + (data.message || "Thao tác không thành công"));
-        }
-    } catch (err) {
-        alert("Lỗi kết nối máy chủ khi lưu khoa!");
-    }
-}
-
-async function toggleKhoaStatus(maKhoa, tenKhoa, isActive) {
-    if (isActive) {
-        const confirmMsg = `CẢNH BÁO QUAN TRỌNG:\nBạn có chắc chắn muốn TẠM NGƯNG HOẠT ĐỘNG khoa "${tenKhoa}" không?\n\n- Toàn bộ tài khoản nhân sự thuộc khoa sẽ tạm thời bị khóa đăng nhập.\n- Các lịch hẹn khám sắp tới của khoa sẽ tự động bị hủy.`;
-        if (!confirm(confirmMsg)) return;
-
-        try {
-            const res = await fetch(`/api/v1/khoa/${maKhoa}`, { method: 'DELETE' });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok) {
-                alert("Đã tạm ngưng hoạt động khoa và khóa các tài khoản nhân sự liên quan!");
-                await loadKhoa();
-            } else {
-                alert("Lỗi: " + (data.message || "Không thể khóa khoa"));
-            }
-        } catch (err) {
-            alert("Lỗi kết nối máy chủ khi khóa khoa!");
-        }
-    } else {
-        if (!confirm(`Bạn có muốn MỞ LẠI HOẠT ĐỘNG cho khoa "${tenKhoa}" không? Các tài khoản nhân sự sẽ được kích hoạt lại.`)) return;
-
-        try {
-            const k = danhSachKhoa.find(item => item.maKhoa === maKhoa);
-            const res = await fetch(`/api/v1/khoa/${maKhoa}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    maKhoa: maKhoa, 
-                    tenKhoa: k ? k.tenKhoa : '', 
-                    moTa: k ? k.moTa : '',
-                    trangThai: 'HoatDong' 
-                })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok) {
-                alert("Đã mở lại hoạt động cho khoa và kích hoạt lại tài khoản nhân sự!");
-                await loadKhoa();
-            } else {
-                alert("Lỗi: " + (data.message || "Không thể mở lại khoa"));
-            }
-        } catch (err) {
-            alert("Lỗi kết nối máy chủ khi mở lại khoa!");
-        }
-    }
-}
 
         window.onload = async function() {
             let currentUser = {};
