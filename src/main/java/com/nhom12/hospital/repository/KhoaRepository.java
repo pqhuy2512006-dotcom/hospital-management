@@ -40,4 +40,30 @@ public class KhoaRepository {
 		);
 		return count != null && count > 0;
 	}
+
+	// mới 
+	public Khoa save(Khoa khoa) {
+        if (existsById(khoa.getMaKhoa())) {
+            jdbcTemplate.update(
+                    "UPDATE dbo.Khoa SET TenKhoa = ?, MoTa = ?, MaTruongKhoa = ? WHERE MaKhoa = ?",
+                    khoa.getTenKhoa(),
+                    khoa.getMoTa(),
+                    khoa.getMaTruongKhoa(),
+                    khoa.getMaKhoa()
+            );
+        } else {
+            jdbcTemplate.update(
+                    "INSERT INTO dbo.Khoa (MaKhoa, TenKhoa, MoTa, MaTruongKhoa) VALUES (?, ?, ?, ?)",
+                    khoa.getMaKhoa(),
+                    khoa.getTenKhoa(),
+                    khoa.getMoTa(),
+                    khoa.getMaTruongKhoa()
+            );
+        }
+        return khoa;
+    }
+
+    public void deleteById(String id) {
+        jdbcTemplate.update("DELETE FROM dbo.Khoa WHERE MaKhoa = ?", id);
+    }
 }

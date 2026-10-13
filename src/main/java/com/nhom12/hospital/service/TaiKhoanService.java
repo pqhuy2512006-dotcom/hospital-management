@@ -270,4 +270,32 @@ public void changePassword(
     // Cập nhật database
     taiKhoanRepository.save(user);
 }
+    @Transactional
+    public String resetPassword(Long id, Long currentAccountId) {
+        Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(id);
+
+        if (accountOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy tài khoản!");
+        }
+
+        TaiKhoan account = accountOpt.get();
+
+        if ("BenhNhan".equals(account.getVaiTro())) {
+            throw new IllegalArgumentException("Chỉ được quản lý tài khoản nhân viên.");
+        }
+
+        // Có thể chặn Admin tự reset pass của chính mình nếu cần
+        if (Objects.equals(currentAccountId, id)) {
+            throw new IllegalArgumentException("Vui lòng dùng chức năng Đổi mật khẩu cá nhân thay vì Reset.");
+        }
+
+        // Đặt mật khẩu mặc định (bạn có thể thay đổi chuỗi này)
+        String defaultPassword = "123456"; 
+        account.setMatKhauHash(passwordEncoder.encode(defaultPassword));
+
+        taiKhoanRepository.save(account);
+        
+        // Trả về mật khẩu mặc định để Controller báo lại cho Frontend
+        return defaultPassword; 
+    }
 }

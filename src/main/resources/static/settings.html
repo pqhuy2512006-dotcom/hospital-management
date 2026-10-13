@@ -809,11 +809,45 @@
                             <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
                                 ${u.enabled ? 'Khóa' : 'Mở khóa'}
                             </button>
+                            <button type="button" style="padding:4px 8px; border:1px solid #f59e0b; background:#fef3c7; color:#b45309; border-radius:4px; cursor:pointer; font-size:12px; margin-left:6px;" 
+            onclick="handleResetPassword(${u.id}, '${escapeHtml(u.username)}')" ${isCurrentUser ? 'disabled' : ''}
+            title="Đặt lại mật khẩu về mặc định (123456)">
+        <i class="fa-solid fa-rotate-left"></i> Đặt lại MK
+    </button>
                         </td>
                     </tr>
                 `;
             });
         }
+
+        async function handleResetPassword(id, username) {
+    if (!confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456) không?`)) {
+        return;
+    }
+
+    try {
+        // Lấy ID tài khoản của người đang đăng nhập từ mảng users
+        const authUser = JSON.parse(sessionStorage.getItem('authenticatedUser') || '{}');
+        const currentAccount = users.find(u => u.username === authUser.username);
+        const currentAccountId = currentAccount ? currentAccount.id : 0;
+
+        // Gọi API reset-password với tham số currentAccountId
+        const response = await fetch(`/api/v1/taikhoan/${id}/reset-password?currentAccountId=${currentAccountId}`, {
+            method: 'POST'
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && data.success) {
+            alert(data.message || 'Đặt lại mật khẩu thành công!');
+        } else {
+            alert('Lỗi đặt lại mật khẩu: ' + (data.message || response.statusText));
+        }
+    } catch (error) {
+        console.error('Lỗi khi reset mật khẩu:', error);
+        alert('Lỗi kết nối tới máy chủ khi đặt lại mật khẩu!');
+    }
+}
 
         async function updateAccount(id, role, enabled) {
             const response = await fetch(`/api/v1/taikhoan/${id}`, {

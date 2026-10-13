@@ -145,4 +145,24 @@ public ResponseEntity<?> changePassword(
     }
 }
 
+@PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(@PathVariable Long id, @RequestParam Long currentAccountId) {
+        try {
+            String newPassword = taiKhoanService.resetPassword(id, currentAccountId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đặt lại mật khẩu thành công. Mật khẩu mới là: " + newPassword
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Đã xảy ra lỗi hệ thống."
+            ));
+        }
+    }
 }
