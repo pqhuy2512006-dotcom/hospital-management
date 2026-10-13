@@ -619,15 +619,11 @@
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Học Vị / Chức Danh *</label>
-                            <select id="dHocVi" class="form-control" required>
-                                <option value="Bác sĩ CKI">BS. CKI</option>
-                                <option value="Bác sĩ CKII">BS. CKII</option>
-                                <option value="Thạc sĩ Bác sĩ">ThS. Bác sĩ</option>
-                                <option value="Tiến sĩ Bác sĩ">TS. Bác sĩ</option>
-                                <option value="Bác sĩ Đa khoa">Bác sĩ Đa khoa</option>
-                            </select>
-                        </div>
+    <label>Học Vị / Chức Danh *</label>
+    <select id="dHocVi" class="form-control" required>
+        <option value="">-- Chọn Học Vị / Chức Danh --</option>
+    </select>
+</div>
                         <div class="form-group">
                             <label>Khoa Làm Việc *</label>
                             <select id="dChuyenKhoa" class="form-control" required>
@@ -638,11 +634,11 @@
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label>Phòng Khám Phụ Trách *</label>
-                            <select id="dPhongKham" class="form-control" required>
-                                <option value="">-- Chọn Phòng Khám --</option>
-                            </select>
-                        </div>
+    <label>Phòng Khám Phụ Trách *</label>
+    <select id="dPhongKham" class="form-control" required>
+        <option value="">-- Chọn Phòng Khám --</option>
+    </select>
+</div>
                         <div class="form-group">
                             <label>Số Điện Thoại Liên Lạc *</label>
                             <input type="tel" id="dSDT" class="form-control" placeholder="Ví dụ: 0912348899" required>
@@ -847,11 +843,9 @@
             }
         }
 
-        document.getElementById('dChuyenKhoa').addEventListener('change', async function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const maKhoa = selectedOption ? selectedOption.dataset.makhoa : null;
+                // Hàm load danh sách phòng của Khoa và tự chọn phòng mặc định
+        async function loadPhongForKhoa(maKhoa, currentPhong = null) {
             const dPhongKham = document.getElementById('dPhongKham');
-            
             dPhongKham.innerHTML = '<option value="">-- Chọn Phòng Khám --</option>';
             
             if (maKhoa) {
@@ -865,7 +859,7 @@
                         listToRender.forEach(p => {
                             const option = document.createElement('option');
                             option.value = p.tenPhong; 
-                            option.textContent = p.tenPhong + ' (' + p.loaiPhong + ')';
+                            option.textContent = p.tenPhong + ' (' + (p.loaiPhong || 'Phòng') + ')';
                             dPhongKham.appendChild(option);
                         });
                     }
@@ -873,10 +867,75 @@
                     console.error('Error loading phong:', err);
                 }
             }
+
+            // Nếu nhân viên có phòng/vị trí hiện tại (ví dụ: Quầy Thu Ngân 01, Phòng 201...)
+            if (currentPhong) {
+                // Kiểm tra nếu dropdown chưa có phòng này thì tự thêm vào option để không bị rỗng
+                const exists = Array.from(dPhongKham.options).some(o => o.value === currentPhong);
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = currentPhong;
+                    opt.textContent = currentPhong;
+                    dPhongKham.appendChild(opt);
+                }
+                dPhongKham.value = currentPhong;
+            }
+        }
+
+        // Khi người dùng đổi khoa thì load lại phòng của khoa đó
+        document.getElementById('dChuyenKhoa').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const maKhoa = selectedOption ? selectedOption.dataset.makhoa : null;
+            loadPhongForKhoa(maKhoa);
+        });
+                // Danh mục học vị/chức danh theo từng vai trò
+        const HOC_VI_BY_ROLE = {
+            'BacSi': ['Bác sĩ CKI', 'Bác sĩ CKII', 'Thạc sĩ Bác sĩ', 'Tiến sĩ Bác sĩ', 'Bác sĩ Đa khoa'],
+            'DieuDuong': ['Cử nhân Điều dưỡng', 'Cao đẳng Điều dưỡng', 'Điều dưỡng CKI'],
+            'DuocSi': ['Dược sĩ Đại học', 'Dược sĩ CKI', 'Cao đẳng Dược'],
+            'KTV': ['Cử nhân Xét nghiệm', 'Kỹ thuật viên Y học', 'Kỹ thuật viên Hình ảnh'],
+            'ThuNgan': ['Cử nhân Kế toán', 'Chuyên viên Tài chính', 'Cao đẳng Kế toán'],
+            'LeTan': ['Cao đẳng Y tế', 'Cử nhân Quản trị', 'Nhân viên Tiếp đón'],
+            'NhanSu': ['Cử nhân Quản trị nhân lực', 'Cử nhân Luật', 'Chuyên viên Nhân sự'],
+            'QuanTri': ['Kỹ sư CNTT', 'Quản trị hệ thống']
+        };
+
+        // Hàm lọc danh sách học vị theo vai trò
+        function updateHocViByRole(role, selectedHocVi = null) {
+            const dHocVi = document.getElementById('dHocVi');
+            dHocVi.innerHTML = '<option value="">-- Chọn Học Vị / Chức Danh --</option>';
+            
+            const list = HOC_VI_BY_ROLE[role] || ['Cử nhân', 'Cao đẳng', 'Trung cấp', 'Khác'];
+            list.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                dHocVi.appendChild(opt);
+            });
+
+            // Chọn học vị mặc định nếu có
+            if (selectedHocVi) {
+                const exists = Array.from(dHocVi.options).some(o => o.value === selectedHocVi);
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = selectedHocVi;
+                    opt.textContent = selectedHocVi;
+                    dHocVi.appendChild(opt);
+                }
+                dHocVi.value = selectedHocVi;
+            } else {
+                dHocVi.selectedIndex = 0;
+            }
+        }
+
+        // Khi người dùng bấm đổi Vai Trò ở modal, tự động cập nhật lại danh sách Học Vị
+        document.getElementById('dVaiTro').addEventListener('change', function() {
+            updateHocViByRole(this.value);
         });
 
-        async function openAddDocModal() {
+                async function openAddDocModal() {
             await loadKhoaForDoctor();
+            loadPhongForKhoa(null);
             isEditDoc = false;
             document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Thêm Nhân Viên Y Tế Mới (UC64)';
             document.getElementById('dMaNV').value = `NV-DOC${String(doctors.length + 1).padStart(2, '0')}`;
@@ -885,6 +944,7 @@
             document.getElementById('dSDT').value = '';
             document.getElementById('dCCHN').value = '';
             document.getElementById('dVaiTro').value = 'BacSi';
+            updateHocViByRole('BacSi'); // Khởi tạo danh sách học vị của Bác Sĩ
             document.getElementById('dTrangThai').value = 'DangLamViec';
             document.getElementById('doctorModal').style.display = 'flex';
         }
@@ -897,8 +957,13 @@
             document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen" style="color:var(--warning);"></i> Cập Nhật Thông Tin Nhân Viên (UC65)';
             document.getElementById('dMaNV').value = doc.maNV;
             document.getElementById('dHoTen').value = doc.hoTen;
-            document.getElementById('dHocVi').value = doc.hocVi;
             
+            // 1. Điền vai trò và lọc danh sách học vị đúng theo vai trò đó
+            const role = doc.vaiTro || 'BacSi';
+            document.getElementById('dVaiTro').value = role;
+            updateHocViByRole(role, doc.hocVi);
+            
+            // 2. Tải Khoa và chọn đúng Khoa
             await loadKhoaForDoctor();
             const dChk = document.getElementById('dChuyenKhoa');
             for (let i = 0; i < dChk.options.length; i++) {
@@ -907,20 +972,13 @@
                     break;
                 }
             }
-            // trigger change to load Phong Khams
-            const dChuyenKhoa = document.getElementById('dChuyenKhoa');
-            const event = new Event('change');
-            dChuyenKhoa.dispatchEvent(event);
-            
-            // wait a bit for phong to load, then set phongKham value
-            setTimeout(() => {
-                document.getElementById('dPhongKham').value = doc.diaChi;
-            }, 500);
 
-            document.getElementById('dPhongKham').value = doc.phongKham;
+            // 3. Tải Phòng và chọn đúng Phòng của nhân viên
+            await loadPhongForKhoa(doc.maKhoa, doc.phongKham);
+
+            // 4. Các thông tin còn lại
             document.getElementById('dSDT').value = doc.sdt;
             document.getElementById('dCCHN').value = doc.cchn;
-            document.getElementById('dVaiTro').value = doc.vaiTro || 'BacSi';
             document.getElementById('dTrangThai').value = doc.trangThai || 'DangLamViec';
 
             document.getElementById('doctorModal').style.display = 'flex';

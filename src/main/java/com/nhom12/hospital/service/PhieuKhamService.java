@@ -4,7 +4,8 @@ import com.nhom12.hospital.entity.*;
 import com.nhom12.hospital.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -114,6 +115,36 @@ public class PhieuKhamService {
         if (payload.get("nhietDo") != null) pk.setNhietDo(new BigDecimal(payload.get("nhietDo").toString()));
         if (payload.get("huyetAp") != null) pk.setHuyetAp((String) payload.get("huyetAp"));
         if (payload.get("nhipTho") != null) pk.setNhipTho(Integer.parseInt(payload.get("nhipTho").toString()));
+                // XỬ LÝ HẸN TÁI KHÁM:
+        String rawNgayHen = (String) payload.get("ngayHenTaiKham");
+        String rawGioHen = (String) payload.get("gioHenTaiKham");
+
+        if (rawNgayHen != null && !rawNgayHen.trim().isEmpty()) {
+            LocalDate ngayHen = LocalDate.parse(rawNgayHen.trim());
+            pk.setNgayHenTaiKham(ngayHen);
+
+            // Tự động tạo 1 lịch hẹn tái khám mới
+            LichHen lhMoi = new LichHen();
+            lhMoi.setMaLichHen("LH" + (System.currentTimeMillis() % 10000000));
+            lhMoi.setMaBenhNhan(pk.getMaBenhNhan());
+            lhMoi.setMaKhoa(pk.getMaKhoa());
+            lhMoi.setMaBacSi(pk.getMaBacSi()); // Khám với chính bác sĩ điều trị
+            lhMoi.setNgayKham(ngayHen);
+
+            LocalTime gioHen = (rawGioHen != null && !rawGioHen.trim().isEmpty())
+                    ? LocalTime.parse(rawGioHen.trim())
+                    : LocalTime.of(8, 30);
+            lhMoi.setGioKham(gioHen);
+
+            lhMoi.setLoaiKham("TaiKham");
+            lhMoi.setThoiGianKhamDuKien(30); // 30 phút theo chuẩn DB
+            lhMoi.setHinhThucDat("TrucTiep");
+            lhMoi.setLyDoKham("Tái khám theo hẹn: " + pk.getChanDoan());
+            lhMoi.setTrangThai("DaDatLich");
+            lhMoi.setNgayDatLich(LocalDateTime.now());
+
+            lichHenRepository.save(lhMoi);
+        }
 
         phieuKhamRepository.save(pk);
 

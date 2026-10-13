@@ -559,7 +559,33 @@
                         <label>Lời dặn của bác sĩ / Hẹn tái khám</label>
                         <input type="text" id="txtDoctorAdvice" class="form-control" value="Ăn uống đúng giờ, tránh thức ăn cay nóng. Tái khám sau 7 ngày nếu không đỡ.">
                     </div>
-
+                                        <!-- KHUNG HẸN TÁI KHÁM THEO PHƯƠNG ÁN B -->
+                    <div class="form-group" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:14px; border-radius:8px; margin-bottom:16px;">
+                        <label style="font-weight:700; color:#166534; margin-bottom:8px; display:block;">
+                            <i class="fa-solid fa-calendar-plus"></i> Hẹn Tái Khám (Tùy chọn)
+                        </label>
+                        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <div>
+                                <small style="display:block; color:#166534; font-weight:600; margin-bottom:4px;">Ngày tái khám:</small>
+                                <input type="date" id="txtFollowUpDate" class="form-control" style="width:170px;" onchange="loadDoctorFollowUpSlots()">
+                            </div>
+                            <div>
+                                <small style="display:block; color:#166534; font-weight:600; margin-bottom:4px;">Chọn nhanh:</small>
+                                <div style="display:flex; gap:6px;">
+                                    <button type="button" class="btn-logout" style="background:#ffffff; color:#166534; border:1px solid #86efac; padding:6px 10px; font-size:12px;" onclick="setQuickFollowUpDays(7)">+7 ngày</button>
+                                    <button type="button" class="btn-logout" style="background:#ffffff; color:#166534; border:1px solid #86efac; padding:6px 10px; font-size:12px;" onclick="setQuickFollowUpDays(14)">+14 ngày</button>
+                                    <button type="button" class="btn-logout" style="background:#ffffff; color:#166534; border:1px solid #86efac; padding:6px 10px; font-size:12px;" onclick="setQuickFollowUpDays(30)">+1 tháng</button>
+                                    <button type="button" class="btn-logout" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; padding:6px 10px; font-size:12px;" onclick="clearFollowUp()"><i class="fa-solid fa-xmark"></i> Không hẹn</button>
+                                </div>
+                            </div>
+                            <div style="flex-grow:1; min-width:200px;">
+                                <small style="display:block; color:#166534; font-weight:600; margin-bottom:4px;">Khung giờ còn trống của bác sĩ:</small>
+                                <select id="selFollowUpSlot" class="form-control">
+                                    <option value="">-- Chọn ngày để xem giờ trống --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Nút hoàn tất -->
                     <button type="submit" class="btn-finish-exam">
                         <i class="fa-solid fa-clipboard-check"></i> Hoàn Tất Khám Bệnh & Chuyển Đơn Sang Quầy Thuốc / Thu Ngân
@@ -632,7 +658,55 @@
         let selectedQueueIdx = 0;
         let availableDrugs = [];
         let availableCLS = [];
+        let currentDoctorId = '';
 
+        function setQuickFollowUpDays(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            document.getElementById('txtFollowUpDate').value = d.toISOString().split('T')[0];
+            loadDoctorFollowUpSlots();
+        }
+        function clearFollowUp() {
+    document.getElementById('txtFollowUpDate').value = '';
+    document.getElementById('selFollowUpSlot').innerHTML = '<option value="">-- Không hẹn tái khám --</option>';
+}
+        async function loadDoctorFollowUpSlots() {
+            const date = document.getElementById('txtFollowUpDate').value;
+            const slotSelect = document.getElementById('selFollowUpSlot');
+            if (!date) {
+                slotSelect.innerHTML = '<option value="">-- Chọn ngày để xem giờ trống --</option>';
+                return;
+            }
+
+            slotSelect.innerHTML = '<option value="">Đang tải các khung giờ trống...</option>';
+            try {
+                // Tự động lấy mã bác sĩ nếu chưa có
+                if (!currentDoctorId) {
+                    const meRes = await fetch('/api/v1/nhanvien/me');
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        currentDoctorId = me.maNhanVien || '';
+                    }
+                }
+
+                const res = await fetch(`/api/v1/lichhen/available-slots?doctorId=${currentDoctorId}&date=${date}&loaiKham=TaiKham`);
+                if (res.ok) {
+                    const slots = await res.json();
+                    if (slots.length === 0) {
+                        slotSelect.innerHTML = '<option value="">Bác sĩ kín lịch ngày này</option>';
+                    } else {
+                        slotSelect.innerHTML = '<option value="">-- Chọn giờ tái khám --</option>';
+                        slots.forEach(s => {
+                            slotSelect.innerHTML += `<option value="${s}">${s}</option>`;
+                        });
+                    }
+                } else {
+                    slotSelect.innerHTML = '<option value="">Lỗi tải giờ</option>';
+                }
+            } catch (err) {
+                slotSelect.innerHTML = '<option value="">Lỗi kết nối lịch</option>';
+            }
+        }
         async function loadPatientQueue() {
             try {
                 const [appointmentsRes, patientsRes, drugsRes, clsRes] = await Promise.all([
@@ -925,7 +999,9 @@
                 chanDoan: icd,
                 loiDanBacSi: advice,
                 donThuoc: donThuocList,
-                clsList: clsList
+                clsList: clsList,
+                ngayHenTaiKham: document.getElementById('txtFollowUpDate').value || null,
+                gioHenTaiKham: document.getElementById('selFollowUpSlot').value || null
             };
 
             try {
