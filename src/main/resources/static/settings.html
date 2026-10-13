@@ -521,7 +521,7 @@
                         <i class="fa-solid fa-table-list" style="color:var(--primary);"></i> Ma Trận Phân Quyền Chức Năng Theo Vai Trò (RBAC Matrix)
                     </h3>
                     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px;">
-                        Đảm bảo nguyên tắc bảo mật y tế: Bác sĩ không thể sửa viện phí, Thu ngân không thể sửa chẩn đoán, Dược sĩ phụ trách xuất kho thuốc[cite: 1].
+                        Đảm bảo nguyên tắc bảo mật y tế: Bác sĩ không thể sửa viện phí, Thu ngân không thể sửa chẩn đoán, Dược sĩ phụ trách xuất kho thuốc.
                     </p>
 
                     <table class="matrix-table" style="font-size: 12.5px;">
@@ -648,7 +648,7 @@
                             <tr>
                                 <td><strong>9. Báo Cáo Điều Hành & Thống Kê (4.10)</strong></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i></td>
-                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (BGD)</td>
+                                <td style="text-align:center;"><i class="fa-solid fa-circle-check chk-yes"></i> (Chỉ xem & xuất báo cáo)</td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
                                 <td style="text-align:center;"><i class="fa-solid fa-circle-minus chk-no"></i></td>
@@ -718,6 +718,7 @@
                         <select id="nuRole" class="form-control" required>
                             <option value="BacSi">Bác Sĩ (DOCTOR)</option>
                             <option value="QuanTri">Quản Trị Viên (ADMIN)</option>
+                            <option value="GiamDoc">Ban Giám Đốc (DIRECTOR)</option>
                             <option value="ThuNgan">Thu Ngân (CASHIER)</option>
                             <option value="DuocSi">Dược Sĩ (PHARMACIST)</option>
                             <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
@@ -998,6 +999,6 @@
             await loadUsers();
         };
     </script>
-    <script src="/auth-guard.js?v=2"></script>
+    <script src="/auth-guard.js?v=3"></script>
 </body>
 </html>

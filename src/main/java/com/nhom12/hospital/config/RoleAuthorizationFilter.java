@@ -167,6 +167,20 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("GiamDoc".equals(role)) {
+                boolean allowed = ("GET".equals(method)
+                        && ("/api/v1/dashboard/stats".equals(path)
+                        || "/api/v1/dashboard/report".equals(path)))
+                        || ("GET".equals(method) && "/api/v1/nhanvien/me".equals(path))
+                        || ("PUT".equals(method) && "/api/v1/nhanvien/me".equals(path));
+                if (!allowed) {
+                    writeForbidden(response, "Ban Giám Đốc chỉ được xem báo cáo và quản lý thông tin cá nhân.");
+                    return;
+                }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if ("BacSi".equals(role)) {
                 if (!isDoctorRequestAllowed(path, method)) {
                     writeForbidden(response, "Bác sĩ không có quyền thực hiện thao tác này.");
@@ -303,4 +317,3 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         return path.equals(basePath) || path.startsWith(basePath + "/");
     }
 }
-
