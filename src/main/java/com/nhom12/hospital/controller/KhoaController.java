@@ -8,18 +8,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/khoa")
-// public class KhoaController {
 
-    // private final KhoaService khoaService;
-
-    // public KhoaController(KhoaService khoaService) {
-    //     this.khoaService = khoaService;
-    // }
-
-    // @GetMapping
-    // public List<Khoa> getAllKhoa() {
-    //     return khoaService.getAllKhoa();
-    // }
 public class KhoaController {
 
     private final KhoaService khoaService;
@@ -29,9 +18,9 @@ public class KhoaController {
     }
 
     @GetMapping
-    public List<Khoa> getAllKhoa() {
-        return khoaService.getAllKhoa();
-    }
+public List<Khoa> getAllKhoa(@RequestParam(required = false, defaultValue = "false") boolean all) {
+    return khoaService.getAllKhoa(all);
+}
 
     @GetMapping("/{maKhoa}")
     public ResponseEntity<?> getKhoaById(@PathVariable String maKhoa) {

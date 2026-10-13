@@ -9,24 +9,18 @@ import java.util.List;
 
 @Service
 public class KhoaService {
-    // private final KhoaRepository khoaRepository;
-
-    // public KhoaService(KhoaRepository khoaRepository) {
-    //     this.khoaRepository = khoaRepository;
-    // }
-
-    // public List<Khoa> getAllKhoa() {
-    //     return khoaRepository.findAll();
-    // }
     private final KhoaRepository khoaRepository;
 
     public KhoaService(KhoaRepository khoaRepository) {
         this.khoaRepository = khoaRepository;
     }
 
-    public List<Khoa> getAllKhoa() {
-        return khoaRepository.findAll();
+    public List<Khoa> getAllKhoa(boolean all) {
+    if (all) {
+        return khoaRepository.findAllForAdmin();
     }
+    return khoaRepository.findAll();
+}
 
     public Optional<Khoa> getKhoaById(String maKhoa) {
         return khoaRepository.findById(maKhoa);
