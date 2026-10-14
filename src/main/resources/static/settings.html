@@ -805,10 +805,15 @@
                         <td>${escapeHtml(u.fullName || u.username)}</td>
                         <td><span class="role-badge ${badgeClass}">${escapeHtml(u.role)}</span></td>
                         <td><span style="color:${u.enabled ? '#10b981' : '#ef4444'}; font-weight:600;">${u.enabled ? 'Hoạt động' : 'Bị khóa'}</span></td>
-                        <td>
-                            <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
-                                ${u.enabled ? 'Khóa' : 'Mở khóa'}
-                            </button>
+                                                <td>
+                            <div style="display:flex; gap:6px;">
+                                <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
+                                    ${u.enabled ? 'Khóa' : 'Mở khóa'}
+                                </button>
+                                <button type="button" style="padding:4px 8px; border:1px solid #f59e0b; background:#fffbeb; color:#b45309; border-radius:4px; cursor:pointer; font-size:12px;" onclick="handleResetPassword(${u.id}, '${escapeHtml(u.username)}')" ${isCurrentUser ? 'disabled' : ''} title="Đặt lại mật khẩu về 123456">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -828,6 +833,28 @@
                 return;
             }
             await loadUsers();
+        }
+                async function handleResetPassword(id, username) {
+            const confirmReset = confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456) không?`);
+            if (!confirmReset) return;
+
+            try {
+                const response = await fetch(`/api/v1/taikhoan/${id}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword: '123456' })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`✅ ${result.message}`);
+                } else {
+                    alert(`❌ ${result.message || 'Lỗi khi đặt lại mật khẩu.'}`);
+                }
+            } catch (err) {
+                console.error("Lỗi reset password:", err);
+                alert("Lỗi kết nối máy chủ khi reset mật khẩu!");
+            }
         }
 
         async function loadAuditLogs() {

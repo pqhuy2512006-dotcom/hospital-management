@@ -162,38 +162,28 @@ public Map<String, Object> create(Map<String, Object> payload) {
 
     TaiKhoan saved = taiKhoanRepository.save(tk);
 
-    // Tạo nhân viên tương ứng
-    if (!"BenhNhan".equals(dbRole)) {
-
-        NhanVien nv = new NhanVien();
-
-        nv.setMaNhanVien(
-                "NV" + (System.currentTimeMillis() % 10000000)
-        );
-
-        nv.setMaTaiKhoan(saved.getMaTaiKhoan());
-
-        nv.setHoTen(
-                fullName != null && !fullName.trim().isEmpty()
-                        ? fullName.trim()
-                        : username
-        );
-
-        nv.setSoDienThoai(phone);
-        nv.setEmail(email);
-        nv.setGioiTinh("Nam");
-        nv.setVaiTro(dbRole);
-        nv.setTrangThai("DangLamViec");
-
-        nhanVienRepository.save(nv);
-    }
-
+    // Theo Hướng 2: Admin chỉ cấp tài khoản đăng nhập (TaiKhoan), HR sẽ tạo hồ sơ NhanVien và liên kết với tài khoản này
     return Map.of(
             "success", true,
-            "message", "Cấp tài khoản nhân sự thành công!",
+            "message", "Cấp tài khoản nhân sự thành công! Hồ sơ nhân viên sẽ do phòng Nhân sự (HR) hoàn thiện.",
             "username", username,
             "role", dbRole
     );
+}
+
+public List<Map<String, Object>> getUnlinkedAccounts() {
+    List<TaiKhoan> list = taiKhoanRepository.findUnlinkedAccounts();
+    List<Map<String, Object>> res = new ArrayList<>();
+    for (TaiKhoan tk : list) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("maTaiKhoan", tk.getMaTaiKhoan());
+        map.put("tenDangNhap", tk.getTenDangNhap());
+        map.put("soDienThoai", tk.getSoDienThoai());
+        map.put("email", tk.getEmail());
+        map.put("vaiTro", tk.getVaiTro());
+        res.add(map);
+    }
+    return res;
 }
 public void updateAccount(
         Long id,
@@ -270,4 +260,33 @@ public void changePassword(
     // Cập nhật database
     taiKhoanRepository.save(user);
 }
+    @Transactional
+    public String resetPassword(Long id, String newPassword, Long currentAccountId) {
+        Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(id);
+
+        if (accountOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy tài khoản!");
+        }
+
+        TaiKhoan account = accountOpt.get();
+
+        if ("BenhNhan".equals(account.getVaiTro())) {
+            throw new IllegalArgumentException("Chỉ được quản lý tài khoản nhân viên.");
+        }
+
+        if (Objects.equals(currentAccountId, id)) {
+            throw new IllegalArgumentException("Vui lòng dùng chức năng Đổi Mật Khẩu cá nhân thay vì Reset.");
+        }
+
+        // Mật khẩu mặc định là 123456 nếu không truyền vào mật khẩu tùy chọn
+        String passToSet = (newPassword != null && !newPassword.trim().isEmpty()) ? newPassword.trim() : "123456";
+        if (passToSet.length() < 6) {
+            throw new IllegalArgumentException("Mật khẩu mới phải có tối thiểu 6 ký tự.");
+        }
+
+        account.setMatKhauHash(passwordEncoder.encode(passToSet));
+        taiKhoanRepository.save(account);
+
+        return passToSet;
+    }
 }

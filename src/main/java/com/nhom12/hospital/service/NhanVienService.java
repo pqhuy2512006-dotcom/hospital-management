@@ -4,9 +4,11 @@ import com.nhom12.hospital.entity.NhanVien;
 import com.nhom12.hospital.entity.TaiKhoan;
 import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.TaiKhoanRepository;
+import com.nhom12.hospital.repository.PhanCongRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +20,14 @@ public class NhanVienService {
 
     private final NhanVienRepository nhanVienRepository;
     private final TaiKhoanRepository taiKhoanRepository;
+    private final PhanCongRepository phanCongRepository;
 
-    public NhanVienService(NhanVienRepository nhanVienRepository, TaiKhoanRepository taiKhoanRepository) {
+    public NhanVienService(NhanVienRepository nhanVienRepository, 
+                           TaiKhoanRepository taiKhoanRepository,
+                           PhanCongRepository phanCongRepository) {
         this.nhanVienRepository = nhanVienRepository;
         this.taiKhoanRepository = taiKhoanRepository;
+        this.phanCongRepository = phanCongRepository;
     }
 
     public List<NhanVien> getAll() {
@@ -124,7 +130,14 @@ public class NhanVienService {
             }
         }
 
-        return nhanVienRepository.save(nhanVien);
+        NhanVien saved = nhanVienRepository.save(nhanVien);
+        if (saved.getMaKhoa() != null && !saved.getMaKhoa().trim().isEmpty()) {
+            String chucVu = (saved.getTrinhDoChuyenMon() != null && !saved.getTrinhDoChuyenMon().trim().isEmpty())
+                    ? saved.getTrinhDoChuyenMon()
+                    : saved.getVaiTro();
+            phanCongRepository.themPhanCongMoi(saved.getMaNhanVien(), saved.getMaKhoa(), chucVu, LocalDate.now(), "Phân công công tác ban đầu");
+        }
+        return saved;
     }
 
     public Optional<NhanVien> update(String id, NhanVien updated) {

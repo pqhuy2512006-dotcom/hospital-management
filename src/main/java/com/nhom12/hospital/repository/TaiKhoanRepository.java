@@ -73,6 +73,15 @@ public class TaiKhoanRepository {
         return jdbcTemplate.query("SELECT * FROM dbo.vw_TaiKhoan", ROW_MAPPER);
     }
 
+    public List<TaiKhoan> findUnlinkedAccounts() {
+        String sql = "SELECT tk.* FROM dbo.vw_TaiKhoan tk " +
+                     "WHERE tk.VaiTro <> 'BenhNhan' " +
+                     "AND tk.TrangThai = 1 " +
+                     "AND NOT EXISTS (SELECT 1 FROM NhanVien nv WHERE nv.MaTaiKhoan = tk.MaTaiKhoan) " +
+                     "ORDER BY tk.NgayTao DESC";
+        return jdbcTemplate.query(sql, ROW_MAPPER);
+    }
+
     public TaiKhoan save(TaiKhoan account) {
         MapSqlParameterSource parameters = new MapSqlParameterSource()
                 .addValue("MatKhauHash", account.getMatKhauHash(), Types.VARCHAR)

@@ -117,8 +117,9 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if (path.startsWith("/api/v1/taikhoan")) {
-                if (path.equals("/api/v1/taikhoan/change-password")) {
+                if (path.startsWith("/api/v1/taikhoan")) {
+                if (path.equals("/api/v1/taikhoan/change-password")
+                        || (path.equals("/api/v1/taikhoan/unlinked") && ("QuanTri".equals(role) || "QuanLyNhanSu".equals(role)))) {
                     filterChain.doFilter(request, response);
                     return;
                 }

@@ -397,3 +397,38 @@ END;
 GO
 
 
+
+
+-- 1. Tạo bảng lưu lịch sử phân công và điều chuyển khoa
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'LichSuPhanCongKhoa')
+BEGIN
+    CREATE TABLE LichSuPhanCongKhoa (
+        MaPhanCong      INT IDENTITY(1,1) PRIMARY KEY,
+        MaNhanVien      VARCHAR(15) NOT NULL,
+        MaKhoa          VARCHAR(10) NOT NULL,
+        ChucVu          NVARCHAR(100) NULL,
+        NgayBatDau      DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE),
+        NgayKetThuc     DATE NULL,
+        LyDo            NVARCHAR(255) NULL,
+        TrangThai       NVARCHAR(30) DEFAULT N'DangCongTac', -- 'DangCongTac', 'DaChuyenKhoa'
+        CONSTRAINT FK_LSPC_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien),
+        CONSTRAINT FK_LSPC_Khoa FOREIGN KEY (MaKhoa) REFERENCES Khoa(MaKhoa)
+    );
+END
+GO
+
+-- 2. Khởi tạo dữ liệu phân công ban đầu cho các nhân viên hiện có
+IF NOT EXISTS (SELECT 1 FROM LichSuPhanCongKhoa)
+BEGIN
+    INSERT INTO LichSuPhanCongKhoa (MaNhanVien, MaKhoa, ChucVu, NgayBatDau, TrangThai, LyDo)
+    SELECT 
+        MaNhanVien, 
+        MaKhoa, 
+        ISNULL(TrinhDoChuyenMon, VaiTro), 
+        ISNULL(NgayVaoLam, CAST(GETDATE() AS DATE)), 
+        N'DangCongTac', 
+        N'Phân công công tác ban đầu'
+    FROM NhanVien
+    WHERE MaKhoa IS NOT NULL;
+END
+GO

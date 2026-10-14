@@ -494,17 +494,29 @@
 
             <!-- TAB 1: DANH SÁCH BÁC SĨ (UC63) -->
             <div id="docListTab" class="tab-content active">
-                <div class="action-bar">
-                    <div class="search-box">
+                                <div class="action-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div class="search-box" style="flex:1; min-width:280px; max-width:400px;">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="docSearchInput" class="search-input" 
-                               placeholder="tìm nhân viên theo tên, khoa, phòng khám..." 
+                               placeholder="Tìm nhân viên theo tên, mã NV, phòng..." 
                                onkeyup="filterDoctors()">
                     </div>
-                    <button class="btn-add-doc" onclick="openAddDocModal()">
-                        <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên Mới (UC64)
-                    </button>
-                </div>
+                                        <!-- Thống kê nhân sự & Nút thêm mới có badge đếm số lượng -->
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <div style="font-size:13px; font-weight:600; color:var(--text-muted);">
+                            Tổng nhân sự đã phân công: <strong id="countAll" style="color:var(--primary); font-size:15px;">0</strong>
+                        </div>
+                        
+                        <!-- Huy hiệu thông báo nếu có tài khoản Admin cấp đang chờ HR tiếp nhận -->
+                        <div id="badgeUnlinkedWrapper" style="display:none; background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:600;">
+                            <i class="fa-solid fa-bell fa-shake" style="color:#ea580c; margin-right:4px;"></i> Có <span id="countUnlinkedAccounts" style="font-weight:700;">0</span> tài khoản chờ tạo hồ sơ
+                        </div>
+
+                        <button class="btn-add-doc" onclick="openAddDocModal()" style="margin-left:6px; padding:8px 16px; font-size:13px; display:inline-flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên Mới
+                            <span id="badgeUnlinkedBtn" style="display:none; background:#ef4444; color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:10px;">0</span>
+                        </button>
+                    </div>
 
                 <div class="table-card">
                     <table>
@@ -606,6 +618,16 @@
 
             <form onsubmit="handleSaveDoctor(event)">
                 <div class="modal-body">
+                    <!-- Ô liên kết tài khoản khi thêm mới -->
+                    <div class="form-group" id="grpChonTaiKhoan" style="margin-bottom:16px; background:#f0f9ff; padding:12px 14px; border-radius:8px; border:1px solid #bae6fd; display:none;">
+                        <label style="color:#0369a1; font-weight:700;"><i class="fa-solid fa-link"></i> Liên Kết Tài Khoản Hệ Thống (Admin đã cấp)</label>
+                        <select id="dChonTaiKhoan" class="form-control" onchange="onTaiKhoanSelected()" style="margin-top:6px; background:#fff;">
+                            <option value="">-- Chọn tài khoản đã được cấp --</option>
+                        </select>
+                        <small style="color:#0284c7; font-size:12px; margin-top:4px; display:block;">Hệ thống sẽ tự động điền SĐT và Vai trò từ tài khoản được chọn.</small>
+                    </div>
+                    <input type="hidden" id="dMaTaiKhoan">
+
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Mã Nhân Viên *</label>
@@ -617,35 +639,7 @@
                         </div>
                     </div>
 
-                    <div class="form-grid-2">
-                        <div class="form-group">
-    <label>Học Vị / Chức Danh *</label>
-    <select id="dHocVi" class="form-control" required>
-        <option value="">-- Chọn Học Vị / Chức Danh --</option>
-    </select>
-</div>
-                        <div class="form-group">
-                            <label>Khoa Làm Việc *</label>
-                            <select id="dChuyenKhoa" class="form-control" required>
-                                <option value="">-- Chọn Khoa --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-grid-2">
-                        <div class="form-group">
-    <label>Phòng Khám Phụ Trách *</label>
-    <select id="dPhongKham" class="form-control" required>
-        <option value="">-- Chọn Phòng Khám --</option>
-    </select>
-</div>
-                        <div class="form-group">
-                            <label>Số Điện Thoại Liên Lạc *</label>
-                            <input type="tel" id="dSDT" class="form-control" placeholder="Ví dụ: 0912348899" required>
-                        </div>
-                    </div>
-
-                    <div class="form-grid-2">
+                                        <div class="form-grid-2">
                         <div class="form-group">
                             <label>Vai Trò / Vị Trí Công Tác *</label>
                             <select id="dVaiTro" class="form-control" required>
@@ -656,6 +650,34 @@
                                 <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
                                 <option value="ThuNgan">Thu Ngân / Kế Toán Viện Phí</option>
                                 <option value="NhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Khoa Làm Việc *</label>
+                            <select id="dChuyenKhoa" class="form-control" required>
+                                <option value="">-- Chọn Khoa --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Phòng Khám Phụ Trách *</label>
+                            <select id="dPhongKham" class="form-control" required>
+                                <option value="">-- Chọn Phòng Khám --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Số Điện Thoại Liên Lạc *</label>
+                            <input type="tel" id="dSDT" class="form-control" placeholder="Ví dụ: 0912348899" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Học Vị / Chức Danh *</label>
+                            <select id="dHocVi" class="form-control" required>
+                                <option value="">-- Chọn Học Vị / Chức Danh --</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -707,21 +729,25 @@
                 if (!response.ok) throw new Error('Failed to load doctors');
                 const data = await response.json();
 
-                doctors = data.map(item => ({
-                    maNV: item.maNhanVien,
-                    hoTen: item.hoTen,
-                    hocVi: item.trinhDoChuyenMon || 'Bác sĩ',
-                      maKhoa: item.maKhoa,
-                    chuyenKhoa: khoaMap[item.maKhoa] || 'Chưa xác định',
-                    phongKham: item.diaChi || 'Phòng khám',
-                    sdt: item.soDienThoai || '',
-                    cchn: item.chungChiHanhNghe || '',
-                    vaiTro: item.vaiTro || 'BacSi',
-                    trangThai: item.trangThai || 'DangLamViec'
-                }));
+                            // Chỉ hiển thị trên bảng những nhân sự ĐÃ ĐƯỢC PHÂN CÔNG KHOA
+                doctors = data
+                    .filter(item => item.maKhoa && item.maKhoa.trim() !== '')
+                    .map(item => ({
+                        maNV: item.maNhanVien,
+                        hoTen: item.hoTen,
+                        hocVi: item.trinhDoChuyenMon || 'Bác sĩ',
+                        maKhoa: item.maKhoa,
+                        chuyenKhoa: khoaMap[item.maKhoa] || 'Chưa xác định',
+                        phongKham: item.diaChi || '',
+                        sdt: item.soDienThoai || '',
+                        cchn: item.chungChiHanhNghe || '',
+                        vaiTro: item.vaiTro || 'BacSi',
+                        trangThai: item.trangThai || 'DangLamViec'
+                    }));
 
                 renderDoctors();
                 checkHRPermissions();
+                await loadUnlinkedAccountCount(); // Cập nhật badge số lượng tài khoản Admin cấp đang chờ
             } catch (error) {
                 console.error(error);
                 const tbody = document.getElementById('doctorTableBody');
@@ -771,9 +797,52 @@
             }
         }
 
+                let currentPhanCongFilter = 'all'; // 'all', 'assigned', 'unassigned'
+
+        function setPhanCongFilter(filterType, btn) {
+            currentPhanCongFilter = filterType;
+            btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterDoctors();
+        }
+
+                function updateFilterCounts() {
+            const elAll = document.getElementById('countAll');
+            if (elAll) elAll.textContent = doctors.length;
+        }
+
+        // Tải số lượng tài khoản Admin đã cấp đang chờ HR tiếp nhận và tạo hồ sơ
+        async function loadUnlinkedAccountCount() {
+            try {
+                const res = await fetch('/api/v1/taikhoan/unlinked');
+                if (res.ok) {
+                    const list = await res.json();
+                    const count = list.length;
+                    const badgeWrapper = document.getElementById('badgeUnlinkedWrapper');
+                    const countEl = document.getElementById('countUnlinkedAccounts');
+                    const badgeBtn = document.getElementById('badgeUnlinkedBtn');
+                    
+                    if (count > 0) {
+                        if (badgeWrapper) badgeWrapper.style.display = 'inline-flex';
+                        if (countEl) countEl.textContent = count;
+                        if (badgeBtn) {
+                            badgeBtn.textContent = count;
+                            badgeBtn.style.display = 'inline-block';
+                        }
+                    } else {
+                        if (badgeWrapper) badgeWrapper.style.display = 'none';
+                        if (badgeBtn) badgeBtn.style.display = 'none';
+                    }
+                }
+            } catch(e) {
+                console.error("Lỗi đếm tài khoản chờ tạo hồ sơ:", e);
+            }
+        }
+
         function renderDoctors(list = doctors) {
             const tbody = document.getElementById('doctorTableBody');
             tbody.innerHTML = '';
+            updateFilterCounts();
 
             if (list.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Không tìm thấy nhân viên phù hợp</td></tr>`;
@@ -790,19 +859,52 @@
                     statusHtml = '<span class="status-pill status-off"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Đã nghỉ việc</span>';
                 }
 
+                const hasKhoa = doc.maKhoa && doc.maKhoa.trim() !== '';
+                const khoaDisplay = hasKhoa 
+                    ? `<strong>${doc.chuyenKhoa}</strong>`
+                    : `<span class="status-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5;"><i class="fa-solid fa-triangle-exclamation"></i> Chưa phân công</span>`;
+                const phongDisplay = hasKhoa
+                    ? (doc.phongKham && doc.phongKham.trim() !== '' ? doc.phongKham : '<span style="color:var(--text-muted);">-</span>')
+                    : '<span style="color:var(--text-muted); font-style:italic;">Chưa xếp phòng</span>';
+                let actionButtons = '';
+                if (!hasKhoa) {
+                    // Nhân viên mới chưa xếp khoa -> Nút Phân Công nổi bật
+                    actionButtons = `
+                        <button class="btn-tbl-edit" style="background:var(--primary); color:#fff; border:none;" onclick="openPhanCongModal('${doc.maNV}', true)" title="Phân công khoa cho nhân viên mới">
+                            <i class="fa-solid fa-user-plus"></i> Phân Công
+                        </button>
+                        <button class="btn-tbl-edit" onclick="openEditDocModal('${doc.maNV}')" title="Sửa hồ sơ">
+                            <i class="fa-solid fa-pen-to-square"></i> Sửa
+                        </button>
+                    `;
+                } else {
+                    // Nhân viên đã có khoa -> Nút Điều chuyển, Sửa và Lịch sử
+                    actionButtons = `
+                        <button class="btn-tbl-edit" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="openPhanCongModal('${doc.maNV}', false)" title="Điều chuyển công tác sang khoa khác">
+                            <i class="fa-solid fa-arrows-rotate"></i> Điều chuyển
+                        </button>
+                        <button class="btn-tbl-edit" onclick="openEditDocModal('${doc.maNV}')" title="Sửa hồ sơ">
+                            <i class="fa-solid fa-pen-to-square"></i> Sửa
+                        </button>
+                        <button class="btn-tbl-edit" style="background:#f8fafc; color:#475569;" onclick="openLichSuPhanCongModal('${doc.maNV}')" title="Xem lịch sử phân công">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử
+                        </button>
+                    `;
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="doc-badge">${doc.maNV}</span></td>
                         <td><strong>${doc.hoTen}</strong></td>
                         <td>${doc.hocVi}</td>
-                        <td>${doc.chuyenKhoa}</td>
-                        <td>${doc.phongKham}</td>
+                        <td>${khoaDisplay}</td>
+                        <td>${phongDisplay}</td>
                         <td>${doc.sdt}</td>
                         <td>${statusHtml}</td>
                         <td>
-                            <button class="btn-tbl-edit" onclick="openEditDocModal('${doc.maNV}')">
-                                <i class="fa-solid fa-pen-to-square"></i> Sửa
-                            </button>
+                            <div style="display:flex; gap:6px; justify-content:center;">
+                                ${actionButtons}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -812,13 +914,166 @@
 
         function filterDoctors() {
             const kw = document.getElementById('docSearchInput').value.trim().toLowerCase();
-            const filtered = doctors.filter(d => 
+            let filtered = doctors.filter(d => 
                 d.hoTen.toLowerCase().includes(kw) ||
                 d.chuyenKhoa.toLowerCase().includes(kw) ||
                 d.phongKham.toLowerCase().includes(kw) ||
                 d.maNV.toLowerCase().includes(kw)
             );
+
+            if (currentPhanCongFilter === 'assigned') {
+                filtered = filtered.filter(d => d.maKhoa && d.maKhoa.trim() !== '');
+            } else if (currentPhanCongFilter === 'unassigned') {
+                filtered = filtered.filter(d => !d.maKhoa || d.maKhoa.trim() === '');
+            }
+
             renderDoctors(filtered);
+        }
+
+        // ================= CÁC HÀM XỬ LÝ PHÂN CÔNG & ĐIỀU CHUYỂN =================
+        async function openPhanCongModal(maNV, isNewAssignment) {
+            const doc = doctors.find(d => d.maNV === maNV);
+            if (!doc) return;
+
+            document.getElementById('pcMaNV').value = doc.maNV;
+            document.getElementById('pcMaNVHienThi').textContent = doc.maNV;
+            document.getElementById('pcHoTen').textContent = doc.hoTen;
+            document.getElementById('pcVaiTro').textContent = `${doc.hocVi} (${doc.vaiTro || 'Nhân viên'})`;
+            document.getElementById('pcKhoaHienTai').textContent = doc.maKhoa ? doc.chuyenKhoa : 'Chưa phân công';
+
+            const title = document.getElementById('pcModalTitle');
+            const lblKhoa = document.getElementById('lblKhoaMoi');
+            const btnSubmit = document.getElementById('btnSubmitPC');
+
+            if (isNewAssignment) {
+                title.innerHTML = '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Phân Công Khoa Ban Đầu Cho Nhân Viên Mới';
+                lblKhoa.textContent = 'Khoa Phân Công *';
+                btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> Xác Nhận Phân Công';
+                document.getElementById('pcLyDo').value = 'Phân công công tác ban đầu';
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-arrows-rotate" style="color:var(--warning);"></i> Quyết Định Điều Chuyển Công Tác';
+                lblKhoa.textContent = 'Khoa Tiếp Nhận Mới *';
+                btnSubmit.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Xác Nhận Điều Chuyển';
+                document.getElementById('pcLyDo').value = '';
+            }
+
+            // Đặt ngày hôm nay làm mặc định
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('pcNgayBatDau').value = today;
+
+            // Nạp danh sách Khoa vào dropdown
+            const pcKhoaSelect = document.getElementById('pcKhoaMoi');
+            pcKhoaSelect.innerHTML = '<option value="">-- Chọn Khoa Tiếp Nhận --</option>';
+            try {
+                const res = await fetch('/api/v1/khoa');
+                if (res.ok) {
+                    const khoas = await res.json();
+                    khoas.forEach(k => {
+                        // Không hiện lại chính khoa đang làm việc
+                        if (k.maKhoa !== doc.maKhoa) {
+                            const opt = document.createElement('option');
+                            opt.value = k.maKhoa;
+                            opt.textContent = `${k.tenKhoa} (${k.maKhoa})`;
+                            pcKhoaSelect.appendChild(opt);
+                        }
+                    });
+                }
+            } catch(e) { console.error(e); }
+
+            document.getElementById('phanCongModal').style.display = 'flex';
+        }
+
+        function closePhanCongModal() {
+            document.getElementById('phanCongModal').style.display = 'none';
+        }
+
+        async function handleSavePhanCong(e) {
+            e.preventDefault();
+            const maNV = document.getElementById('pcMaNV').value;
+            const maKhoaMoi = document.getElementById('pcKhoaMoi').value;
+            const ngayBatDau = document.getElementById('pcNgayBatDau').value;
+            const lyDo = document.getElementById('pcLyDo').value.trim();
+
+            if (!maKhoaMoi) {
+                alert("Vui lòng chọn khoa tiếp nhận!");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/v1/phancong/dieu-chuyen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        maNhanVien: maNV,
+                        maKhoa: maKhoaMoi,
+                        ngayBatDau: ngayBatDau,
+                        lyDo: lyDo
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    alert("Cảnh báo: " + (data.message || 'Không thể thực hiện điều chuyển!'));
+                    return;
+                }
+
+                alert(data.message || "Thao tác thành công!");
+                closePhanCongModal();
+                await loadDoctors(); // Tải lại bảng nhân sự
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ Backend!");
+            }
+        }
+
+        // ================= XEM LỊCH SỬ PHÂN CÔNG =================
+        async function openLichSuPhanCongModal(maNV) {
+            const doc = doctors.find(d => d.maNV === maNV);
+            const ten = doc ? doc.hoTen : maNV;
+            document.getElementById('lsTenNV').textContent = `${ten} (${maNV})`;
+
+            const tbody = document.getElementById('lichSuPhanCongTbody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px;">Đang tải lịch sử...</td></tr>';
+            document.getElementById('lichSuPhanCongModal').style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/v1/phancong/lich-su/${encodeURIComponent(maNV)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px; color:var(--text-muted);">Chưa có ghi nhận lịch sử công tác nào</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    data.forEach(item => {
+                        const isCurrent = item.trangThai === 'DangCongTac';
+                        const statusBadge = isCurrent 
+                            ? '<span class="status-pill status-duty">Đang công tác</span>'
+                            : '<span class="status-pill" style="background:#f1f5f9; color:#475569;">Đã chuyển khoa</span>';
+
+                        tbody.innerHTML += `
+                            <tr style="border-bottom:1px solid #e2e8f0;">
+                                <td style="padding:10px 12px;"><strong>${item.tenKhoa}</strong> (${item.maKhoa})</td>
+                                <td style="padding:10px 12px;">${item.chucVu || '-'}</td>
+                                <td style="padding:10px 12px;">${item.ngayBatDau || '-'}</td>
+                                <td style="padding:10px 12px;">${item.ngayKetThuc || '<em style="color:#16a34a;">Hiện tại</em>'}</td>
+                                <td style="padding:10px 12px;">${item.lyDo || '-'}</td>
+                                <td style="padding:10px 12px;">${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px; color:var(--danger);">Không thể lấy lịch sử công tác</td></tr>';
+                }
+            } catch(e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px; color:var(--danger);">Lỗi tải dữ liệu</td></tr>';
+            }
+        }
+
+        function closeLichSuPhanCongModal() {
+            document.getElementById('lichSuPhanCongModal').style.display = 'none';
         }
 
         
@@ -933,7 +1188,26 @@
             updateHocViByRole(this.value);
         });
 
-                async function openAddDocModal() {
+        function onTaiKhoanSelected() {
+            const sel = document.getElementById('dChonTaiKhoan');
+            const opt = sel.options[sel.selectedIndex];
+            if (opt && opt.value) {
+                document.getElementById('dMaTaiKhoan').value = opt.value;
+                document.getElementById('dSDT').value = opt.dataset.sdt || '';
+                document.getElementById('dSDT').readOnly = true;
+                const role = opt.dataset.role || 'BacSi';
+                document.getElementById('dVaiTro').value = role;
+                updateHocViByRole(role);
+                if (!document.getElementById('dHoTen').value) {
+                    document.getElementById('dHoTen').value = opt.dataset.user || '';
+                }
+            } else {
+                document.getElementById('dMaTaiKhoan').value = '';
+                document.getElementById('dSDT').readOnly = false;
+            }
+        }
+
+        async function openAddDocModal() {
             await loadKhoaForDoctor();
             loadPhongForKhoa(null);
             isEditDoc = false;
@@ -942,10 +1216,47 @@
             document.getElementById('dHoTen').value = '';
             document.getElementById('dPhongKham').value = '';
             document.getElementById('dSDT').value = '';
+            document.getElementById('dSDT').readOnly = false;
             document.getElementById('dCCHN').value = '';
+            document.getElementById('dMaTaiKhoan').value = '';
             document.getElementById('dVaiTro').value = 'BacSi';
             updateHocViByRole('BacSi'); // Khởi tạo danh sách học vị của Bác Sĩ
             document.getElementById('dTrangThai').value = 'DangLamViec';
+
+            // Tải danh sách tài khoản Admin đã cấp nhưng chưa có hồ sơ
+            const grp = document.getElementById('grpChonTaiKhoan');
+            if (grp) {
+                grp.style.display = 'block';
+                const sel = document.getElementById('dChonTaiKhoan');
+                sel.innerHTML = '<option value="">-- Đang tải tài khoản... --</option>';
+                try {
+                                        const res = await fetch('/api/v1/taikhoan/unlinked');
+                    if (res.ok) {
+                        const accounts = await res.json();
+                        sel.innerHTML = '<option value="">-- Chọn tài khoản Admin đã cấp --</option>';
+                        if (accounts.length === 0) {
+                            sel.innerHTML = '<option value="">(Không có tài khoản mới nào đang chờ tạo hồ sơ)</option>';
+                        } else {
+                            accounts.forEach(a => {
+                                const opt = document.createElement('option');
+                                opt.value = a.maTaiKhoan;
+                                opt.dataset.sdt = a.soDienThoai;
+                                opt.dataset.role = a.vaiTro;
+                                opt.dataset.user = a.tenDangNhap;
+                                opt.textContent = `${a.tenDangNhap} - SĐT: ${a.soDienThoai} (${a.vaiTro})`;
+                                sel.appendChild(opt);
+                            });
+                        }
+                    } else {
+                        console.error("Lỗi API unlinked:", res.status);
+                        sel.innerHTML = `<option value="">-- Không thể tải tài khoản (Mã lỗi ${res.status}) --</option>`;
+                    }
+                } catch(e) {
+                    console.error("Lỗi fetch:", e);
+                    sel.innerHTML = '<option value="">-- Lỗi kết nối máy chủ --</option>';
+                }
+            }
+
             document.getElementById('doctorModal').style.display = 'flex';
         }
 
@@ -958,6 +1269,12 @@
             document.getElementById('dMaNV').value = doc.maNV;
             document.getElementById('dHoTen').value = doc.hoTen;
             
+            // Ẩn ô chọn tài khoản khi sửa hồ sơ
+            const grp = document.getElementById('grpChonTaiKhoan');
+            if (grp) grp.style.display = 'none';
+            document.getElementById('dSDT').readOnly = false;
+            document.getElementById('dMaTaiKhoan').value = '';
+
             // 1. Điền vai trò và lọc danh sách học vị đúng theo vai trò đó
             const role = doc.vaiTro || 'BacSi';
             document.getElementById('dVaiTro').value = role;
@@ -1000,9 +1317,11 @@
             const cchn = document.getElementById('dCCHN').value.trim();
             const vaiTro = document.getElementById('dVaiTro').value;
             const trangThai = document.getElementById('dTrangThai').value;
+            const maTaiKhoan = document.getElementById('dMaTaiKhoan').value;
 
             const payload = {
                 maNhanVien: maNV,
+                maTaiKhoan: maTaiKhoan ? parseInt(maTaiKhoan) : null,
                 hoTen: hoTen,
                 trinhDoChuyenMon: hocVi,
                 maKhoa: maKhoa,
@@ -1207,6 +1526,78 @@
                     <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Xác Nhận</button>
                 </div>
             </form>
+        </div>
+    </div>
+        <!-- MODAL PHÂN CÔNG / ĐIỀU CHUYỂN KHOA -->
+    <div class="modal-overlay" id="phanCongModal">
+        <div class="modal-box" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 id="pcModalTitle"><i class="fa-solid fa-arrows-rotate" style="color:var(--primary);"></i> Điều Chuyển Công Tác Nhân Viên</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closePhanCongModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSavePhanCong(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="pcMaNV">
+                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:12px 16px; margin-bottom:16px;">
+                        <div style="margin-bottom:6px;">Nhân viên: <strong id="pcHoTen" style="color:var(--primary); font-size:15px;"></strong> (<span id="pcMaNVHienThi" style="font-weight:600;"></span>)</div>
+                        <div style="margin-bottom:6px;">Chức vụ / Vai trò: <span id="pcVaiTro" style="font-weight:600;"></span></div>
+                        <div>Khoa hiện tại: <span id="pcKhoaHienTai" style="font-weight:700; color:#dc2626;"></span></div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label id="lblKhoaMoi">Khoa Tiếp Nhận Mới *</label>
+                        <select id="pcKhoaMoi" class="form-control" required>
+                            <option value="">-- Chọn Khoa Tiếp Nhận --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>Ngày Bắt Đầu Có Hiệu Lực *</label>
+                        <input type="date" id="pcNgayBatDau" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lý Do / Quyết Định Phân Công</label>
+                        <input type="text" id="pcLyDo" class="form-control" placeholder="Ví dụ: Phân công nhân sự mới / Điều động theo quyết định số...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closePhanCongModal()">Hủy Bỏ</button>
+                    <button type="submit" class="btn-save" id="btnSubmitPC"><i class="fa-solid fa-check"></i> Xác Nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL XEM LỊCH SỬ PHÂN CÔNG CÔNG TÁC -->
+    <div class="modal-overlay" id="lichSuPhanCongModal">
+        <div class="modal-box" style="max-width: 780px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Lịch Sử Công Tác - <span id="lsTenNV" style="color:var(--primary);"></span></h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeLichSuPhanCongModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:15px 20px;">
+                <div style="max-height:360px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:1px solid var(--border-color); text-align:left;">
+                                <th style="padding:10px 12px;">Khoa Công Tác</th>
+                                <th style="padding:10px 12px;">Chức Danh / Vị Trí</th>
+                                <th style="padding:10px 12px;">Từ Ngày</th>
+                                <th style="padding:10px 12px;">Đến Ngày</th>
+                                <th style="padding:10px 12px;">Lý Do</th>
+                                <th style="padding:10px 12px;">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lichSuPhanCongTbody">
+                            <!-- Dữ liệu render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeLichSuPhanCongModal()">Đóng</button>
+            </div>
         </div>
     </div>
 

@@ -27,6 +27,11 @@ public class TaiKhoanController {
         return taiKhoanService.getAll();
     } 
 
+    @GetMapping("/unlinked")
+    public List<Map<String, Object>> getUnlinkedAccounts() {
+        return taiKhoanService.getUnlinkedAccounts();
+    }
+
     @PostMapping
 public ResponseEntity<?> create(@RequestBody Map<String, Object> payload,
                                 HttpServletRequest request) {
@@ -144,5 +149,36 @@ public ResponseEntity<?> changePassword(
                 ));
     }
 }
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> payload,
+            HttpServletRequest request) {
+        try {
+            Long currentAccountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+            String customPass = (payload != null) ? payload.get("newPassword") : null;
+            String resultPass = taiKhoanService.resetPassword(id, customPass, currentAccountId);
 
+            request.setAttribute(
+                    SessionAttributes.AUDIT_DETAIL,
+                    "Reset mật khẩu tài khoản ID=" + id
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đặt lại mật khẩu thành công! Mật khẩu mới là: " + resultPass,
+                    "newPassword", resultPass
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Lỗi reset mật khẩu: " + (e.getMessage() != null ? e.getMessage() : e.toString())
+            ));
+        }
+    }
 }
