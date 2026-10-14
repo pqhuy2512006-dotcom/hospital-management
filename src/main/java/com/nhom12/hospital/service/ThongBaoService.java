@@ -4,7 +4,7 @@ import com.nhom12.hospital.entity.ThongBao;
 import com.nhom12.hospital.repository.ThongBaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.Map;
 import java.util.List;
 
 @Service
@@ -27,6 +27,13 @@ public class ThongBaoService {
 
     public void createThongBao(Long accountId, String tieuDe, String noiDung, String loaiThongBao) {
         thongBaoRepository.create(accountId, tieuDe, noiDung, loaiThongBao);
+    }
+        public int broadcast(String tieuDe, String noiDung, String loaiThongBao, String targetRole) {
+        return thongBaoRepository.broadcast(tieuDe, noiDung, loaiThongBao, targetRole);
+    }
+
+    public List<Map<String, Object>> getBroadcastHistory() {
+        return thongBaoRepository.getBroadcastHistory();
     }
 }
 

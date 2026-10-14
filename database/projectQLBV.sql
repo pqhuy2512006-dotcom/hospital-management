@@ -432,3 +432,57 @@ BEGIN
     WHERE MaKhoa IS NOT NULL;
 END
 GO
+
+
+
+-- 
+CREATE OR ALTER PROCEDURE dbo.sp_ThongBao_Broadcast
+    @TieuDe NVARCHAR(200),
+    @NoiDung NVARCHAR(1000),
+    @LoaiThongBao VARCHAR(50),
+    @TargetRole VARCHAR(20) = 'ALL'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Lấy danh sách tài khoản từ VIEW dbo.vw_TaiKhoan theo nhóm chỉ định
+    IF @TargetRole IS NULL OR @TargetRole = '' OR UPPER(@TargetRole) = 'ALL'
+    BEGIN
+        INSERT INTO dbo.ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+        SELECT MaTaiKhoan, @TieuDe, @NoiDung, @LoaiThongBao, 0, GETDATE()
+        FROM dbo.vw_TaiKhoan
+        WHERE TrangThai = 1;
+    END
+    ELSE IF UPPER(@TargetRole) = 'STAFF'
+    BEGIN
+        INSERT INTO dbo.ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+        SELECT MaTaiKhoan, @TieuDe, @NoiDung, @LoaiThongBao, 0, GETDATE()
+        FROM dbo.vw_TaiKhoan
+        WHERE TrangThai = 1 AND VaiTro <> 'BenhNhan';
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+        SELECT MaTaiKhoan, @TieuDe, @NoiDung, @LoaiThongBao, 0, GETDATE()
+        FROM dbo.vw_TaiKhoan
+        WHERE TrangThai = 1 AND VaiTro = @TargetRole;
+    END
+    -- Trả về số lượng người nhận thực tế
+    SELECT @@ROWCOUNT AS SoNguoiNhan;
+END;
+GO
+
+--
+
+CREATE OR ALTER PROCEDURE dbo.sp_ThongBao_Create
+    @MaTaiKhoan BIGINT,
+    @TieuDe NVARCHAR(200),
+    @NoiDung NVARCHAR(1000),
+    @LoaiThongBao VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+    VALUES (@MaTaiKhoan, @TieuDe, @NoiDung, @LoaiThongBao, 0, GETDATE());
+END;
+GO

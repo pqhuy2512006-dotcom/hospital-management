@@ -31,10 +31,29 @@ public class ThongBaoRepository {
         );
     }
 
-    public void create(Long maTaiKhoan, String tieuDe, String noiDung, String loaiThongBao) {
+        public void create(Long maTaiKhoan, String tieuDe, String noiDung, String loaiThongBao) {
         jdbcTemplate.update(
-                "INSERT INTO ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao) VALUES (?, ?, ?, ?, 0, GETDATE())",
+                "EXEC dbo.sp_ThongBao_Create @MaTaiKhoan=?, @TieuDe=?, @NoiDung=?, @LoaiThongBao=?",
                 maTaiKhoan, tieuDe, noiDung, loaiThongBao
         );
+    }
+    
+        // Phát thông báo hàng loạt thông qua Stored Procedure
+    public int broadcast(String tieuDe, String noiDung, String loaiThongBao, String targetRole) {
+        Integer count = jdbcTemplate.queryForObject(
+                "EXEC dbo.sp_ThongBao_Broadcast @TieuDe=?, @NoiDung=?, @LoaiThongBao=?, @TargetRole=?",
+                Integer.class,
+                tieuDe, noiDung, loaiThongBao, targetRole
+        );
+        return count != null ? count : 0;
+    }
+
+    // Lấy lịch sử thông báo thông qua VIEW dbo.vw_ThongBao
+    public java.util.List<java.util.Map<String, Object>> getBroadcastHistory() {
+        String sql = "SELECT TOP 30 TieuDe, NoiDung, LoaiThongBao, MIN(NgayTao) AS NgayTao, COUNT(*) AS SoLuongNguoiNhan " +
+                     "FROM dbo.vw_ThongBao " +
+                     "GROUP BY TieuDe, NoiDung, LoaiThongBao " +
+                     "ORDER BY MIN(NgayTao) DESC";
+        return jdbcTemplate.queryForList(sql);
     }
 }

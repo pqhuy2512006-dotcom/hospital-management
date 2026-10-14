@@ -394,6 +394,9 @@
                 <button class="tab-btn" onclick="switchTab('auditTab', this)">
                     <i class="fa-solid fa-clipboard-list"></i> Nhật Ký Truy Cập
                 </button>
+                                <button class="tab-btn" onclick="switchTab('broadcastTab', this)">
+                    <i class="fa-solid fa-bullhorn"></i> Phát Thông Báo Toàn Viện
+                </button>
             </div>
 
             <!-- TAB 1: ĐỔI MẬT KHẨU -->
@@ -681,6 +684,82 @@
                     </table>
                 </div>
             </div>
+                        <!-- TAB 5: PHÁT THÔNG BÁO TOÀN VIỆN -->
+            <div id="broadcastTab" class="tab-content">
+                <div class="panel-card" style="padding: 24px; margin-bottom: 24px;">
+                    <div class="panel-header" style="margin-bottom: 16px;">
+                        <h3><i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> Soạn & Phát Thông Báo Toàn Viện</h3>
+                        <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Thông báo sẽ được gửi tức thì đến hộp thư và quả chuông của các tài khoản được chọn.</p>
+                    </div>
+
+                    <form onsubmit="handleSendBroadcast(event)">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label style="font-weight:600;">Tiêu Đề Thông Báo *</label>
+                                <input type="text" id="bcTieuDe" class="form-control" placeholder="Ví dụ: Bảo trì hệ thống HIS / Thông báo hội chẩn toàn viện..." required>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;">Mức Độ / Loại Thông Báo *</label>
+                                <select id="bcLoai" class="form-control" required>
+                                    <option value="THONG_BAO_CHUNG">📢 Thông Tin Chung (Hoạt động toàn viện)</option>
+                                    <option value="CANH_BAO">⚠️ Cảnh Báo Hệ Thống (Bảo trì / Thay đổi kỹ thuật)</option>
+                                    <option value="KHAN_CAP">🚨 Khẩn Cấp (Báo động đỏ / Cấp cứu hàng loạt)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:14px;">
+                            <label style="font-weight:600;">Đối Tượng Tiếp Nhận *</label>
+                            <select id="bcTarget" class="form-control" required>
+                                <option value="ALL">🌐 Toàn Viện (Tất cả nhân viên y tế & Bệnh nhân)</option>
+                                <option value="STAFF">👥 Toàn Bộ Nhân Viên Y Tế Nội Bộ (Trừ bệnh nhân)</option>
+                                <option value="BacSi">🩺 Chỉ Bác Sĩ Điều Trị</option>
+                                <option value="DieuDuong">🏥 Chỉ Điều Dưỡng Nội Trú</option>
+                                <option value="DuocSi">💊 Chỉ Dược Sĩ Kho Dược</option>
+                                <option value="KTV">🧪 Chỉ Kỹ Thuật Viên Xét Nghiệm (CLS)</option>
+                                <option value="ThuNgan">💵 Chỉ Thu Ngân / Kế Toán Viện Phí</option>
+                                <option value="LeTan">📋 Chỉ Tiếp Đón / Lễ Tân</option>
+                                <option value="BenhNhan">👤 Chỉ Bệnh Nhân</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top:14px;">
+                            <label style="font-weight:600;">Nội Dung Chi Tiết *</label>
+                            <textarea id="bcNoiDung" class="form-control" rows="4" placeholder="Nhập nội dung thông báo chi tiết gửi đến nhân viên..." required style="resize:vertical;"></textarea>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                            <button type="submit" id="btnSendBroadcast" class="btn-submit" style="height:42px; padding:0 22px; font-size:14px; background:var(--primary); display:inline-flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-paper-plane"></i> Phát Thông Báo Ngay
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Bảng Lịch sử các thông báo đã gửi -->
+                <div class="panel-card" style="padding: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <h4 style="font-size:15px; font-weight:700;"><i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Các Thông Báo Đã Phát Gần Đây</h4>
+                        <button type="button" class="btn-cancel" onclick="loadBroadcastHistory()" style="padding:6px 12px; font-size:12px; cursor:pointer;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Làm mới
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thời Gian</th>
+                                <th>Tiêu Đề</th>
+                                <th>Mức Độ</th>
+                                <th>Nội Dung</th>
+                                <th style="text-align:center;">Số Người Nhận</th>
+                            </tr>
+                        </thead>
+                        <tbody id="broadcastHistoryTbody">
+                            <tr><td colspan="5" style="text-align:center; padding:16px;">Đang tải lịch sử...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -724,6 +803,7 @@
                             <option value="LeTan">Tiếp Đón / Lễ Tân (RECEPTIONIST)</option>
                             <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (TECHNICIAN)</option>
                             <option value="DieuDuong">Điều Dưỡng Nội Trú (NURSE)</option>
+                            <option value="QuanLyNhanSu">Quản Lý Nhân Sự (HR MANAGER)</option>
                         </select>
                     </div>
 
@@ -768,6 +848,7 @@
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
             if (tabId === 'auditTab') loadAuditLogs();
+            if (tabId === 'broadcastTab') loadBroadcastHistory();
         }
 
         function escapeHtml(value) {
@@ -1004,7 +1085,86 @@
                 alert("Lỗi kết nối máy chủ khi cấp tài khoản mới: " + err.message);
             }
         }
+        async function handleSendBroadcast(e) {
+            e.preventDefault();
+            const tieuDe = document.getElementById('bcTieuDe').value.trim();
+            const loaiThongBao = document.getElementById('bcLoai').value;
+            const targetRole = document.getElementById('bcTarget').value;
+            const noiDung = document.getElementById('bcNoiDung').value.trim();
 
+            const confirmSend = confirm(`Bạn có chắc chắn muốn phát thông báo "${tieuDe}" đến đối tượng đã chọn không?`);
+            if (!confirmSend) return;
+
+            const btn = document.getElementById('btnSendBroadcast');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+
+            try {
+                const response = await fetch('/api/v1/thongbao/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tieuDe, noiDung, loaiThongBao, targetRole })
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert(`✅ ${result.message}`);
+                    document.getElementById('bcTieuDe').value = '';
+                    document.getElementById('bcNoiDung').value = '';
+                    await loadBroadcastHistory();
+                } else {
+                    alert(`❌ ${result.message || 'Lỗi khi phát thông báo.'}`);
+                }
+            } catch (err) {
+                console.error("Lỗi broadcast:", err);
+                alert("Lỗi kết nối máy chủ khi phát thông báo!");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Phát Thông Báo Ngay';
+            }
+        }
+
+        async function loadBroadcastHistory() {
+            const tbody = document.getElementById('broadcastHistoryTbody');
+            try {
+                const res = await fetch('/api/v1/thongbao/broadcast-history');
+                if (!res.ok) throw new Error('Không thể tải lịch sử');
+                const list = await res.json();
+                tbody.innerHTML = '';
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">Chưa có thông báo nào được phát.</td></tr>';
+                    return;
+                }
+                list.forEach(item => {
+                    const tieuDe = item.TieuDe || item.tieuDe || '';
+                    const noiDung = item.NoiDung || item.noiDung || '';
+                    const loai = item.LoaiThongBao || item.loaiThongBao || '';
+                    const ngayTao = item.NgayTao || item.ngayTao;
+                    const count = item.SoLuongNguoiNhan || item.soLuongNguoiNhan || 0;
+
+                    let badge = '<span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-size:12px; font-weight:600;">Thông tin</span>';
+                    if (loai === 'CANH_BAO') {
+                        badge = '<span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:12px; font-size:12px; font-weight:600;">⚠️ Cảnh báo</span>';
+                    } else if (loai === 'KHAN_CAP') {
+                        badge = '<span style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:12px; font-size:12px; font-weight:600;">🚨 Khẩn cấp</span>';
+                    }
+
+                    const timeStr = ngayTao ? new Date(ngayTao).toLocaleString('vi-VN') : '-';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="white-space:nowrap; font-size:13px; color:var(--text-muted);">${timeStr}</td>
+                            <td><strong>${escapeHtml(tieuDe)}</strong></td>
+                            <td>${badge}</td>
+                            <td style="max-width:320px; font-size:13px; color:#475569;">${escapeHtml(noiDung)}</td>
+                            <td style="text-align:center;"><span style="background:#f1f5f9; padding:2px 8px; border-radius:10px; font-weight:700; color:var(--primary);">${count} người</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger); padding:16px;">Lỗi tải lịch sử thông báo.</td></tr>';
+            }
+        }
         function logout() {
             sessionStorage.removeItem('authenticatedUser');
             window.location.href = '/login.html';

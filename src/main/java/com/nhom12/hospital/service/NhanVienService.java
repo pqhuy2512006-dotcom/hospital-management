@@ -107,8 +107,10 @@ public class NhanVienService {
                 throw new IllegalArgumentException("Số điện thoại " + nhanVien.getSoDienThoai() + " đã được đăng ký cho nhân viên khác!");
             }
         }
-        if (nhanVien.getVaiTro() == null) {
+                if (nhanVien.getVaiTro() == null) {
             nhanVien.setVaiTro("BacSi");
+        } else if ("NhanSu".equalsIgnoreCase(nhanVien.getVaiTro())) {
+            nhanVien.setVaiTro("QuanLyNhanSu");
         }
         if (nhanVien.getTrangThai() == null) {
             nhanVien.setTrangThai("DangLamViec");

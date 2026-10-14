@@ -10,7 +10,7 @@
         'patients.html': ['BacSi', 'DOCTOR', 'LeTan', 'RECEPTIONIST', 'BenhNhan', 'PATIENT'],
         'doctors.html': ['QuanLyNhanSu', 'HR', 'LeTan', 'RECEPTIONIST'],
         'examination.html': ['BacSi', 'DOCTOR'],
-        'referrals.html': ['BacSi', 'DOCTOR', 'DieuDuong', 'NURSE', 'TruongKhoa'],
+        'referrals.html': ['BacSi', 'DOCTOR', 'TruongKhoa'],
         'laboratory.html': ['KTV', 'TECHNICIAN', 'BacSi', 'DOCTOR'],
         'pharmacy.html': ['DuocSi', 'PHARMACIST'],
         'inpatient.html': ['DieuDuong', 'NURSE'],
