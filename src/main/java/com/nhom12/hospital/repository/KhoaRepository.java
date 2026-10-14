@@ -40,4 +40,16 @@ public class KhoaRepository {
 		);
 		return count != null && count > 0;
 	}
+		public void save(Khoa khoa) {
+		jdbcTemplate.update(
+				"EXEC dbo.sp_Khoa_Save @MaKhoa = ?, @TenKhoa = ?, @MoTa = ?",
+				khoa.getMaKhoa(),
+				khoa.getTenKhoa(),
+				khoa.getMoTa()
+		);
+	}
+
+	public void toggleStatus(String maKhoa) {
+		jdbcTemplate.update("EXEC dbo.sp_Khoa_ToggleStatus @MaKhoa = ?", maKhoa);
+	}
 }

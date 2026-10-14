@@ -11,6 +11,8 @@ import com.nhom12.hospital.repository.NoiTruRepository;
 import com.nhom12.hospital.repository.GiuongBenhRepository;
 import com.nhom12.hospital.entity.NoiTru;
 import com.nhom12.hospital.entity.GiuongBenh;
+import com.nhom12.hospital.entity.Khoa;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,17 +87,30 @@ public class ChuyenKhoaService {
             throw new IllegalStateException("Chỉ được chuyển khoa/hội chẩn trên phiếu khám của chính bác sĩ.");
         }
 
-        if (!khoaRepository.existsById(departmentId)) {
+                Optional<Khoa> targetDeptOpt = khoaRepository.findById(departmentId);
+        if (targetDeptOpt.isEmpty()) {
             throw new IllegalArgumentException("Khoa nhận không tồn tại.");
         }
+                if (Boolean.FALSE.equals(targetDeptOpt.get().getTrangThai())) {
+            throw new IllegalArgumentException("Khoa " + targetDeptOpt.get().getTenKhoa() + " hiện đang tạm ngưng tiếp nhận, không thể chuyển bệnh nhân đến khoa này.");
+        }
+
+        // 👉 CHẶN CHUYỂN KHOA ĐẾN CHÍNH KHOA HIỆN TẠI CỦA BỆNH NHÂN
+        String currentDeptId = examOpt.get().getMaKhoa() != null ? examOpt.get().getMaKhoa() : doctor.getMaKhoa();
+        if ("CHUYEN_KHOA".equals(type) && departmentId.equalsIgnoreCase(currentDeptId)) {
+            throw new IllegalArgumentException("Bệnh nhân hiện đang ở " + targetDeptOpt.get().getTenKhoa() + ", không thể chuyển khoa đến chính khoa hiện tại!");
+        }
+
         if (invitedDoctorId != null) {
             Optional<NhanVien> invitedDoctor = nhanVienRepository.findById(invitedDoctorId);
             if (invitedDoctor.isEmpty() || !"BacSi".equalsIgnoreCase(invitedDoctor.get().getVaiTro())
                     || "DaNghi".equalsIgnoreCase(invitedDoctor.get().getTrangThai())) {
                 throw new IllegalArgumentException("Bác sĩ được mời không hợp lệ.");
             }
+            if (invitedDoctorId.equals(doctor.getMaNhanVien())) {
+                throw new IllegalArgumentException("Không thể mời chính mình tham gia hội chẩn.");
+            }
         }
-
         if ("CHUYEN_KHOA".equals(type)) {
             boolean hasPendingTransfer = requestRepository.existsPendingTransfer(examId);
             

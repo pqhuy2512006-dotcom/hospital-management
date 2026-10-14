@@ -265,10 +265,47 @@
             }
         };
 
-        function toggleInvitedDoctor() {
+                function toggleInvitedDoctor() {
             const isConsult = document.getElementById('referralType').value === 'HOI_CHAN';
             document.getElementById('invitedDoctorGroup').style.display = isConsult ? 'block' : 'none';
             document.getElementById('invitedDoctor').required = isConsult;
+            // Cập nhật lại danh sách khoa nhận khi đổi loại yêu cầu
+            renderDepartmentOptions();
+        }
+
+        // 👉 HÀM RENDER DROPDOWN KHOA NHẬN (TỰ ĐỘNG LOẠI BỎ KHOA HIỆN TẠI NẾU LÀ CHUYỂN KHOA)
+        function renderDepartmentOptions() {
+            const departmentSelect = document.getElementById('referralDepartment');
+            if (!departmentSelect || !window.allDepartments) return;
+
+            const currentVal = departmentSelect.value;
+            const reqType = document.getElementById('referralType').value;
+            const selectedExamId = document.getElementById('referralExam').value;
+
+            // Tìm mã khoa hiện tại của phiếu khám đang chọn
+            let currentDeptId = null;
+            if (selectedExamId && window.myExams) {
+                const foundExam = window.myExams.find(e => e.maPhieuKham === selectedExamId);
+                if (foundExam) {
+                    currentDeptId = foundExam.maKhoa;
+                }
+            }
+
+            departmentSelect.replaceChildren(new Option('Chọn khoa nhận', ''));
+            window.allDepartments.forEach(d => {
+                // Nếu là CHUYEN_KHOA và trùng với khoa hiện tại thì ẩn đi
+                if (reqType === 'CHUYEN_KHOA' && currentDeptId && d.maKhoa === currentDeptId) {
+                    return;
+                }
+                departmentSelect.add(new Option(d.tenKhoa, d.maKhoa));
+            });
+
+            // Giữ lại giá trị đang chọn nếu còn hợp lệ, ngược lại reset về rỗng
+            if (currentVal && departmentSelect.querySelector(`option[value="${currentVal}"]`)) {
+                departmentSelect.value = currentVal;
+            } else {
+                departmentSelect.value = '';
+            }
         }
 
         async function loadReferralOptions() {
@@ -278,20 +315,27 @@
                 try {
                     const res = await fetch('/api/v1/phieukham/me');
                     if (res.ok) {
-                        const exams = await res.json();
-                        exams.forEach(e => examSelect.add(new Option(e.maPhieuKham + ' - BN: ' + e.maBenhNhan, e.maPhieuKham)));
+                        window.myExams = await res.json();
+                        window.myExams.forEach(e => {
+                            const deptLabel = e.maKhoa ? ` (${e.maKhoa})` : '';
+                            examSelect.add(new Option(e.maPhieuKham + ' - BN: ' + e.maBenhNhan + deptLabel, e.maPhieuKham));
+                        });
                     }
                 } catch(e) {}
+
+                // Khi bác sĩ đổi phiếu khám -> cập nhật lại các khoa nhận hợp lệ
+                examSelect.addEventListener('change', renderDepartmentOptions);
             }
             
             const departmentSelect = document.getElementById('referralDepartment');
             if (departmentSelect) {
-                departmentSelect.replaceChildren(new Option('Chọn khoa nhận', ''));
                 try {
                     const res = await fetch('/api/v1/khoa');
                     if(res.ok) {
                         const departments = await res.json();
-                        departments.forEach(d => departmentSelect.add(new Option(d.tenKhoa, d.maKhoa)));
+                        // Lọc các khoa đang hoạt động
+                        window.allDepartments = departments.filter(d => d.trangThai === true || d.trangThai === 1 || d.trangThai == null);
+                        renderDepartmentOptions();
                     }
                 } catch(e) {}
             }
@@ -362,6 +406,16 @@
         async function submitReferral(event) {
             event.preventDefault();
             const type = document.getElementById('referralType').value;
+             const examId = document.getElementById('referralExam').value;
+            const targetDeptId = document.getElementById('referralDepartment').value;
+            // Kiểm tra nếu là Chuyển khoa và trùng khoa hiện tại
+            if (type === 'CHUYEN_KHOA' && window.myExams) {
+                const foundExam = window.myExams.find(e => e.maPhieuKham === examId);
+                if (foundExam && foundExam.maKhoa && foundExam.maKhoa === targetDeptId) {
+                    alert('Bệnh nhân hiện đang ở khoa này, không thể chuyển khoa đến chính khoa hiện tại!');
+                    return;
+                }
+            }
             try {
                 const response = await fetch('/api/v1/chuyenkhoa', {
                     method: 'POST',

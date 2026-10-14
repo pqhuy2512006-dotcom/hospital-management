@@ -65,7 +65,10 @@ public class GiuongBenhRepository {
         );
         return entity;
     }
-
+    
+        public void toggleStatus(String maGiuong) {
+        jdbcTemplate.update("EXEC dbo.sp_GiuongBenh_ToggleStatus @MaGiuong = ?", maGiuong);
+    }
     private String serializeEntity(GiuongBenh entity) {
         StringBuilder json = new StringBuilder("{");
         json.append("\"MaGiuong\":").append(toJsonValue(entity.getMaGiuong())).append(',');

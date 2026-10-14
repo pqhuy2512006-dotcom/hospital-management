@@ -412,7 +412,11 @@
                             <!-- Render chỉ số xét nghiệm -->
                         </tbody>
                     </table>
-
+                    <div id="addParamContainer" style="margin-top: -6px; margin-bottom: 16px;">
+                        <button type="button" onclick="addCustomParam()" class="btn-add-item" style="padding: 5px 12px; font-size: 12.5px; background: #f8fafc; color: var(--primary); border: 1px dashed var(--primary); cursor: pointer; border-radius: 6px;">
+                            <i class="fa-solid fa-plus"></i> Thêm chỉ số đo khác
+                        </button>
+                    </div>
                     <div class="form-group">
                         <label>Kết luận của Kỹ thuật viên / Bác sĩ đọc kết quả *</label>
                         <textarea id="labConclusion" class="form-control" placeholder="Ghi chú kết luận tổng thể (ví dụ: Số lượng bạch cầu tăng nhẹ, nghi ngờ nhiễm khuẩn...)"></textarea>
@@ -591,7 +595,9 @@
             const btn = document.getElementById('btnSaveResult');
             const conclusionInput = document.getElementById('labConclusion');
 
-            if (order.status === 'COMPLETED') {
+                        // 👉 KHI ĐÃ TRẢ KẾT QUẢ THÌ KHÓA TOÀN BỘ FORM (READ-ONLY)
+            const isCompleted = order.status === 'COMPLETED';
+            if (isCompleted) {
                 badge.className = 'badge badge-completed';
                 badge.innerText = 'Đã hoàn tất & Trả kết quả';
                 btn.disabled = true;
@@ -606,6 +612,32 @@
             }
 
             conclusionInput.value = order.conclusion || '';
+            conclusionInput.readOnly = isCompleted;
+
+            const fileInput = document.getElementById('labImageFile');
+            if (fileInput) fileInput.disabled = isCompleted;
+
+            const addParamBox = document.getElementById('addParamContainer');
+            if (addParamBox) addParamBox.style.display = isCompleted ? 'none' : 'block';
+
+            conclusionInput.value = order.conclusion || '';
+
+            // 👉 TỰ ĐỘNG BỔ SUNG MẪU CHỈ SỐ NẾU CHƯA CÓ
+            if (!order.params || order.params.length === 0) {
+                const sName = (order.service || '').toLowerCase();
+                if (sName.includes('glucose') || sName.includes('đường huyết')) {
+                    order.params = [
+                        { name: 'Định lượng Glucose', val: '', unit: 'mmol/L', ref: '3.9 - 6.4', refMin: 3.9, refMax: 6.4, eval: 'BinhThuong' }
+                    ];
+                } else if (sName.includes('tế bào máu') || sName.includes('huyết học')) {
+                    order.params = [
+                        { name: 'Số lượng hồng cầu (RBC)', val: '', unit: 'T/L', ref: '4.2 - 5.4', refMin: 4.2, refMax: 5.4, eval: 'BinhThuong' },
+                        { name: 'Huyết sắc tố (Hb)', val: '', unit: 'g/L', ref: '130 - 160', refMin: 130, refMax: 160, eval: 'BinhThuong' },
+                        { name: 'Số lượng bạch cầu (WBC)', val: '', unit: 'G/L', ref: '4.0 - 10.0', refMin: 4.0, refMax: 10.0, eval: 'BinhThuong' },
+                        { name: 'Số lượng tiểu cầu (PLT)', val: '', unit: 'G/L', ref: '150 - 450', refMin: 150, refMax: 450, eval: 'BinhThuong' }
+                    ];
+                }
+            }
 
             // Render tham số
             const tbody = document.getElementById('testParametersBody');
@@ -613,13 +645,17 @@
 
             const params = order.params || [];
             if (params.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">Chưa có danh mục chỉ số đo cho dịch vụ này. Vui lòng ghi kết luận tổng thể vào ô bên dưới.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">
+                    Chưa có danh mục chỉ số đo cho dịch vụ này. 
+                    <button type="button" class="btn-add-item" style="display:inline-block; margin-left:8px; padding:4px 10px; font-size:12px;" onclick="addCustomParam()">
+                        <i class="fa-solid fa-plus"></i> Thêm chỉ số đo
+                    </button>
+                </td></tr>`;
             } else {
                 params.forEach((param, pIdx) => {
                     const refText = param.ref || (param.refMin !== null && param.refMin !== undefined ? `${param.refMin} - ${param.refMax}` : 'Bình thường');
-                    const isCompleted = order.status === 'COMPLETED';
 
-                    tbody.innerHTML += `
+                                        tbody.innerHTML += `
                         <tr>
                             <td><strong>${param.name}</strong></td>
                             <td>
@@ -639,6 +675,8 @@
                     checkAbnormal(pIdx);
                 });
             }
+
+            
         }
 
         function checkAbnormal(pIdx) {
@@ -699,16 +737,16 @@
                 return;
             }
 
-            // Cập nhật các giá trị đo được
+                        // Cập nhật các giá trị đo được
             if (order.params && order.params.length > 0) {
                 order.params.forEach((param, pIdx) => {
                     const input = document.getElementById(`param_val_${pIdx}`);
                     if (input) param.val = input.value;
                     const evalTd = document.getElementById(`eval_${pIdx}`);
                     if (evalTd) {
-                        if (evalTd.innerText.includes('Tăng')) param.eval = 'Tang';
-                        else if (evalTd.innerText.includes('Giảm')) param.eval = 'Giam';
-                        else if (evalTd.innerText.includes('Đạt') || evalTd.innerText.includes('Bình thường')) param.eval = 'BinhThuong';
+                        if (evalTd.innerText.includes('Tăng') || evalTd.innerText.includes('Cao')) param.eval = 'Cao';
+                        else if (evalTd.innerText.includes('Giảm') || evalTd.innerText.includes('Thấp')) param.eval = 'Thap';
+                        else param.eval = 'BinhThuong';
                     }
                 });
             }
@@ -743,6 +781,32 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Lưu & Trả Kết Quả Về Bác Sĩ';
             }
+        }
+                function addCustomParam() {
+            const name = prompt("Nhập tên chỉ số đo mới (ví dụ: Định lượng Glucose, HbA1c...):");
+            if (!name || !name.trim()) return;
+            const unit = prompt("Nhập đơn vị tính (ví dụ: mmol/L, g/L, %...):", "") || "";
+            const ref = prompt("Nhập khoảng tham chiếu (ví dụ: 3.9 - 6.4):", "") || "";
+            
+            let refMin = null, refMax = null;
+            if (ref.includes('-')) {
+                const parts = ref.split('-');
+                refMin = parseFloat(parts[0].replace(/[^0-9.]/g, '')) || null;
+                refMax = parseFloat(parts[1].replace(/[^0-9.]/g, '')) || null;
+            }
+
+            const order = labOrders[currentSelectedIndex];
+            if (!order.params) order.params = [];
+            order.params.push({
+                name: name.trim(),
+                val: '',
+                unit: unit.trim(),
+                ref: ref.trim(),
+                refMin: refMin,
+                refMax: refMax,
+                eval: 'BinhThuong'
+            });
+            loadOrderForm(order);
         }
 
         function logout() {

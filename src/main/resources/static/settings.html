@@ -397,6 +397,9 @@
                                 <button class="tab-btn" onclick="switchTab('broadcastTab', this)">
                     <i class="fa-solid fa-bullhorn"></i> Phát Thông Báo Toàn Viện
                 </button>
+                                <button class="tab-btn" onclick="switchTab('facilitiesTab', this)">
+                    <i class="fa-solid fa-hospital"></i> Cơ Cấu Khoa - Phòng - Giường
+                </button>
             </div>
 
             <!-- TAB 1: ĐỔI MẬT KHẨU -->
@@ -760,6 +763,123 @@
                     </table>
                 </div>
             </div>
+                        <!-- TAB 6: QUẢN LÝ CƠ CẤU KHOA - PHÒNG - GIƯỜNG -->
+            <div id="facilitiesTab" class="tab-content">
+                <!-- Thanh Sub-tabs điều hướng nội bộ -->
+                <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:2px solid var(--border-color); padding-bottom:8px;">
+                    <button class="tab-btn active" id="btnSubKhoa" onclick="switchFacilitySubTab('subKhoa', this)" style="border:1px solid #cbd5e1;">
+                        <i class="fa-solid fa-sitemap"></i> 1. Danh Mục Khoa Viện
+                    </button>
+                    <button class="tab-btn" id="btnSubPhong" onclick="switchFacilitySubTab('subPhong', this)" style="border:1px solid #cbd5e1;">
+                        <i class="fa-solid fa-door-open"></i> 2. Buồng Phòng & Khám Bệnh
+                    </button>
+                    <button class="tab-btn" id="btnSubGiuong" onclick="switchFacilitySubTab('subGiuong', this)" style="border:1px solid #cbd5e1;">
+                        <i class="fa-solid fa-bed"></i> 3. Giường Bệnh Nội Trú
+                    </button>
+                </div>
+
+                <!-- SUB-TAB 1: KHOA -->
+                <div id="subKhoa" class="facility-sub-content">
+                    <div class="panel-card" style="padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 style="font-size:16px; font-weight:700;"><i class="fa-solid fa-sitemap" style="color:var(--primary);"></i> Danh Sách Khoa Viện</h3>
+                            <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openKhoaModal()">
+                                <i class="fa-solid fa-plus"></i> Thêm Khoa Mới
+                            </button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã Khoa</th>
+                                    <th>Tên Khoa</th>
+                                    <th>Trưởng Khoa</th>
+                                    <th>Mô Tả</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align:right;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="khoaTbody">
+                                <tr><td colspan="6" style="text-align:center;">Đang tải danh sách khoa...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-TAB 2: PHÒNG -->
+                <div id="subPhong" class="facility-sub-content" style="display:none;">
+                    <div class="panel-card" style="padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                                <h3 style="font-size:16px; font-weight:700;"><i class="fa-solid fa-door-open" style="color:var(--primary);"></i> Danh Sách Buồng Phòng</h3>
+                                <select id="filterPhongKhoa" class="form-control" style="width:200px;" onchange="renderPhongs()">
+                                    <option value="ALL">-- Tất cả các Khoa --</option>
+                                </select>
+                                <select id="filterPhongLoai" class="form-control" style="width:200px;" onchange="renderPhongs()">
+                                    <option value="ALL">-- Tất cả loại phòng --</option>
+                                    <option value="KHAM_BENH">Phòng Khám Bệnh</option>
+                                    <option value="LUU_BENH">Phòng Lưu Bệnh Nội Trú</option>
+                                    <option value="XET_NGHIEM">Phòng Cận Lâm Sàng</option>
+                                    <option value="PHAU_THUAT">Phòng Phẫu Thuật</option>
+                                </select>
+                            </div>
+                            <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openPhongModal()">
+                                <i class="fa-solid fa-plus"></i> Thêm Phòng Mới
+                            </button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã Phòng</th>
+                                    <th>Tên Phòng</th>
+                                    <th>Thuộc Khoa</th>
+                                    <th>Loại Phòng</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align:right;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="phongTbody">
+                                <tr><td colspan="6" style="text-align:center;">Đang tải danh sách phòng...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-TAB 3: GIƯỜNG -->
+                <div id="subGiuong" class="facility-sub-content" style="display:none;">
+                    <div class="panel-card" style="padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                                <h3 style="font-size:16px; font-weight:700;"><i class="fa-solid fa-bed" style="color:var(--primary);"></i> Giường Bệnh Nội Trú</h3>
+                                <select id="filterGiuongKhoa" class="form-control" style="width:190px;" onchange="onGiuongKhoaChange()">
+                                    <option value="ALL">-- Tất cả các Khoa --</option>
+                                </select>
+                                <select id="filterGiuongPhong" class="form-control" style="width:190px;" onchange="renderGiuongs()">
+                                    <option value="ALL">-- Tất cả các Phòng --</option>
+                                </select>
+                            </div>
+                            <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openGiuongModal()">
+                                <i class="fa-solid fa-plus"></i> Thêm Giường Mới
+                            </button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã Giường</th>
+                                    <th>Số Giường</th>
+                                    <th>Buồng Phòng</th>
+                                    <th>Khoa Điều Trị</th>
+                                    <th>Đơn Giá / Ngày</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align:right;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="giuongTbody">
+                                <tr><td colspan="7" style="text-align:center;">Đang tải danh sách giường...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -822,7 +942,108 @@
             </form>
         </div>
     </div>
+    <!-- MODAL THÊM/SỬA KHOA -->
+    <div class="modal-overlay" id="khoaModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="khoaModalTitle"><i class="fa-solid fa-sitemap" style="color:var(--primary);"></i> Thông Tin Khoa Viện</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeKhoaModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveKhoa(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Mã Khoa (Viết tắt in hoa) *</label>
+                        <input type="text" id="kMaKhoa" class="form-control" placeholder="Ví dụ: KDL, KMT..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Khoa *</label>
+                        <input type="text" id="kTenKhoa" class="form-control" placeholder="Ví dụ: Khoa Da Liễu" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô Tả / Chức Năng</label>
+                        <textarea id="kMoTa" class="form-control" placeholder="Mô tả chuyên môn của khoa..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeKhoaModal()">Hủy</button>
+                    <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu Khoa</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <!-- MODAL THÊM/SỬA PHÒNG -->
+    <div class="modal-overlay" id="phongModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="phongModalTitle"><i class="fa-solid fa-door-open" style="color:var(--primary);"></i> Thông Tin Buồng Phòng</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closePhongModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSavePhong(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Mã Phòng *</label>
+                        <input type="text" id="pMaPhong" class="form-control" placeholder="Ví dụ: P501, PK03..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Phòng *</label>
+                        <input type="text" id="pTenPhong" class="form-control" placeholder="Ví dụ: Phòng Khám Da Liễu 1" required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Thuộc Khoa *</label>
+                            <select id="pMaKhoa" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Phòng *</label>
+                            <select id="pLoaiPhong" class="form-control" required>
+                                <option value="KHAM_BENH">Phòng Khám Bệnh</option>
+                                <option value="LUU_BENH">Phòng Lưu Bệnh Nội Trú</option>
+                                <option value="XET_NGHIEM">Phòng Cận Lâm Sàng</option>
+                                <option value="PHAU_THUAT">Phòng Phẫu Thuật</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closePhongModal()">Hủy</button>
+                    <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu Phòng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM GIƯỜNG -->
+    <div class="modal-overlay" id="giuongModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-bed" style="color:var(--primary);"></i> Thêm Giường Bệnh Mới</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeGiuongModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveGiuong(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Chọn Phòng Lưu Bệnh *</label>
+                        <select id="gMaPhong" class="form-control" required></select>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Tên / Số Giường *</label>
+                            <input type="text" id="gSoGiuong" class="form-control" placeholder="Ví dụ: Giường 05" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Đơn Giá / Ngày (VNĐ) *</label>
+                            <input type="number" id="gDonGia" class="form-control" value="250000" min="0" step="10000" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeGiuongModal()">Hủy</button>
+                    <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Tạo Giường</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- SCRIPT LOGIC CẤU HÌNH & TÀI KHOẢN -->
     <script>
         let users = [];
@@ -849,6 +1070,7 @@
             document.getElementById(tabId).classList.add('active');
             if (tabId === 'auditTab') loadAuditLogs();
             if (tabId === 'broadcastTab') loadBroadcastHistory();
+            if (tabId === 'facilitiesTab') loadFacilitiesData();
         }
 
         function escapeHtml(value) {
@@ -1185,6 +1407,411 @@
             }
             await loadUsers();
         };
+                // ==========================================
+        // QUẢN LÝ CƠ CẤU KHOA - PHÒNG - GIƯỜNG JS
+        // ==========================================
+        let fKhoas = [];
+        let fPhongs = [];
+        let fGiuongs = [];
+
+        function switchFacilitySubTab(subId, btn) {
+            document.querySelectorAll('.facility-sub-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('#facilitiesTab .tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(subId).style.display = 'block';
+            btn.classList.add('active');
+        }
+
+        async function loadFacilitiesData() {
+            await loadKhoas();
+            await loadPhongs();
+            await loadGiuongs();
+        }
+
+        // --- 1. KHOA ---
+        async function loadKhoas() {
+            try {
+                const res = await fetch('/api/v1/khoa');
+                if (res.ok) {
+                    fKhoas = await res.json();
+                    renderKhoas();
+                    populateKhoaDropdowns();
+                }
+            } catch(e) { console.error("Lỗi tải khoa:", e); }
+        }
+
+        function renderKhoas() {
+            const tbody = document.getElementById('khoaTbody');
+            tbody.innerHTML = '';
+            if (fKhoas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có khoa nào.</td></tr>';
+                return;
+            }
+            fKhoas.forEach(k => {
+                const isActive = k.trangThai === true || k.trangThai === 1 || k.trangThai == null;
+                const statusBadge = isActive 
+                    ? '<span class="role-badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-circle-check"></i> Đang hoạt động</span>'
+                    : '<span class="role-badge" style="background:#fee2e2; color:#b91c1c;"><i class="fa-solid fa-ban"></i> Tạm ngưng tiếp nhận</span>';
+
+                const toggleBtn = isActive
+                    ? `<button class="btn-cancel" style="padding:4px 8px; font-size:12px; color:#b91c1c; border-color:#fca5a5;" onclick="toggleKhoaStatus('${k.maKhoa}', true)" title="Tạm ngưng khoa và tự động hủy lịch hẹn"><i class="fa-solid fa-lock"></i> Khóa</button>`
+                    : `<button class="btn-submit" style="padding:4px 8px; font-size:12px; background:#16a34a;" onclick="toggleKhoaStatus('${k.maKhoa}', false)" title="Mở lại hoạt động"><i class="fa-solid fa-lock-open"></i> Mở lại</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(k.maKhoa)}</strong></td>
+                        <td>${escapeHtml(k.tenKhoa)}</td>
+                        <td>${escapeHtml(k.tenTruongKhoa || 'Chưa bổ nhiệm')}</td>
+                        <td><small style="color:var(--text-muted);">${escapeHtml(k.moTa || '-')}</small></td>
+                        <td>${statusBadge}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-cancel" style="padding:4px 8px; font-size:12px;" onclick="openEditKhoaModal('${k.maKhoa}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                            ${toggleBtn}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openKhoaModal() {
+            document.getElementById('khoaModalTitle').innerHTML = '<i class="fa-solid fa-sitemap" style="color:var(--primary);"></i> Thêm Khoa Viện Mới';
+            document.getElementById('kMaKhoa').value = '';
+            document.getElementById('kMaKhoa').readOnly = false;
+            document.getElementById('kTenKhoa').value = '';
+            document.getElementById('kMoTa').value = '';
+            document.getElementById('khoaModal').style.display = 'flex';
+        }
+
+        function openEditKhoaModal(maKhoa) {
+            const k = fKhoas.find(x => x.maKhoa === maKhoa);
+            if (!k) return;
+            document.getElementById('khoaModalTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--primary);"></i> Cập Nhật Thông Tin Khoa';
+            document.getElementById('kMaKhoa').value = k.maKhoa;
+            document.getElementById('kMaKhoa').readOnly = true;
+            document.getElementById('kTenKhoa').value = k.tenKhoa;
+            document.getElementById('kMoTa').value = k.moTa || '';
+            document.getElementById('khoaModal').style.display = 'flex';
+        }
+
+        function closeKhoaModal() { document.getElementById('khoaModal').style.display = 'none'; }
+
+        async function handleSaveKhoa(e) {
+            e.preventDefault();
+            const payload = {
+                maKhoa: document.getElementById('kMaKhoa').value.trim(),
+                tenKhoa: document.getElementById('kTenKhoa').value.trim(),
+                moTa: document.getElementById('kMoTa').value.trim()
+            };
+            try {
+                const res = await fetch('/api/v1/khoa', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('Lưu khoa thành công!');
+                    closeKhoaModal();
+                    loadKhoas();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) { alert('Không thể kết nối đến máy chủ.'); }
+        }
+
+        async function toggleKhoaStatus(maKhoa, isCurrentlyActive) {
+            if (isCurrentlyActive) {
+                const confirmLock = confirm(
+                    `⚠️ CẢNH BÁO QUAN TRỌNG:\n\nKhi khóa khoa [${maKhoa}], hệ thống sẽ:\n` +
+                    `1. Tạm ngưng tiếp nhận bệnh nhân mới vào khoa này.\n` +
+                    `2. Tự động HỦY các lịch hẹn tương lai chưa khám của khoa này.\n` +
+                    `3. Gửi thông báo đến tài khoản bệnh nhân để đổi lịch khám khác.\n\n` +
+                    `Bạn có chắc chắn muốn khóa khoa này không?`
+                );
+                if (!confirmLock) return;
+            }
+            try {
+                const res = await fetch(`/api/v1/khoa/${maKhoa}/toggle-status`, { method: 'PUT' });
+                if (res.ok) {
+                    alert('Đã cập nhật trạng thái khoa!');
+                    loadKhoas();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) { alert('Lỗi kết nối.'); }
+        }
+
+        function populateKhoaDropdowns() {
+            const selFilter = document.getElementById('filterPhongKhoa');
+            const selGiuongKhoa = document.getElementById('filterGiuongKhoa');
+            const selModal = document.getElementById('pMaKhoa');
+
+            let optHtml = '<option value="ALL">-- Tất cả các Khoa --</option>';
+            let modalHtml = '<option value="">-- Chọn Khoa --</option>';
+
+            fKhoas.forEach(k => {
+                optHtml += `<option value="${k.maKhoa}">${k.tenKhoa} (${k.maKhoa})</option>`;
+                modalHtml += `<option value="${k.maKhoa}">${k.tenKhoa} (${k.maKhoa})</option>`;
+            });
+
+            if (selFilter) selFilter.innerHTML = optHtml;
+            if (selGiuongKhoa) selGiuongKhoa.innerHTML = optHtml;
+            if (selModal) selModal.innerHTML = modalHtml;
+        }
+
+        // --- 2. PHÒNG ---
+        async function loadPhongs() {
+            try {
+                const res = await fetch('/api/v1/phong');
+                if (res.ok) {
+                    fPhongs = await res.json();
+                    renderPhongs();
+                    populatePhongDropdowns();
+                }
+            } catch(e) { console.error("Lỗi tải phòng:", e); }
+        }
+
+        function renderPhongs() {
+            const filterKhoa = document.getElementById('filterPhongKhoa').value;
+            const filterLoai = document.getElementById('filterPhongLoai').value;
+            const tbody = document.getElementById('phongTbody');
+            tbody.innerHTML = '';
+
+            let list = fPhongs;
+            if (filterKhoa !== 'ALL') list = list.filter(p => p.maKhoa === filterKhoa);
+            if (filterLoai !== 'ALL') list = list.filter(p => p.loaiPhong === filterLoai);
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Không tìm thấy phòng phù hợp.</td></tr>';
+                return;
+            }
+
+            const loaiLabel = {
+                'KHAM_BENH': '<span style="color:#0284c7; font-weight:600;"><i class="fa-solid fa-stethoscope"></i> Khám Bệnh</span>',
+                'LUU_BENH': '<span style="color:#7c3aed; font-weight:600;"><i class="fa-solid fa-bed"></i> Lưu Bệnh (Nội trú)</span>',
+                'XET_NGHIEM': '<span style="color:#0f766e; font-weight:600;"><i class="fa-solid fa-flask-vial"></i> Cận Lâm Sàng</span>',
+                'PHAU_THUAT': '<span style="color:#b45309; font-weight:600;"><i class="fa-solid fa-syringe"></i> Phẫu Thuật</span>'
+            };
+
+            list.forEach(p => {
+                const isActive = p.trangThai === true || p.trangThai === 1 || p.trangThai == null;
+                const statusBadge = isActive 
+                    ? '<span class="role-badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-check"></i> Hoạt động</span>'
+                    : '<span class="role-badge" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-wrench"></i> Tạm ngưng / Sửa chữa</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(p.maPhong)}</strong></td>
+                        <td>${escapeHtml(p.tenPhong)}</td>
+                        <td>${escapeHtml(p.tenKhoa || p.maKhoa)}</td>
+                        <td>${loaiLabel[p.loaiPhong] || p.loaiPhong}</td>
+                        <td>${statusBadge}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-cancel" style="padding:4px 8px; font-size:12px;" onclick="openEditPhongModal('${p.maPhong}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                            <button class="btn-cancel" style="padding:4px 8px; font-size:12px; border-color:#cbd5e1;" onclick="togglePhongStatus('${p.maPhong}')"><i class="fa-solid fa-power-off"></i> Bật/Tắt</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openPhongModal() {
+            document.getElementById('phongModalTitle').innerHTML = '<i class="fa-solid fa-door-open" style="color:var(--primary);"></i> Thêm Buồng Phòng Mới';
+            document.getElementById('pMaPhong').value = '';
+            document.getElementById('pMaPhong').readOnly = false;
+            document.getElementById('pTenPhong').value = '';
+            document.getElementById('pMaKhoa').value = '';
+            document.getElementById('pLoaiPhong').value = 'KHAM_BENH';
+            document.getElementById('phongModal').style.display = 'flex';
+        }
+
+        function openEditPhongModal(maPhong) {
+            const p = fPhongs.find(x => x.maPhong === maPhong);
+            if (!p) return;
+            document.getElementById('phongModalTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--primary);"></i> Cập Nhật Thông Tin Phòng';
+            document.getElementById('pMaPhong').value = p.maPhong;
+            document.getElementById('pMaPhong').readOnly = true;
+            document.getElementById('pTenPhong').value = p.tenPhong;
+            document.getElementById('pMaKhoa').value = p.maKhoa;
+            document.getElementById('pLoaiPhong').value = p.loaiPhong;
+            document.getElementById('phongModal').style.display = 'flex';
+        }
+
+        function closePhongModal() { document.getElementById('phongModal').style.display = 'none'; }
+
+        async function handleSavePhong(e) {
+            e.preventDefault();
+            const payload = {
+                maPhong: document.getElementById('pMaPhong').value.trim(),
+                tenPhong: document.getElementById('pTenPhong').value.trim(),
+                maKhoa: document.getElementById('pMaKhoa').value,
+                loaiPhong: document.getElementById('pLoaiPhong').value
+            };
+            try {
+                const res = await fetch('/api/v1/phong', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('Lưu phòng thành công!');
+                    closePhongModal();
+                    loadPhongs();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) { alert('Lỗi kết nối.'); }
+        }
+
+        async function togglePhongStatus(maPhong) {
+            try {
+                const res = await fetch(`/api/v1/phong/${maPhong}/toggle-status`, { method: 'PUT' });
+                if (res.ok) {
+                    loadPhongs();
+                } else {
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
+                }
+            } catch(e) { alert('Lỗi kết nối.'); }
+        }
+
+        function populatePhongDropdowns() {
+            const gPhongSel = document.getElementById('gMaPhong');
+            const fGiuongPhong = document.getElementById('filterGiuongPhong');
+            const luuBenhPhongs = fPhongs.filter(p => p.loaiPhong === 'LUU_BENH');
+
+            let modalHtml = '<option value="">-- Chọn Phòng Lưu Bệnh --</option>';
+            let filterHtml = '<option value="ALL">-- Tất cả các Phòng --</option>';
+
+            luuBenhPhongs.forEach(p => {
+                modalHtml += `<option value="${p.maPhong}">${p.tenPhong} (${p.maPhong}) - ${p.tenKhoa || p.maKhoa}</option>`;
+                filterHtml += `<option value="${p.maPhong}">${p.tenPhong} (${p.maPhong})</option>`;
+            });
+
+            if (gPhongSel) gPhongSel.innerHTML = modalHtml;
+            if (fGiuongPhong) fGiuongPhong.innerHTML = filterHtml;
+        }
+
+        // --- 3. GIƯỜNG ---
+        async function loadGiuongs() {
+            try {
+                const res = await fetch('/api/v1/giuongbenh');
+                if (res.ok) {
+                    fGiuongs = await res.json();
+                    renderGiuongs();
+                }
+            } catch(e) { console.error("Lỗi tải giường:", e); }
+        }
+
+        function onGiuongKhoaChange() {
+            const selKhoa = document.getElementById('filterGiuongKhoa').value;
+            const fGiuongPhong = document.getElementById('filterGiuongPhong');
+            let phongs = fPhongs.filter(p => p.loaiPhong === 'LUU_BENH');
+            if (selKhoa !== 'ALL') phongs = phongs.filter(p => p.maKhoa === selKhoa);
+
+            let filterHtml = '<option value="ALL">-- Tất cả các Phòng --</option>';
+            phongs.forEach(p => {
+                filterHtml += `<option value="${p.maPhong}">${p.tenPhong} (${p.maPhong})</option>`;
+            });
+            fGiuongPhong.innerHTML = filterHtml;
+            renderGiuongs();
+        }
+
+        function renderGiuongs() {
+            const selKhoa = document.getElementById('filterGiuongKhoa').value;
+            const selPhong = document.getElementById('filterGiuongPhong').value;
+            const tbody = document.getElementById('giuongTbody');
+            tbody.innerHTML = '';
+
+            let list = fGiuongs;
+            if (selKhoa !== 'ALL') list = list.filter(g => g.maKhoa === selKhoa);
+            if (selPhong !== 'ALL') list = list.filter(g => g.maPhong === selPhong);
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Chưa có giường bệnh nào.</td></tr>';
+                return;
+            }
+
+            list.forEach(g => {
+                let statusBadge = '';
+                let canToggle = true;
+
+                if (g.trangThai === 'Trong') {
+                    statusBadge = '<span class="role-badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-circle-check"></i> Trống</span>';
+                } else if (g.trangThai === 'BaoTri') {
+                    statusBadge = '<span class="role-badge" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-wrench"></i> Đang bảo trì</span>';
+                } else {
+                    statusBadge = '<span class="role-badge" style="background:#ede9fe; color:#6366f1;"><i class="fa-solid fa-user-injured"></i> Đang có bệnh nhân</span>';
+                    canToggle = false;
+                }
+
+                const toggleBtn = canToggle 
+                    ? `<button class="btn-cancel" style="padding:4px 8px; font-size:12px; border-color:#cbd5e1;" onclick="toggleGiuongStatus('${g.maGiuong}')"><i class="fa-solid fa-wrench"></i> ${g.trangThai === 'Trong' ? 'Bảo trì' : 'Mở lại'}</button>`
+                    : `<span style="font-size:11px; color:var(--text-muted); font-style:italic;">Không thể khóa</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(g.maGiuong)}</strong></td>
+                        <td>${escapeHtml(g.soGiuong)}</td>
+                        <td>${escapeHtml(g.tenPhong || g.maPhong)}</td>
+                        <td>${escapeHtml(g.maKhoa || '-')}</td>
+                        <td>${Number(g.donGiaNgay || 0).toLocaleString('vi-VN')} đ</td>
+                        <td>${statusBadge}</td>
+                        <td style="text-align:right;">${toggleBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openGiuongModal() {
+            document.getElementById('gMaPhong').value = '';
+            document.getElementById('gSoGiuong').value = '';
+            document.getElementById('gDonGia').value = 250000;
+            document.getElementById('giuongModal').style.display = 'flex';
+        }
+
+        function closeGiuongModal() { document.getElementById('giuongModal').style.display = 'none'; }
+
+        async function handleSaveGiuong(e) {
+            e.preventDefault();
+            const maPhong = document.getElementById('gMaPhong').value;
+            const soGiuong = document.getElementById('gSoGiuong').value.trim();
+            const donGia = parseFloat(document.getElementById('gDonGia').value) || 250000;
+
+            const payload = {
+                maPhong: maPhong,
+                soGiuong: soGiuong,
+                donGiaNgay: donGia,
+                trangThai: 'Trong'
+            };
+
+            try {
+                const res = await fetch('/api/v1/giuongbenh', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('Thêm giường thành công!');
+                    closeGiuongModal();
+                    loadGiuongs();
+                } else {
+                    alert('Lỗi lưu giường.');
+                }
+            } catch(e) { alert('Lỗi kết nối.'); }
+        }
+
+        async function toggleGiuongStatus(maGiuong) {
+            try {
+                const res = await fetch(`/api/v1/giuongbenh/${maGiuong}/toggle-status`, { method: 'PUT' });
+                if (res.ok) {
+                    loadGiuongs();
+                } else {
+                    alert('Lỗi cập nhật trạng thái giường.');
+                }
+            } catch(e) { alert('Lỗi kết nối.'); }
+        }
     </script>
     <script src="/auth-guard.js?v=3"></script>
 </body>

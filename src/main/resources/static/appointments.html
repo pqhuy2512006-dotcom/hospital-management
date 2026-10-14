@@ -619,13 +619,18 @@
                 if (!response.ok) throw new Error('Failed to load departments');
                 departments = await response.json();
 
-                const deptSelect = document.getElementById('filterDept');
+                                const deptSelect = document.getElementById('filterDept');
                 const bookingDept = document.getElementById('onlDept');
                 const filterOptions = ['<option value="ALL">Tất cả khoa</option>'];
                 const bookingOptions = ['<option value="">Chọn khoa khám</option>'];
                 departments.forEach(dept => {
                     filterOptions.push(`<option value="${dept.tenKhoa}">${dept.tenKhoa}</option>`);
-                    bookingOptions.push(`<option value="${dept.maKhoa}">${dept.tenKhoa}</option>`);
+                    
+                    // 👉 CHỈ CHO PHÉP ĐẶT LỊCH VÀO CÁC KHOA ĐANG HOẠT ĐỘNG
+                    const isActive = dept.trangThai === true || dept.trangThai === 1 || dept.trangThai == null;
+                    if (isActive) {
+                        bookingOptions.push(`<option value="${dept.maKhoa}">${dept.tenKhoa}</option>`);
+                    }
                 });
                 deptSelect.innerHTML = filterOptions.join('');
                 bookingDept.innerHTML = bookingOptions.join('');

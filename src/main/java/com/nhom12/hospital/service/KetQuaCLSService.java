@@ -46,7 +46,7 @@ public class KetQuaCLSService {
         return mapResults(ketQuaCLSRepository.findByMaBacSiDoc(doctor.get().getMaNhanVien()));
     }
 
-    private List<Map<String, Object>> mapResults(List<KetQuaCLS> list) {
+        private List<Map<String, Object>> mapResults(List<KetQuaCLS> list) {
         List<Map<String, Object>> res = new ArrayList<>();
 
         for (KetQuaCLS kq : list) {
@@ -54,6 +54,7 @@ public class KetQuaCLSService {
             map.put("id", kq.getMaKetQua());
             map.put("patientId", kq.getMaBenhNhan());
             map.put("service", kq.getLoaiXetNghiem());
+            map.put("serviceCode", kq.getMaDichVu());
             map.put("conclusion", kq.getKetLuan());
             map.put("hinhAnhFile", kq.getHinhAnhFile());
             map.put("status", kq.getKetLuan() != null && !kq.getKetLuan().trim().isEmpty() ? "COMPLETED" : "PENDING");
@@ -69,35 +70,80 @@ public class KetQuaCLSService {
 
             List<ChiTietKetQuaCLS> details = chiTietKetQuaCLSRepository.findByMaKetQua(kq.getMaKetQua());
             List<Map<String, Object>> params = new ArrayList<>();
-            for (ChiTietKetQuaCLS d : details) {
-                Map<String, Object> p = new HashMap<>();
-                p.put("name", d.getTenChiSo());
-                p.put("val", d.getGiaTri());
-                p.put("unit", d.getDonVi());
-                p.put("ref", d.getKhoangThamChieu());
-                p.put("eval", d.getDanhGia());
 
-                // parse refMin/refMax if possible
-                if (d.getKhoangThamChieu() != null && d.getKhoangThamChieu().contains("-")) {
-                    String[] parts = d.getKhoangThamChieu().split("-");
-                    try {
-                        p.put("refMin", Double.parseDouble(parts[0].trim()));
-                        p.put("refMax", Double.parseDouble(parts[1].trim()));
-                    } catch (Exception ignored) {
+            // 👉 NẾU PHIẾU CHƯA CÓ CHỈ SỐ: TỰ ĐỘNG SINH DANH MỤC MẪU THEO TÊN DỊCH VỤ
+            if (details.isEmpty()) {
+                params = getTemplateParams(kq.getLoaiXetNghiem());
+            } else {
+                for (ChiTietKetQuaCLS d : details) {
+                    Map<String, Object> p = new HashMap<>();
+                    p.put("name", d.getTenChiSo());
+                    p.put("val", d.getGiaTri());
+                    p.put("unit", d.getDonVi());
+                    p.put("ref", d.getKhoangThamChieu());
+                    p.put("eval", d.getDanhGia());
+
+                    // parse refMin/refMax nếu có dạng "min - max"
+                    if (d.getKhoangThamChieu() != null && d.getKhoangThamChieu().contains("-")) {
+                        String[] parts = d.getKhoangThamChieu().split("-");
+                        try {
+                            p.put("refMin", Double.parseDouble(parts[0].replaceAll("[^0-9.]", "").trim()));
+                            p.put("refMax", Double.parseDouble(parts[1].replaceAll("[^0-9.]", "").trim()));
+                        } catch (Exception ignored) {
+                            p.put("refMin", null);
+                            p.put("refMax", null);
+                        }
+                    } else {
                         p.put("refMin", null);
                         p.put("refMax", null);
                     }
-                } else {
-                    p.put("refMin", null);
-                    p.put("refMax", null);
+                    params.add(p);
                 }
-                params.add(p);
             }
             map.put("params", params);
             res.add(map);
         }
 
         return res;
+    }
+
+    private List<Map<String, Object>> getTemplateParams(String loaiXetNghiem) {
+        List<Map<String, Object>> params = new ArrayList<>();
+        String name = loaiXetNghiem != null ? loaiXetNghiem.toLowerCase() : "";
+
+        if (name.contains("glucose") || name.contains("đường huyết")) {
+            params.add(buildParam("Định lượng Glucose", "", "mmol/L", "3.9 - 6.4", 3.9, 6.4, "BinhThuong"));
+        } else if (name.contains("tế bào máu") || name.contains("huyết học")) {
+            params.add(buildParam("Số lượng hồng cầu (RBC)", "", "T/L", "4.2 - 5.4", 4.2, 5.4, "BinhThuong"));
+            params.add(buildParam("Huyết sắc tố (Hb)", "", "g/L", "130 - 160", 130.0, 160.0, "BinhThuong"));
+            params.add(buildParam("Số lượng bạch cầu (WBC)", "", "G/L", "4.0 - 10.0", 4.0, 10.0, "BinhThuong"));
+            params.add(buildParam("Số lượng tiểu cầu (PLT)", "", "G/L", "150 - 450", 150.0, 450.0, "BinhThuong"));
+        } else if (name.contains("ure") || name.contains("urê")) {
+            params.add(buildParam("Định lượng Ure", "", "mmol/L", "2.5 - 7.5", 2.5, 7.5, "BinhThuong"));
+        } else if (name.contains("creatinin")) {
+            params.add(buildParam("Định lượng Creatinine", "", "µmol/L", "62 - 115", 62.0, 115.0, "BinhThuong"));
+        } else if (name.contains("men gan") || name.contains("ast") || name.contains("alt")) {
+            params.add(buildParam("AST (GOT)", "", "U/L", "0 - 40", 0.0, 40.0, "BinhThuong"));
+            params.add(buildParam("ALT (GPT)", "", "U/L", "0 - 40", 0.0, 40.0, "BinhThuong"));
+        } else if (name.contains("cholesterol")) {
+            params.add(buildParam("Cholesterol toàn phần", "", "mmol/L", "3.9 - 5.2", 3.9, 5.2, "BinhThuong"));
+            params.add(buildParam("Triglyceride", "", "mmol/L", "0.4 - 1.8", 0.4, 1.8, "BinhThuong"));
+        } else {
+            params.add(buildParam(loaiXetNghiem != null ? loaiXetNghiem : "Chỉ số xét nghiệm", "", "Lần", "Bình thường", null, null, "BinhThuong"));
+        }
+        return params;
+    }
+
+    private Map<String, Object> buildParam(String name, String val, String unit, String ref, Double min, Double max, String eval) {
+        Map<String, Object> p = new HashMap<>();
+        p.put("name", name);
+        p.put("val", val);
+        p.put("unit", unit);
+        p.put("ref", ref);
+        p.put("refMin", min);
+        p.put("refMax", max);
+        p.put("eval", eval);
+        return p;
     }
 
     @Transactional
@@ -116,27 +162,35 @@ public class KetQuaCLSService {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> params = (List<Map<String, Object>>) payload.get("params");
         if (params != null) {
+            int seq = 1;
             for (Map<String, Object> p : params) {
                 String name = (String) p.get("name");
                 String val = (String) p.get("val");
                 String eval = (String) p.get("eval");
 
+                // Chuẩn hóa theo ràng buộc CHECK (DanhGia IN ('BinhThuong','Cao','Thap'))
+                if ("Tang".equalsIgnoreCase(eval)) eval = "Cao";
+                if ("Giam".equalsIgnoreCase(eval)) eval = "Thap";
+                if (!"Cao".equalsIgnoreCase(eval) && !"Thap".equalsIgnoreCase(eval)) {
+                    eval = "BinhThuong";
+                }
+
                 List<ChiTietKetQuaCLS> details = chiTietKetQuaCLSRepository.findByMaKetQua(id);
-                Optional<ChiTietKetQuaCLS> targetOpt = details.stream().filter(d -> d.getTenChiSo().equals(name)).findFirst();
+                Optional<ChiTietKetQuaCLS> targetOpt = details.stream().filter(d -> d.getTenChiSo().equalsIgnoreCase(name)).findFirst();
                 if (targetOpt.isPresent()) {
                     ChiTietKetQuaCLS target = targetOpt.get();
                     target.setGiaTri(val);
-                    if (eval != null) target.setDanhGia(eval);
+                    target.setDanhGia(eval);
                     chiTietKetQuaCLSRepository.save(target);
                 } else {
                     ChiTietKetQuaCLS newDetail = new ChiTietKetQuaCLS();
-                    newDetail.setMaChiTietXN("CT" + System.currentTimeMillis() % 1000000);
+                    newDetail.setMaChiTietXN(String.format("CT%06d_%d", System.currentTimeMillis() % 1000000, seq++));
                     newDetail.setMaKetQua(id);
                     newDetail.setTenChiSo(name);
                     newDetail.setGiaTri(val);
                     newDetail.setDonVi((String) p.getOrDefault("unit", ""));
                     newDetail.setKhoangThamChieu((String) p.getOrDefault("ref", ""));
-                    newDetail.setDanhGia(eval != null ? eval : "BinhThuong");
+                    newDetail.setDanhGia(eval);
                     chiTietKetQuaCLSRepository.save(newDetail);
                 }
             }
@@ -144,4 +198,5 @@ public class KetQuaCLSService {
         return Map.of("success", true, "message", "Đã lưu và trả kết quả xét nghiệm thành công!");
     }
 }
+
 

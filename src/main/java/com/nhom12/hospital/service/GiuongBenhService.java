@@ -26,8 +26,18 @@ public class GiuongBenhService {
         return giuongBenhRepository.findById(id);
     }
 
-    public GiuongBenh create(GiuongBenh giuongBenh) {
+        public GiuongBenh create(GiuongBenh giuongBenh) {
+        if (giuongBenh.getMaGiuong() == null || giuongBenh.getMaGiuong().trim().isEmpty()) {
+            giuongBenh.setMaGiuong(giuongBenh.getMaPhong() + "-" + giuongBenh.getSoGiuong().replace(" ", ""));
+        }
+        if (giuongBenh.getTrangThai() == null) {
+            giuongBenh.setTrangThai("Trong");
+        }
         return giuongBenhRepository.save(giuongBenh);
+    }
+
+    public void toggleStatus(String maGiuong) {
+        giuongBenhRepository.toggleStatus(maGiuong);
     }
 
     public Optional<GiuongBenh> update(String id, GiuongBenh updated) {

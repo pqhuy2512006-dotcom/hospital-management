@@ -41,4 +41,13 @@ public class GiuongBenhController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+        @PutMapping("/{id}/toggle-status")
+    public ResponseEntity<?> toggleStatus(@PathVariable String id) {
+        try {
+            giuongBenhService.toggleStatus(id);
+            return ResponseEntity.ok(java.util.Map.of("message", "Cập nhật trạng thái giường thành công!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("message", "Lỗi: " + e.getMessage()));
+        }
+    }
 }

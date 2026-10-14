@@ -16,16 +16,29 @@ public class PhongRepository {
     }
 
     public List<Phong> findByKhoaAndLoaiPhong(String maKhoa, String loaiPhong) {
-        StringBuilder sql = new StringBuilder("SELECT * FROM Phong WHERE TrangThai = 1");
+        StringBuilder sql = new StringBuilder("SELECT * FROM dbo.vw_Phong WHERE 1=1");
         
-        if (maKhoa != null && !maKhoa.isEmpty()) {
+        if (maKhoa != null && !maKhoa.isEmpty() && !maKhoa.equalsIgnoreCase("ALL")) {
             sql.append(" AND MaKhoa = '").append(maKhoa).append("'");
         }
-        if (loaiPhong != null && !loaiPhong.isEmpty()) {
+        if (loaiPhong != null && !loaiPhong.isEmpty() && !loaiPhong.equalsIgnoreCase("ALL")) {
             sql.append(" AND LoaiPhong = N'").append(loaiPhong).append("'");
         }
         
         return jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(Phong.class));
     }
-}
 
+    public void save(Phong phong) {
+        jdbcTemplate.update(
+                "EXEC dbo.sp_Phong_Save @MaPhong = ?, @TenPhong = ?, @LoaiPhong = ?, @MaKhoa = ?",
+                phong.getMaPhong(),
+                phong.getTenPhong(),
+                phong.getLoaiPhong(),
+                phong.getMaKhoa()
+        );
+    }
+
+    public void toggleStatus(String maPhong) {
+        jdbcTemplate.update("EXEC dbo.sp_Phong_ToggleStatus @MaPhong = ?", maPhong);
+    }
+}

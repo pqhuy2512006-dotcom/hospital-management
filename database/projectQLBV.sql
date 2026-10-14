@@ -486,3 +486,172 @@ BEGIN
     VALUES (@MaTaiKhoan, @TieuDe, @NoiDung, @LoaiThongBao, 0, GETDATE());
 END;
 GO
+
+
+
+USE QuanLyBenhVien;
+GO
+
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- 1. Bổ sung cột TrangThai cho bảng Khoa (nếu chưa có)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Khoa') AND name = 'TrangThai')
+BEGIN
+    ALTER TABLE Khoa ADD TrangThai BIT NOT NULL DEFAULT 1;
+END
+GO
+
+-- 2. Tạo/Cập nhật View vw_Khoa
+CREATE OR ALTER VIEW dbo.vw_Khoa AS
+SELECT 
+    k.MaKhoa, 
+    k.TenKhoa, 
+    k.MoTa, 
+    k.MaTruongKhoa, 
+    ISNULL(k.TrangThai, 1) AS TrangThai,
+    nv.HoTen AS TenTruongKhoa
+FROM dbo.Khoa k
+LEFT JOIN dbo.NhanVien nv ON k.MaTruongKhoa = nv.MaNhanVien;
+GO
+
+-- 3. Tạo/Cập nhật View vw_Phong
+CREATE OR ALTER VIEW dbo.vw_Phong AS
+SELECT 
+    p.MaPhong,
+    p.TenPhong,
+    p.LoaiPhong,
+    p.MaKhoa,
+    p.TrangThai,
+    k.TenKhoa
+FROM dbo.Phong p
+JOIN dbo.Khoa k ON p.MaKhoa = k.MaKhoa;
+GO
+
+-- 4. SP Thêm/Cập nhật Khoa
+CREATE OR ALTER PROCEDURE dbo.sp_Khoa_Save
+    @MaKhoa VARCHAR(10),
+    @TenKhoa NVARCHAR(100),
+    @MoTa NVARCHAR(300) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM Khoa WHERE MaKhoa = @MaKhoa)
+    BEGIN
+        UPDATE Khoa 
+        SET TenKhoa = @TenKhoa, MoTa = @MoTa
+        WHERE MaKhoa = @MaKhoa;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Khoa (MaKhoa, TenKhoa, MoTa, TrangThai)
+        VALUES (@MaKhoa, @TenKhoa, @MoTa, 1);
+    END
+END;
+GO
+
+-- 5. SP Bật/Tắt trạng thái Khoa (Đã khớp đúng cột NgayKham và trạng thái DaDatLich)
+CREATE OR ALTER PROCEDURE dbo.sp_Khoa_ToggleStatus
+    @MaKhoa VARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @CurrentStatus BIT;
+    SELECT @CurrentStatus = ISNULL(TrangThai, 1) FROM Khoa WHERE MaKhoa = @MaKhoa;
+
+    IF @CurrentStatus = 1
+    BEGIN
+        -- Đổi sang Tạm ngưng (0)
+        UPDATE Khoa SET TrangThai = 0 WHERE MaKhoa = @MaKhoa;
+
+        -- Tìm các lịch hẹn tương lai chưa khám của khoa này để hủy
+        DECLARE @AffectedAppointments TABLE (MaLichHen VARCHAR(15), MaTaiKhoan BIGINT, NgayKham DATE);
+        
+        INSERT INTO @AffectedAppointments (MaLichHen, MaTaiKhoan, NgayKham)
+        SELECT lh.MaLichHen, bn.MaTaiKhoan, lh.NgayKham
+        FROM LichHen lh
+        LEFT JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan
+        WHERE lh.MaKhoa = @MaKhoa 
+          AND lh.NgayKham >= CAST(GETDATE() AS DATE)
+          AND lh.TrangThai = 'DaDatLich';
+
+        -- Cập nhật hủy lịch
+        UPDATE LichHen 
+        SET TrangThai = 'DaHuy' 
+        WHERE MaLichHen IN (SELECT MaLichHen FROM @AffectedAppointments);
+
+        -- Bắn thông báo tự động cho bệnh nhân
+        DECLARE @TenKhoa NVARCHAR(100);
+        SELECT @TenKhoa = TenKhoa FROM Khoa WHERE MaKhoa = @MaKhoa;
+
+        INSERT INTO ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+        SELECT 
+            aa.MaTaiKhoan,
+            N'Thông báo hủy lịch hẹn do Khoa tạm ngưng tiếp nhận',
+            N'Lịch hẹn ngày ' + CONVERT(VARCHAR, aa.NgayKham, 103) + N' tại ' + @TenKhoa + N' đã được tự động hủy do Khoa tạm ngưng hoạt động. Quý khách vui lòng đặt lại lịch tại khoa khác hoặc liên hệ bộ phận Tiếp đón.',
+            N'LICH_HEN',
+            0,
+            GETDATE()
+        FROM @AffectedAppointments aa
+        WHERE aa.MaTaiKhoan IS NOT NULL;
+    END
+    ELSE
+    BEGIN
+        -- Mở lại hoạt động (1)
+        UPDATE Khoa SET TrangThai = 1 WHERE MaKhoa = @MaKhoa;
+    END
+END;
+GO
+
+-- 6. SP Thêm/Cập nhật Phòng
+CREATE OR ALTER PROCEDURE dbo.sp_Phong_Save
+    @MaPhong VARCHAR(15),
+    @TenPhong NVARCHAR(100),
+    @LoaiPhong VARCHAR(20),
+    @MaKhoa VARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM Phong WHERE MaPhong = @MaPhong)
+    BEGIN
+        UPDATE Phong 
+        SET TenPhong = @TenPhong, LoaiPhong = @LoaiPhong, MaKhoa = @MaKhoa
+        WHERE MaPhong = @MaPhong;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Phong (MaPhong, TenPhong, LoaiPhong, MaKhoa, TrangThai)
+        VALUES (@MaPhong, @TenPhong, @LoaiPhong, @MaKhoa, 1);
+    END
+END;
+GO
+
+-- 7. SP Bật/Tắt trạng thái Phòng (Hoạt động / Bảo trì)
+CREATE OR ALTER PROCEDURE dbo.sp_Phong_ToggleStatus
+    @MaPhong VARCHAR(15)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Phong 
+    SET TrangThai = CASE WHEN TrangThai = 1 THEN 0 ELSE 1 END
+    WHERE MaPhong = @MaPhong;
+END;
+GO
+
+-- 8. SP Bật/Tắt trạng thái Giường bệnh (Trống <-> Bảo trì)
+CREATE OR ALTER PROCEDURE dbo.sp_GiuongBenh_ToggleStatus
+    @MaGiuong VARCHAR(15)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE GiuongBenh
+    SET TrangThai = CASE 
+        WHEN TrangThai = 'BaoTri' THEN 'Trong'
+        WHEN TrangThai = 'Trong' THEN 'BaoTri'
+        ELSE TrangThai 
+    END
+    WHERE MaGiuong = @MaGiuong;
+END;
+GO

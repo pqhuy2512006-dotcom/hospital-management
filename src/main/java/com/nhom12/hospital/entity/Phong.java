@@ -11,6 +11,7 @@ public class Phong {
     private String tenPhong;
     private String loaiPhong;
     private String maKhoa;
+    private String tenKhoa;
     @Builder.Default
     private Boolean trangThai = true;
     private Khoa khoa;

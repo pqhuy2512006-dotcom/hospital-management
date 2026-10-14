@@ -10,7 +10,7 @@ import com.nhom12.hospital.repository.LichHenRepository;
 import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.TaiKhoanRepository;
 import org.springframework.stereotype.Service;
-
+import com.nhom12.hospital.entity.Khoa;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -275,8 +275,12 @@ public class LichHenService {
             }
             String departmentId = String.valueOf(requestBody.get("maKhoa"));
             String doctorId = String.valueOf(requestBody.get("maBacSi"));
-            if (khoaRepository.findById(departmentId).isEmpty()) {
+                        Optional<Khoa> khoaOpt = khoaRepository.findById(departmentId);
+            if (khoaOpt.isEmpty()) {
                 throw new IllegalArgumentException("Khoa khám không hợp lệ.");
+            }
+            if (Boolean.FALSE.equals(khoaOpt.get().getTrangThai())) {
+                throw new IllegalArgumentException("Khoa " + khoaOpt.get().getTenKhoa() + " hiện đang tạm ngưng tiếp nhận, vui lòng chọn khoa khác.");
             }
             Optional<NhanVien> doctor = nhanVienRepository.findById(doctorId)
                     .filter(employee -> "BacSi".equalsIgnoreCase(employee.getVaiTro()))

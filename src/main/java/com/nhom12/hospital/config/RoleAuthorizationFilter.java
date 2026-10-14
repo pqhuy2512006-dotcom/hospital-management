@@ -156,10 +156,13 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if ("QuanTri".equals(role)) {
+                        if ("QuanTri".equals(role)) {
                 boolean allowed = "/api/v1/dashboard/stats".equals(path)
                         || "/api/v1/dashboard/report".equals(path)
-                        || path.startsWith("/api/v1/admin/audit-logs");
+                        || path.startsWith("/api/v1/admin/audit-logs")
+                        || path.startsWith("/api/v1/khoa")
+                        || path.startsWith("/api/v1/phong")
+                        || path.startsWith("/api/v1/giuongbenh");
                 if (!allowed) {
                     writeForbidden(response, "Admin không có quyền truy cập phân hệ nghiệp vụ này.");
                     return;
