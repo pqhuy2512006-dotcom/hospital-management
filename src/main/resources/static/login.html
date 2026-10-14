@@ -596,28 +596,6 @@
         </div>
 
         <form id="loginForm" autocomplete="off">
-            <!-- Trường chọn vai trò (đã chuẩn hóa style đồng bộ) -->
-            <div class="form-group">
-                <div class="form-label-row">
-                    <label class="form-label" for="roleSelect">Vai trò làm việc</label>
-                </div>
-                <div class="input-container">
-                    <i class="fa-solid fa-user-tag input-icon"></i>
-                    <select id="roleSelect" class="form-input" required>
-                        <option value="QuanTri">Quản Trị Viên (Admin)</option>
-                        <option value="GiamDoc">Ban Giám Đốc (Director)</option>
-                        <option value="QuanLyNhanSu">Quản Lý Nhân Sự (HR)</option>
-                        <option value="BacSi">Bác Sĩ Điều Trị</option>
-                        <option value="ThuNgan">Thu Ngân / Kế Toán Viện Phí</option>
-                        <option value="DuocSi">Dược Sĩ Kho Dược</option>
-                        <option value="LeTan">Tiếp Đón / Lễ Tân</option>
-                        <option value="KTV">Kỹ Thuật Viên Xét Nghiệm (CLS)</option>
-                        <option value="DieuDuong">Điều Dưỡng Nội Trú</option>
-                        <option value="BenhNhan">Bệnh Nhân (Patient)</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down select-arrow"></i>
-                </div>
-            </div>
 
             <!-- Tên đăng nhập -->
             <div class="form-group">
@@ -790,7 +768,6 @@
 
 <script>
     const form = document.getElementById('loginForm');
-    const roleSelect = document.getElementById('roleSelect');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('togglePasswordBtn');
@@ -878,10 +855,9 @@
     }
 
     // Chức năng điền nhanh tài khoản kèm tự chọn đúng vai trò
-    function fillTestAccount(user, pass, role) {
+        function fillTestAccount(user, pass) {
         usernameInput.value = user;
         passwordInput.value = pass;
-        if (role) roleSelect.value = role;
         hideToast();
         passwordInput.focus();
     }
@@ -901,12 +877,11 @@
         toastAlert.style.display = 'none';
     }
 
-    // Xử lý gửi API đăng nhập vào Spring Boot
+        // Xử lý gửi API đăng nhập vào Spring Boot
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideToast();
 
-        const role = roleSelect.value;
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
@@ -925,19 +900,13 @@
                 },
                 body: JSON.stringify({ 
                     username: username, 
-                    password: password,
-                    role: role 
+                    password: password
                 })
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Tự động đồng bộ vai trò thực tế
-                if (data.vaiTro && data.vaiTro.toUpperCase() !== role.toUpperCase()) {
-                    roleSelect.value = data.vaiTro;
-                }
-
                 displayToast(
                     'success', 
                     'fa-solid fa-circle-check', 
@@ -952,7 +921,7 @@
                     loginTime: new Date().toISOString()
                 }));
 
-                // Điều hướng theo phân quyền vai trò (Role-based Landing Page)
+                                // Điều hướng chuẩn theo file HTML thực tế của dự án
                 const ROLE_LANDING_PAGES = {
                     'QuanTri': '/dashboard.html',
                     'ADMIN': '/dashboard.html',
@@ -989,14 +958,18 @@
                 displayToast(
                     'error', 
                     'fa-solid fa-circle-xmark', 
-                    data.message || 'Mật khẩu hoặc tên đăng nhập không chính xác.'
+                    data.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.'
                 );
+                passwordInput.value = '';
+                passwordInput.focus();
             }
+
         } catch (error) {
+            console.error('Lỗi kết nối API Login:', error);
             displayToast(
                 'error', 
-                'fa-solid fa-server', 
-                'Không thể kết nối đến máy chủ Backend (Cổng 8080). Vui lòng kiểm tra lại Spring Boot!'
+                'fa-solid fa-triangle-exclamation', 
+                'Không thể kết nối đến máy chủ Backend. Vui lòng thử lại sau.'
             );
         } finally {
             setLoadingState(false);
