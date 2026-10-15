@@ -17,7 +17,7 @@ public class NhanVien {
     private String soCCCD;
     private String soDienThoai;
     private String email;
-    private String diaChi;
+    private String maPhong;
     private String chungChiHanhNghe;
     private String trinhDoChuyenMon;
     private LocalDate ngayVaoLam;

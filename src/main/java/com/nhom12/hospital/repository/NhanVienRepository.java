@@ -77,7 +77,7 @@ public class NhanVienRepository {
 		columns.put("SoCCCD", employee.getSoCCCD());
 		columns.put("SoDienThoai", employee.getSoDienThoai());
 		columns.put("Email", employee.getEmail());
-		columns.put("DiaChi", employee.getDiaChi());
+		columns.put("MaPhong", employee.getMaPhong());;
 		columns.put("ChungChiHanhNghe", employee.getChungChiHanhNghe());
 		columns.put("TrinhDoChuyenMon", employee.getTrinhDoChuyenMon());
 		columns.put("NgayVaoLam", employee.getNgayVaoLam());

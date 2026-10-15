@@ -111,7 +111,7 @@ CREATE TABLE BenhNhan (
     MaBHYT              VARCHAR(15)      NULL,
     NhomMau             VARCHAR(5)       NULL,
     NgheNghiep          NVARCHAR(100)    NULL,
-    DiaChi              NVARCHAR(200)    NULL,
+    MaPhong             VARCHAR(15) NULL,
     SoDienThoai         VARCHAR(15)      NOT NULL,
     Email               VARCHAR(100)     NULL,
     NguoiLienHeKhanCap  NVARCHAR(100)    NULL,
@@ -655,3 +655,169 @@ BEGIN
     WHERE MaGiuong = @MaGiuong;
 END;
 GO
+
+
+
+CREATE OR ALTER PROCEDURE dbo.sp_Phong_ToggleStatus
+    @MaPhong VARCHAR(15)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @NewStatus BIT;
+    SELECT @NewStatus = CASE WHEN ISNULL(TrangThai, 1) = 1 THEN 0 ELSE 1 END FROM Phong WHERE MaPhong = @MaPhong;
+    
+    UPDATE Phong 
+    SET TrangThai = @NewStatus
+    WHERE MaPhong = @MaPhong;
+
+    -- Khi phòng tạm ngưng (0): Chuyển các giường trống trong phòng sang 'BaoTri'
+    IF @NewStatus = 0
+    BEGIN
+        UPDATE GiuongBenh
+        SET TrangThai = 'BaoTri'
+        WHERE MaPhong = @MaPhong AND TrangThai = 'Trong';
+    END
+    -- Khi phòng mở lại (1): Trả các giường 'BaoTri' về lại 'Trong'
+    ELSE
+    BEGIN
+        UPDATE GiuongBenh
+        SET TrangThai = 'Trong'
+        WHERE MaPhong = @MaPhong AND TrangThai = 'BaoTri';
+    END
+END;
+GO
+
+
+
+
+-- 1. Cập nhật View vw_GiuongBenh để lấy kèm MaKhoa và TenPhong từ bảng Phong
+CREATE OR ALTER VIEW dbo.vw_GiuongBenh AS
+SELECT 
+    g.MaGiuong,
+    g.MaPhong,
+    g.SoGiuong,
+    g.TrangThai,
+    g.DonGiaNgay,
+    p.TenPhong,
+    p.MaKhoa
+FROM dbo.GiuongBenh g
+LEFT JOIN dbo.Phong p ON g.MaPhong = p.MaPhong;
+GO
+
+-- 2. SP Bật/Tắt PHÒNG: Tự động đổi trạng thái Giường trong phòng đó (dùng MaPhong)
+CREATE OR ALTER PROCEDURE dbo.sp_Phong_ToggleStatus
+    @MaPhong VARCHAR(15)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @NewStatus BIT;
+    SELECT @NewStatus = CASE WHEN ISNULL(TrangThai, 1) = 1 THEN 0 ELSE 1 END 
+    FROM Phong 
+    WHERE MaPhong = @MaPhong;
+
+    -- Cập nhật trạng thái Phòng
+    UPDATE Phong 
+    SET TrangThai = @NewStatus
+    WHERE MaPhong = @MaPhong;
+
+    -- Nếu Phòng Tạm ngưng (0): Chuyển các giường Trống trong phòng sang 'BaoTri'
+    IF @NewStatus = 0
+    BEGIN
+        UPDATE GiuongBenh
+        SET TrangThai = 'BaoTri'
+        WHERE MaPhong = @MaPhong AND TrangThai = 'Trong';
+    END
+    -- Nếu Phòng Mở lại (1): Trả các giường 'BaoTri' về lại 'Trong'
+    ELSE
+    BEGIN
+        UPDATE GiuongBenh
+        SET TrangThai = 'Trong'
+        WHERE MaPhong = @MaPhong AND TrangThai = 'BaoTri';
+    END
+END;
+GO
+
+-- 3. SP Bật/Tắt KHOA: Khóa toàn bộ Phòng và Giường thuộc Khoa (JOIN qua bảng Phong)
+CREATE OR ALTER PROCEDURE dbo.sp_Khoa_ToggleStatus
+    @MaKhoa VARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @CurrentStatus BIT;
+    SELECT @CurrentStatus = ISNULL(TrangThai, 1) FROM Khoa WHERE MaKhoa = @MaKhoa;
+
+    IF @CurrentStatus = 1
+    BEGIN
+        -- Đổi Khoa sang Tạm ngưng (0)
+        UPDATE Khoa SET TrangThai = 0 WHERE MaKhoa = @MaKhoa;
+
+        -- Khóa tất cả Phòng thuộc khoa
+        UPDATE Phong SET TrangThai = 0 WHERE MaKhoa = @MaKhoa;
+
+        -- Khóa tất cả Giường trống thuộc các phòng của khoa này (JOIN qua Phong)
+        UPDATE g
+        SET g.TrangThai = 'BaoTri'
+        FROM GiuongBenh g
+        INNER JOIN Phong p ON g.MaPhong = p.MaPhong
+        WHERE p.MaKhoa = @MaKhoa AND g.TrangThai = 'Trong';
+
+        -- Hủy các lịch hẹn tương lai chưa khám
+        DECLARE @AffectedAppointments TABLE (MaLichHen VARCHAR(15), MaTaiKhoan BIGINT, NgayKham DATE);
+        
+        INSERT INTO @AffectedAppointments (MaLichHen, MaTaiKhoan, NgayKham)
+        SELECT lh.MaLichHen, bn.MaTaiKhoan, lh.NgayKham
+        FROM LichHen lh
+        LEFT JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan
+        WHERE lh.MaKhoa = @MaKhoa 
+          AND lh.NgayKham >= CAST(GETDATE() AS DATE)
+          AND lh.TrangThai = 'DaDatLich';
+
+        UPDATE LichHen 
+        SET TrangThai = 'DaHuy' 
+        WHERE MaLichHen IN (SELECT MaLichHen FROM @AffectedAppointments);
+
+        -- Bắn thông báo cho bệnh nhân
+        DECLARE @TenKhoa NVARCHAR(100);
+        SELECT @TenKhoa = TenKhoa FROM Khoa WHERE MaKhoa = @MaKhoa;
+
+        INSERT INTO ThongBao (MaTaiKhoan, TieuDe, NoiDung, LoaiThongBao, DaDoc, NgayTao)
+        SELECT 
+            aa.MaTaiKhoan,
+            N'Thông báo hủy lịch hẹn do Khoa tạm ngưng tiếp nhận',
+            N'Lịch hẹn ngày ' + CONVERT(VARCHAR, aa.NgayKham, 103) + N' tại ' + @TenKhoa + N' đã được tự động hủy do Khoa tạm ngưng hoạt động. Quý khách vui lòng đặt lại lịch tại khoa khác hoặc liên hệ bộ phận Tiếp đón.',
+            N'LICH_HEN',
+            0,
+            GETDATE()
+        FROM @AffectedAppointments aa
+        WHERE aa.MaTaiKhoan IS NOT NULL;
+    END
+    ELSE
+    BEGIN
+        -- Mở lại hoạt động Khoa (1)
+        UPDATE Khoa SET TrangThai = 1 WHERE MaKhoa = @MaKhoa;
+
+        -- Mở lại tất cả Phòng thuộc khoa
+        UPDATE Phong SET TrangThai = 1 WHERE MaKhoa = @MaKhoa;
+
+        -- Mở lại các giường 'BaoTri' về lại 'Trong' (JOIN qua Phong)
+        UPDATE g
+        SET g.TrangThai = 'Trong'
+        FROM GiuongBenh g
+        INNER JOIN Phong p ON g.MaPhong = p.MaPhong
+        WHERE p.MaKhoa = @MaKhoa AND g.TrangThai = 'BaoTri';
+    END
+END;
+GO
+
+-- 4. Đồng bộ ngay lập tức cho các Giường nằm trong Phòng đang bị khóa
+UPDATE g
+SET g.TrangThai = 'BaoTri'
+FROM GiuongBenh g
+INNER JOIN Phong p ON g.MaPhong = p.MaPhong
+WHERE p.TrangThai = 0 AND g.TrangThai = 'Trong';
+GO
+
+
+USE QuanLyBenhVien;
+GO
+

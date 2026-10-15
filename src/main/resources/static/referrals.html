@@ -308,49 +308,76 @@
             }
         }
 
-        async function loadReferralOptions() {
+                async function loadReferralOptions() {
+            // 1. Tải danh sách Phiếu khám (Đã loại bỏ các phiếu đã chuyển khoa)
             const examSelect = document.getElementById('referralExam');
             if (examSelect) {
                 examSelect.replaceChildren(new Option('Chọn phiếu khám', ''));
                 try {
-                    const res = await fetch('/api/v1/phieukham/me');
+                    const [res, reqRes] = await Promise.all([
+                        fetch('/api/v1/phieukham/me'),
+                        fetch('/api/v1/chuyenkhoa/me')
+                    ]);
+
                     if (res.ok) {
-                        window.myExams = await res.json();
+                        const allExams = await res.json();
+                        const transferredExamIds = new Set();
+
+                        if (reqRes.ok) {
+                            const myRequests = await reqRes.json();
+                            myRequests.forEach(r => {
+                                if (r.loaiYeuCau === 'CHUYEN_KHOA' && ['CHO_DUYET', 'CHO_XEP_GIUONG', 'CHO_TIEP_NHAN', 'DA_TIEP_NHAN'].includes(r.trangThai)) {
+                                    transferredExamIds.add(r.maPhieuKham);
+                                }
+                            });
+                        }
+
+                        // Chỉ giữ lại những phiếu khám CHƯA chuyển khoa
+                        window.myExams = allExams.filter(e => !transferredExamIds.has(e.maPhieuKham));
                         window.myExams.forEach(e => {
                             const deptLabel = e.maKhoa ? ` (${e.maKhoa})` : '';
                             examSelect.add(new Option(e.maPhieuKham + ' - BN: ' + e.maBenhNhan + deptLabel, e.maPhieuKham));
                         });
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Lỗi khi tải danh sách phiếu khám:", e);
+                }
 
                 // Khi bác sĩ đổi phiếu khám -> cập nhật lại các khoa nhận hợp lệ
                 examSelect.addEventListener('change', renderDepartmentOptions);
             }
-            
+
+            // 2. Tải danh sách Khoa nhận
             const departmentSelect = document.getElementById('referralDepartment');
             if (departmentSelect) {
                 try {
                     const res = await fetch('/api/v1/khoa');
-                    if(res.ok) {
+                    if (res.ok) {
                         const departments = await res.json();
                         // Lọc các khoa đang hoạt động
                         window.allDepartments = departments.filter(d => d.trangThai === true || d.trangThai === 1 || d.trangThai == null);
                         renderDepartmentOptions();
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Lỗi khi tải danh sách khoa:", e);
+                }
             }
 
+            // 3. Tải danh sách Bác sĩ (phục vụ Hội chẩn)
             const doctorSelect = document.getElementById('invitedDoctor');
             if (doctorSelect) {
                 doctorSelect.replaceChildren(new Option('Chọn bác sĩ', ''));
                 try {
                     const res = await fetch('/api/v1/nhanvien/doctors');
-                    if(res.ok) {
+                    if (res.ok) {
                         window.allDoctors = await res.json();
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Lỗi khi tải danh sách bác sĩ:", e);
+                }
             }
 
+            // 4. Lọc bác sĩ theo khoa khi chuyển sang Hội chẩn
             if (departmentSelect && doctorSelect) {
                 departmentSelect.addEventListener('change', function() {
                     doctorSelect.replaceChildren(new Option('Chọn bác sĩ', '')); 
@@ -359,7 +386,7 @@
 
                     const filteredDoctors = window.allDoctors.filter(d => d.specialty === selectedMaKhoa);
                     filteredDoctors.forEach(doctor => {
-                        doctorSelect.add(new Option(doctor.name + ' - ' + (doctor.specialty || ''), doctor.id));
+                        doctorSelect.add(new Option(`${doctor.name} - ${doctor.specialty || ''}`, doctor.id));
                     });
                 });
             }
@@ -433,6 +460,7 @@
                     event.target.reset();
                     toggleInvitedDoctor();
                     loadMyReferrals();
+                    loadReferralOptions();
                 } else {
                     const error = await response.json();
                     alert('Lỗi: ' + error.message);

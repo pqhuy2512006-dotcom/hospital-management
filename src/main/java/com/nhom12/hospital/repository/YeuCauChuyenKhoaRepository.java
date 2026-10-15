@@ -28,6 +28,13 @@ public class YeuCauChuyenKhoaRepository {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, maPhieuKham);
         return count != null && count > 0;
     }
+        public Optional<YeuCauChuyenKhoa> findLatestApprovedTransfer(String maBenhNhan, String maKhoaNhan) {
+        String sql = "SELECT TOP 1 * FROM dbo.vw_YeuCauChuyenKhoa " +
+                     "WHERE MaBenhNhan = ? AND MaKhoaNhan = ? AND TrangThai IN ('CHO_XEP_GIUONG', 'DA_TIEP_NHAN') " +
+                     "ORDER BY NgayTao DESC";
+        List<YeuCauChuyenKhoa> list = jdbcTemplate.query(sql, ROW_MAPPER, maBenhNhan, maKhoaNhan);
+        return list.stream().findFirst();
+    }
 
     public List<YeuCauChuyenKhoa> findByMaBacSiGuiOrderByNgayTaoDesc(String maBacSiGui) {
         return jdbcTemplate.query(

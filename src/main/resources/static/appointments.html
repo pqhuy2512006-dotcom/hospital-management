@@ -656,7 +656,7 @@
                 const available = doctors.filter(doc => doc.specialty === departmentId);
                 doctorSelect.innerHTML = available.length
                     ? '<option value="">Chọn bác sĩ</option>' + available.map(doctor =>
-                        `<option value="${doctor.id}">${doctor.name}</option>`).join('')
+                        `<option value="${doctor.id}">${doctor.name}${doctor.maPhong ? ' - Phòng: ' + doctor.maPhong : ''}</option>`).join('')
                     : '<option value="">Chưa có bác sĩ thuộc khoa này</option>';
             } catch (error) {
                 console.error(error);
@@ -691,7 +691,11 @@
                     stt: item.maLichHen,
                     patientName: patientMap.get(item.maBenhNhan) || item.maBenhNhan,
                     dept: departments.find(dept => dept.maKhoa === item.maKhoa)?.tenKhoa || item.maKhoa,
-                    doctor: doctors.find(doctor => doctor.id === item.maBacSi)?.name || item.maBacSi || 'Chưa phân công',
+                    doctor: (() => {
+        const doc = doctors.find(d => d.id === item.maBacSi);
+        if (!doc) return item.maBacSi || 'Chưa phân công';
+        return doc.maPhong ? `${doc.name} (Phòng ${doc.maPhong})` : doc.name;
+    })(),
                     date: item.ngayKham,
                     time: item.gioKham,
                     queuePosition: item.viTriHangDoi,
@@ -856,14 +860,15 @@
             }
         }
 
-        async function cancelAppt(id) {
+               async function cancelAppt(id) {
             if (confirm("Bạn có chắc chắn muốn hủy lịch hẹn này?")) {
                 try {
                     const res = await fetch(`/api/v1/lichhen/${encodeURIComponent(id)}/cancel`, {
                         method: 'PUT'
                     });
                     if (!res.ok) {
-                        alert("Không thể hủy lịch hẹn trên hệ thống!");
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.message || "Không thể hủy lịch hẹn trên hệ thống!");
                         return;
                     }
                     alert("Đã hủy lịch hẹn thành công!");
@@ -878,13 +883,13 @@
         function canChangeAppointment(appointment) {
             if (['DaHuy', 'DaKham'].includes(appointment.status)) return false;
             const appointmentTime = new Date(`${appointment.date}T${appointment.time}`);
-            return appointmentTime.getTime() - Date.now() >= 24 * 60 * 60 * 1000;
+            return appointmentTime.getTime() - Date.now() >= 4 * 60 * 60 * 1000;
         }
 
         function openReschedule(id) {
             const appointment = appointments.find(item => item.id === id);
             if (!appointment || !canChangeAppointment(appointment)) {
-                alert('Chỉ được đổi lịch trước giờ khám ít nhất 24 tiếng.');
+                alert('Chỉ được đổi lịch trước giờ khám ít nhất 4 tiếng.');
                 return;
             }
             document.getElementById('rescheduleId').value = id;
@@ -982,7 +987,7 @@
                 const available = allDoctors.filter(doc => doc.specialty === departmentId);
                 doctorSelect.innerHTML = available.length
                     ? '<option value="">Chọn bác sĩ</option>' + available.map(doc =>
-                        `<option value="${doc.id}">${doc.name}</option>`).join('')
+                        `<option value="${doc.id}">${doc.name}${doctor.maPhong ? ' - Phòng: ' + doctor.maPhong : ''}</option>`).join('')
                     : '<option value="">Chưa có bác sĩ thuộc khoa này</option>';
                 loadAvailableSlotsWalkin();
             } catch (error) {

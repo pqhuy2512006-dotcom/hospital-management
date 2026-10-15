@@ -42,6 +42,15 @@ public class HoaDonRepository {
         );
     }
 
+        public Optional<HoaDon> findByMaPhieuKham(String maPhieuKham) {
+        List<HoaDon> rows = jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_HoaDon WHERE MaPhieuKham = ?",
+                ROW_MAPPER,
+                maPhieuKham
+        );
+        return rows.stream().findFirst();
+    }
+    
     public List<HoaDon> findByTrangThaiTT(String trangThaiTT) {
         return jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_HoaDon WHERE TrangThaiTT = ? ORDER BY NgayLap DESC",

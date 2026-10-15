@@ -23,7 +23,7 @@ public class PhieuKhamService {
     private final ChiTietHoaDonRepository chiTietHoaDonRepository;
     private final BenhNhanRepository benhNhanRepository;
     private final NhanVienRepository nhanVienRepository;
-
+    private final KhoaRepository khoaRepository;
     public PhieuKhamService(PhieuKhamRepository phieuKhamRepository,
                             DonThuocRepository donThuocRepository,
                             ThuocRepository thuocRepository,
@@ -33,7 +33,8 @@ public class PhieuKhamService {
                             HoaDonRepository hoaDonRepository,
                             ChiTietHoaDonRepository chiTietHoaDonRepository,
                             BenhNhanRepository benhNhanRepository,
-                            NhanVienRepository nhanVienRepository) {
+                            NhanVienRepository nhanVienRepository,
+                        KhoaRepository khoaRepository) {
         this.phieuKhamRepository = phieuKhamRepository;
         this.donThuocRepository = donThuocRepository;
         this.thuocRepository = thuocRepository;
@@ -44,6 +45,7 @@ public class PhieuKhamService {
         this.chiTietHoaDonRepository = chiTietHoaDonRepository;
         this.benhNhanRepository = benhNhanRepository;
         this.nhanVienRepository = nhanVienRepository;
+        this.khoaRepository = khoaRepository;
     }
 
     public List<PhieuKham> getAll() {
@@ -210,6 +212,7 @@ public class PhieuKhamService {
         }
 
         List<KetQuaCLS> clsOrders = new ArrayList<>();
+        boolean isClsPaused = false;
         List<?> clsList = (List<?>) payload.get("clsList");
         if (clsList != null && !clsList.isEmpty()) {
             int clsSeq = 1;
@@ -277,12 +280,15 @@ public class PhieuKhamService {
         donThuocRepository.saveAll(donThuocList);
         ketQuaCLSRepository.saveAll(clsOrders);
 
-        return Map.of(
-                "success", true,
-                "maPhieuKham", maPK,
-                "maHoaDon", maHD,
-                "message", "Khám bệnh thành công! Đã tạo đơn thuốc và chuyển hóa đơn sang viện phí."
-        );
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("success", true);
+        resp.put("maPhieuKham", maPK);
+        resp.put("maHoaDon", maHD);
+        resp.put("message", "Khám bệnh thành công! Đã tạo đơn thuốc và chuyển hóa đơn sang viện phí.");
+        if (isClsPaused) {
+            resp.put("warning", "Khoa Cận Lâm Sàng hiện đang tạm ngưng tiếp nhận. Các chỉ định xét nghiệm đã được lưu vào hàng đợi và sẽ được phòng Lab tiếp nhận ngay khi Khoa mở lại.");
+        }
+        return resp;
     }
 
     @Transactional
@@ -328,9 +334,16 @@ public class PhieuKhamService {
             });
         }
 
+                boolean isClsPaused = false;
         List<KetQuaCLS> clsOrders = new ArrayList<>();
         List<?> clsList = (List<?>) payload.get("clsList");
         if (clsList != null && !clsList.isEmpty()) {
+            // Kiểm tra nếu Khoa CLS đang tạm ngưng (TrangThai = 0 hoặc false)
+            Optional<Khoa> clsDept = khoaRepository.findById("CLS");
+            if (clsDept.isPresent() && Boolean.FALSE.equals(clsDept.get().getTrangThai())) {
+                isClsPaused = true;
+            }
+
             int clsSeq = 1;
             for (Object item : clsList) {
                 String maDV = null;
@@ -362,11 +375,14 @@ public class PhieuKhamService {
             ketQuaCLSRepository.saveAll(clsOrders);
         }
 
-        return Map.of(
-                "success", true,
-                "maPhieuKham", maPK,
-                "message", "Chỉ định cận lâm sàng thành công. Bệnh nhân chuyển sang trạng thái Chờ kết quả."
-        );
+                Map<String, Object> resp = new HashMap<>();
+        resp.put("success", true);
+        resp.put("maPhieuKham", maPK);
+        resp.put("message", "Chỉ định cận lâm sàng thành công. Bệnh nhân chuyển sang trạng thái Chờ kết quả.");
+        if (isClsPaused) {
+            resp.put("warning", "Khoa Cận Lâm Sàng hiện đang tạm ngưng tiếp nhận. Chỉ định đã được lưu vào hàng đợi và sẽ được thực hiện khi Khoa mở lại.");
+        }
+        return resp;
     }
 }
 

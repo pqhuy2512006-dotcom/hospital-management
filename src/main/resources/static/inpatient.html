@@ -896,6 +896,21 @@
         function closeAssignModal() {
             document.getElementById('assignModal').style.display = 'none';
         }
+                document.getElementById('assignPatientId')?.addEventListener('blur', async function() {
+            const pid = this.value.trim();
+            if (!pid) return;
+            try {
+                const res = await fetch(`/api/v1/benhnhan/${encodeURIComponent(pid)}`);
+                if (res.ok) {
+                    const bn = await res.json();
+                    if (bn && bn.hoTen) {
+                        document.getElementById('assignPatientName').value = bn.hoTen;
+                    }
+                }
+            } catch (err) {
+                console.warn("Không tìm thấy thông tin bệnh nhân", err);
+            }
+        });
 
         // Xác nhận gán bệnh nhân vào giường lên SQL Server
         async function confirmAssignBed(e) {
@@ -916,9 +931,15 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!res.ok) {
-                    const err = await res.text();
-                    alert("Lỗi khi xếp giường: " + err);
+                    if (!res.ok) {
+                    let errMsg = "Lỗi khi xếp giường!";
+                    try {
+                        const errData = await res.json();
+                        errMsg = errData.message || JSON.stringify(errData);
+                    } catch (_) {
+                        errMsg = await res.text();
+                    }
+                    alert(errMsg);
                     return;
                 }
 
@@ -941,6 +962,7 @@
                         if (nt) targetNoiTruId = nt.maNoiTru;
                     }
 
+                                        let invoiceInfo = null;
                     if (targetNoiTruId && targetNoiTruId !== 'null') {
                         const res = await fetch(`/api/v1/noitru/${encodeURIComponent(targetNoiTruId)}/xuatvien`, {
                             method: 'PUT'
@@ -949,6 +971,7 @@
                             alert("Không thể cập nhật xuất viện trên hệ thống!");
                             return;
                         }
+                        invoiceInfo = await res.json();
                     } else {
                         // Cập nhật trạng thái giường về 'Trong'
                         await fetch(`/api/v1/giuongbenh/${encodeURIComponent(bedId)}`, {
@@ -958,7 +981,7 @@
                         });
                     }
 
-                    alert(`Giường ${bedId} đã được xuất viện và chuyển sang trạng thái Trống sẵn sàng!`);
+                    alert(`Bệnh nhân đã xuất viện thành công!\nGiường ${bedId} đã chuyển sang trạng thái Trống sẵn sàng đón bệnh nhân mới.`);
                     await loadInpatientData();
                 } catch (err) {
                     console.error(err);

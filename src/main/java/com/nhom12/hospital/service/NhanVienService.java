@@ -51,6 +51,7 @@ public class NhanVienService {
                     doctor.put("id", employee.getMaNhanVien());
                     doctor.put("name", employee.getHoTen());
                     doctor.put("specialty", employee.getMaKhoa());
+                    doctor.put("maPhong", employee.getMaPhong());
                     return doctor;
                 })
                 .collect(Collectors.toList());
@@ -86,7 +87,7 @@ public class NhanVienService {
 
         employee.setSoDienThoai(phone);
         employee.setEmail(email);
-        employee.setDiaChi(normalizeOptional(payload.get("diaChi")));
+        employee.setMaPhong(normalizeOptional(payload.get("maPhong")));
         nhanVienRepository.save(employee);
 
         TaiKhoan account = accountOpt.get();
@@ -150,7 +151,7 @@ public class NhanVienService {
             nv.setHoTen(updated.getHoTen());
             nv.setTrinhDoChuyenMon(updated.getTrinhDoChuyenMon());
             nv.setMaKhoa(updated.getMaKhoa());
-            nv.setDiaChi(updated.getDiaChi());
+            nv.setMaPhong(updated.getMaPhong());;
             nv.setSoDienThoai(updated.getSoDienThoai());
             nv.setChungChiHanhNghe(updated.getChungChiHanhNghe());
             nv.setTrangThai(updated.getTrangThai());
@@ -168,7 +169,7 @@ public class NhanVienService {
         profile.put("chungChiHanhNghe", employee.getChungChiHanhNghe());
         profile.put("soDienThoai", employee.getSoDienThoai());
         profile.put("email", employee.getEmail());
-        profile.put("diaChi", employee.getDiaChi());
+        profile.put("maPhong", employee.getMaPhong());
         profile.put("maKhoa", employee.getMaKhoa());
         return profile;
     }

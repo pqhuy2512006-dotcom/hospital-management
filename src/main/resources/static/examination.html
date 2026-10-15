@@ -713,7 +713,8 @@
                     fetch('/api/v1/lichhen/me'),
                     fetch('/api/v1/benhnhan'),
                     fetch('/api/v1/thuoc'),
-                    fetch('/api/v1/dichvucls')
+                    fetch('/api/v1/dichvucls'),
+                    fetch('/api/v1/khoa')
                 ]);
 
                 if (drugsRes.ok) availableDrugs = await drugsRes.json();
@@ -874,8 +875,12 @@
                         ${optionsHtml}
                     </select>
                 </td>
-                <td>Phòng Xét Nghiệm CLS</td>
-                <td><span style="color:#b45309; font-weight:600;"><i class="fa-solid fa-clock"></i> Đã gửi chỉ định - Chờ phòng CLS tiếp nhận</span></td>
+                                <td>Phòng Xét Nghiệm CLS</td>
+                <td>
+                    ${window.isClsActive !== false 
+                        ? '<span style="color:#b45309; font-weight:600;"><i class="fa-solid fa-clock"></i> Đã gửi chỉ định - Chờ phòng CLS tiếp nhận</span>' 
+                        : '<span style="color:#d97706; font-weight:600; background:#fef3c7; padding:3px 8px; border-radius:4px;"><i class="fa-solid fa-triangle-exclamation"></i> Khoa CLS đang tạm ngưng - Đã lưu hàng đợi chờ mở lại</span>'}
+                </td>
                 <td><button type="button" class="btn-del-item" onclick="deleteRow(this)">&times;</button></td>
             `;
             tbody.appendChild(newRow);
@@ -1018,11 +1023,16 @@
                 }
 
                 const data = await res.json();
-                alert(`Khám bệnh thành công cho bệnh nhân: ${currentPatient.name}!\n` +
-                      `Mã phiếu khám: ${data.maPhieuKham}\n` +
-                      `Mã hóa đơn viện phí: ${data.maHoaDon}\n` +
-                      `Đã lưu kết quả khám, đơn thuốc và tạo hóa đơn vào CSDL SQL Server!`);
-
+                let msg = `Khám bệnh thành công cho bệnh nhân: ${currentPatient.name}!\n` +
+                          `Mã phiếu khám: ${data.maPhieuKham}\n` +
+                          `Mã hóa đơn viện phí: ${data.maHoaDon}\n` +
+                          `Đã lưu kết quả khám, đơn thuốc và tạo hóa đơn vào CSDL SQL Server!`;
+                
+                // Nếu Backend trả về cảnh báo (Khoa CLS đang tạm ngưng) thì hiển thị thêm để nhắc Bác sĩ
+                if (data.warning) {
+                    msg += `\n\n⚠️ LƯU Ý BÁC SĨ:\n${data.warning}`;
+                }
+                alert(msg);
                 currentPatient.status = "DONE";
                 if (selectedQueueIdx < patientQueue.length - 1) {
                     selectedQueueIdx++;
@@ -1043,11 +1053,12 @@
             document.getElementById('invitedDoctor').required = isConsult;
         }
 
-        async function loadReferralOptions() {
-            const [departmentsResponse, doctorsResponse, examsResponse] = await Promise.all([
+                async function loadReferralOptions() {
+            const [departmentsResponse, doctorsResponse, examsResponse, referralsResponse] = await Promise.all([
                 fetch('/api/v1/khoa'),
                 fetch('/api/v1/nhanvien/doctors'),
-                fetch('/api/v1/phieukham/me')
+                fetch('/api/v1/phieukham/me'),
+                fetch('/api/v1/chuyenkhoa/me')
             ]);
             if (!departmentsResponse.ok || !doctorsResponse.ok || !examsResponse.ok) {
                 throw new Error('Không thể tải danh sách khoa, bác sĩ hoặc phiếu khám.');
@@ -1055,6 +1066,17 @@
             const departments = await departmentsResponse.json();
             const doctors = await doctorsResponse.json();
             const examinations = await examsResponse.json();
+
+            // Tìm các phiếu khám đã được chuyển khoa
+            const transferredExamIds = new Set();
+            if (referralsResponse.ok) {
+                const myReferrals = await referralsResponse.json();
+                myReferrals.forEach(r => {
+                    if (r.loaiYeuCau === 'CHUYEN_KHOA' && ['CHO_DUYET', 'CHO_XEP_GIUONG', 'CHO_TIEP_NHAN', 'DA_TIEP_NHAN'].includes(r.trangThai)) {
+                        transferredExamIds.add(r.maPhieuKham);
+                    }
+                });
+            }
 
             const departmentSelect = document.getElementById('referralDepartment');
             departmentSelect.replaceChildren(new Option('Chọn khoa nhận', ''));
@@ -1066,7 +1088,10 @@
 
             const examSelect = document.getElementById('referralExam');
             examSelect.replaceChildren(new Option('Chọn phiếu khám', ''));
-            examinations.forEach(exam => examSelect.add(new Option(`${exam.maPhieuKham} - ${exam.maBenhNhan}`, exam.maPhieuKham)));
+            // Chỉ hiển thị các phiếu khám chưa chuyển đi
+            examinations
+                .filter(exam => !transferredExamIds.has(exam.maPhieuKham))
+                .forEach(exam => examSelect.add(new Option(`${exam.maPhieuKham} - ${exam.maBenhNhan}`, exam.maPhieuKham)));
         }
 
         async function loadMyReferrals() {
@@ -1110,6 +1135,7 @@
             }
             document.getElementById('referralReason').value = '';
             await loadMyReferrals();
+            await loadReferralOptions();
             alert('Đã gửi yêu cầu, trạng thái: Chờ tiếp nhận.');
         }
 

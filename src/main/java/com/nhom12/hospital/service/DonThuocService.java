@@ -11,31 +11,35 @@ import com.nhom12.hospital.repository.ThuocRepository;
 import com.nhom12.hospital.repository.ChiTietNhapKhoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.nhom12.hospital.entity.HoaDon;
+import com.nhom12.hospital.repository.HoaDonRepository;
 import java.util.*;
 
 @Service
 public class DonThuocService {
 
-    private final DonThuocRepository donThuocRepository;
+        private final DonThuocRepository donThuocRepository;
     private final PhieuKhamRepository phieuKhamRepository;
     private final ThuocRepository thuocRepository;
     private final BenhNhanRepository benhNhanRepository;
     private final NhanVienRepository nhanVienRepository;
     private final ChiTietNhapKhoRepository chiTietNhapKhoRepository;
+    private final HoaDonRepository hoaDonRepository;
 
     public DonThuocService(DonThuocRepository donThuocRepository,
                            PhieuKhamRepository phieuKhamRepository,
                            ThuocRepository thuocRepository,
                            BenhNhanRepository benhNhanRepository,
                            NhanVienRepository nhanVienRepository,
-                           ChiTietNhapKhoRepository chiTietNhapKhoRepository) {
+                           ChiTietNhapKhoRepository chiTietNhapKhoRepository,
+                           HoaDonRepository hoaDonRepository) {
         this.donThuocRepository = donThuocRepository;
         this.phieuKhamRepository = phieuKhamRepository;
         this.thuocRepository = thuocRepository;
         this.benhNhanRepository = benhNhanRepository;
         this.nhanVienRepository = nhanVienRepository;
         this.chiTietNhapKhoRepository = chiTietNhapKhoRepository;
+        this.hoaDonRepository = hoaDonRepository;
     }
 
     public List<Map<String, Object>> getAll() {
@@ -67,6 +71,13 @@ public class DonThuocService {
                     map.put("doctor", nv.getHoTen());
                 });
             });
+            
+                if (dt.getMaPhieuKham() != null) {
+                hoaDonRepository.findByMaPhieuKham(dt.getMaPhieuKham()).ifPresent(hd -> {
+                    map.put("paymentStatus", hd.getTrangThaiTT());
+                    map.put("invoiceId", hd.getMaHoaDon());
+                });
+            }
 
             res.add(map);
         }
@@ -82,6 +93,16 @@ public class DonThuocService {
         DonThuoc dt = dtOpt.get();
         if ("DISPENSED".equalsIgnoreCase(dt.getTrangThai())) {
             throw new IllegalStateException("Thu?c này dã du?c c?p phát r?i!");
+        }
+                // KIỂM TRA THANH TOÁN VIỆN PHÍ TRƯỚC KHI XUẤT THUỐC
+        if (dt.getMaPhieuKham() != null) {
+            Optional<HoaDon> hdOpt = hoaDonRepository.findByMaPhieuKham(dt.getMaPhieuKham());
+            if (hdOpt.isPresent()) {
+                HoaDon hd = hdOpt.get();
+                if (!"DaThanhToan".equalsIgnoreCase(hd.getTrangThaiTT())) {
+                    throw new IllegalStateException("Bệnh nhân chưa thanh toán hóa đơn viện phí (" + hd.getMaHoaDon() + "). Vui lòng yêu cầu bệnh nhân thanh toán trước khi cấp phát thuốc!");
+                }
+            }
         }
         Optional<Thuoc> drugOpt = thuocRepository.findById(dt.getMaThuoc());
         if (drugOpt.isEmpty()) {

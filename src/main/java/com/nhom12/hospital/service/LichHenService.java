@@ -319,18 +319,28 @@ public class LichHenService {
         }
     }
 
+    // 👉 TÌM HÀM cancelAppointment VÀ CẬP NHẬT NHƯ SAU:
     public LichHen cancelAppointment(String id, Long accountId) {
         Optional<LichHen> appointment = lichHenRepository.findById(id);
         if (appointment.isEmpty()) {
             throw new NoSuchElementException("Không tìm thấy lịch hẹn.");
         }
         LichHen current = appointment.get();
+
+        // Chặn không cho hủy lịch đã khám xong hoặc đang trong phòng khám
+        if ("DaKham".equalsIgnoreCase(current.getTrangThai()) || "DangKham".equalsIgnoreCase(current.getTrangThai())) {
+            throw new IllegalStateException("Lịch hẹn đang diễn ra hoặc đã hoàn tất khám, không thể hủy.");
+        }
+        if ("DaHuy".equalsIgnoreCase(current.getTrangThai())) {
+            throw new IllegalStateException("Lịch hẹn này đã bị hủy trước đó.");
+        }
+
         if (accountId != null && isPatient(accountId)) {
             if (!ownsAppointment(current, accountId)) {
                 throw new IllegalStateException("Bạn chỉ được hủy lịch hẹn của mình.");
             }
             if (!canPatientChange(current)) {
-                throw new IllegalArgumentException("Chỉ được hủy lịch trước giờ khám hơn 24 tiếng.");
+                throw new IllegalArgumentException("Chỉ được hủy lịch hẹn trước giờ khám tối thiểu 4 tiếng.");
             }
         }
         current.setTrangThai("DaHuy");
@@ -350,7 +360,7 @@ public class LichHenService {
             throw new IllegalStateException("Bạn chỉ được đổi lịch hẹn của mình.");
         }
         if (!canPatientChange(current)) {
-            throw new IllegalArgumentException("Chỉ được đổi lịch trước giờ khám hơn 24 tiếng.");
+            throw new IllegalArgumentException("Chỉ được đổi lịch trước giờ khám hơn 4 tiếng.");
         }
         try {
             LocalDate newDate = LocalDate.parse(requestBody.get("ngayKham"));
@@ -453,14 +463,15 @@ public class LichHenService {
                 .orElse(false);
     }
 
-    private boolean canPatientChange(LichHen appointment) {
+     private boolean canPatientChange(LichHen appointment) {
         if (appointment.getNgayKham() == null || appointment.getGioKham() == null
                 || "DaHuy".equalsIgnoreCase(appointment.getTrangThai())
+                || "DangKham".equalsIgnoreCase(appointment.getTrangThai())
                 || "DaKham".equalsIgnoreCase(appointment.getTrangThai())) {
             return false;
         }
         return !LocalDateTime.of(appointment.getNgayKham(), appointment.getGioKham())
-            .isBefore(LocalDateTime.now().plusHours(24));
+            .isBefore(LocalDateTime.now().plusHours(4));
     }
 
     private Integer expectedDuration(String visitType) {

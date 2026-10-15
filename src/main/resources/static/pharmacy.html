@@ -756,6 +756,7 @@
         }
 
         // Render đơn thuốc chờ cấp phát
+                // Render đơn thuốc chờ cấp phát (Kiểm tra thanh toán viện phí)
         function renderPrescriptions() {
             const tbody = document.getElementById('prescriptionTableBody');
             tbody.innerHTML = '';
@@ -766,13 +767,30 @@
             }
 
             prescriptions.forEach(p => {
-                const statusHtml = p.status === 'PENDING'
-                    ? '<span class="badge-status status-pending">Chờ xuất thuốc</span>'
-                    : '<span class="badge-status status-dispensed">Đã phát thuốc</span>';
+                // Kiểm tra xem đơn thuốc này đã thanh toán hóa đơn viện phí chưa
+                const isPaid = p.paymentStatus === 'DaThanhToan';
 
-                const actionHtml = p.status === 'PENDING'
-                    ? `<button class="btn-dispense" onclick="dispenseDrug('${p.id}')"><i class="fa-solid fa-box-open"></i> Xuất Thuốc (Trừ Tồn)</button>`
-                    : '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check-double"></i> Đã hoàn tất</span>';
+                // Trạng thái đơn thuốc & viện phí
+                let statusHtml = '';
+                if (p.status === 'DISPENSED') {
+                    statusHtml = '<span class="badge-status status-dispensed">Đã phát thuốc</span>';
+                } else if (isPaid) {
+                    statusHtml = '<span class="badge-status" style="background:#dcfce7; color:#15803d; font-weight:600;"><i class="fa-solid fa-check"></i> Đã đóng tiền - Chờ phát</span>';
+                } else {
+                    statusHtml = '<span class="badge-status" style="background:#fee2e2; color:#dc2626; font-weight:700;"><i class="fa-solid fa-circle-exclamation"></i> Chưa đóng tiền</span>';
+                }
+
+                // Nút hành động
+                let actionHtml = '';
+                if (p.status === 'DISPENSED') {
+                    actionHtml = '<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-check-double"></i> Đã hoàn tất</span>';
+                } else if (!isPaid) {
+                    // Chưa đóng tiền -> Khóa nút bấm lại (disabled)
+                    actionHtml = '<button class="btn-dispense" disabled style="background:#e2e8f0; color:#94a3b8; cursor:not-allowed;" title="Bệnh nhân chưa đóng viện phí, không thể xuất thuốc"><i class="fa-solid fa-ban"></i> Chờ đóng tiền</button>';
+                } else {
+                    // Đã đóng tiền -> Cho phép Dược sĩ bấm xuất thuốc
+                    actionHtml = `<button class="btn-dispense" onclick="dispenseDrug('${p.id}')"><i class="fa-solid fa-box-open"></i> Xuất Thuốc (Trừ Tồn)</button>`;
+                }
 
                 tbody.innerHTML += `
                     <tr>

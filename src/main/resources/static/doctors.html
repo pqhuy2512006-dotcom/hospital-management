@@ -739,7 +739,7 @@
                         hocVi: item.trinhDoChuyenMon || 'Bác sĩ',
                         maKhoa: item.maKhoa,
                         chuyenKhoa: khoaMap[item.maKhoa] || 'Chưa xác định',
-                        phongKham: item.diaChi || '',
+                        phongKham: item.maPhong || '',
                         sdt: item.soDienThoai || '',
                         cchn: item.chungChiHanhNghe || '',
                         vaiTro: item.vaiTro || 'BacSi',
@@ -1114,8 +1114,8 @@
                         
                         listToRender.forEach(p => {
                             const option = document.createElement('option');
-                            option.value = p.tenPhong; 
-                            option.textContent = p.tenPhong + ' (' + (p.loaiPhong || 'Phòng') + ')';
+                            option.value = p.maPhong; 
+                            option.textContent = p.tenPhong + ' (' + p.maPhong + ')';
                             dPhongKham.appendChild(option);
                         });
                     }
@@ -1326,7 +1326,7 @@
                 hoTen: hoTen,
                 trinhDoChuyenMon: hocVi,
                 maKhoa: maKhoa,
-                diaChi: phongKham,
+                maPhong: phongKham,
                 soDienThoai: sdt,
                 chungChiHanhNghe: cchn,
                 vaiTro: vaiTro,
