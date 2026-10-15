@@ -1,18 +1,18 @@
 package com.nhom12.hospital.entity;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Phong {
     private String maPhong;
     private String tenPhong;
     private String loaiPhong;
     private String maKhoa;
     private String tenKhoa;
-    @Builder.Default
     private Boolean trangThai = true;
     private Khoa khoa;
 }

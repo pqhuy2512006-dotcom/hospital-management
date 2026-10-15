@@ -5,7 +5,6 @@ import com.nhom12.hospital.entity.TaiKhoan;
 import com.nhom12.hospital.repository.NhanVienRepository;
 import com.nhom12.hospital.repository.TaiKhoanRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -109,9 +108,6 @@ public Map<String, Object> create(Map<String, Object> payload) {
         );
     }
 
-    String fullName =
-            (String) payload.getOrDefault("fullName", username);
-
     String email =
             payload.get("email") instanceof String value
                     ? value.trim()
@@ -160,7 +156,7 @@ public Map<String, Object> create(Map<String, Object> payload) {
     tk.setTrangThai(true);
     tk.setNgayTao(LocalDateTime.now());
 
-    TaiKhoan saved = taiKhoanRepository.save(tk);
+    taiKhoanRepository.save(tk);
 
     // Theo Hướng 2: Admin chỉ cấp tài khoản đăng nhập (TaiKhoan), HR sẽ tạo hồ sơ NhanVien và liên kết với tài khoản này
     return Map.of(

@@ -1,7 +1,6 @@
 package com.nhom12.hospital.service;
 
 import com.nhom12.hospital.entity.NhanVien;
-import com.nhom12.hospital.entity.PhieuKham;
 import com.nhom12.hospital.entity.YeuCauChuyenKhoa;
 import com.nhom12.hospital.repository.KhoaRepository;
 import com.nhom12.hospital.repository.NhanVienRepository;
@@ -166,7 +165,7 @@ public class ChuyenKhoaService {
         }
 
         List<GiuongBenh> availableBeds = giuongBenhRepository.findByMaKhoaAndTrangThai(nurse.get().getMaKhoa(), "Trong");
-        GiuongBenh newBed = availableBeds.stream()
+        availableBeds.stream()
                 .filter(b -> b.getMaGiuong().equals(maGiuongMoi))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Giường không tồn tại hoặc không còn trống trong khoa của bạn."));

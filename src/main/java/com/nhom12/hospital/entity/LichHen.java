@@ -1,6 +1,5 @@
 package com.nhom12.hospital.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +10,6 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class LichHen {
     private String maLichHen;
     private String maBenhNhan;

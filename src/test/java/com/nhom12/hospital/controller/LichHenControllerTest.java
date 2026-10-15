@@ -1,26 +1,19 @@
 package com.nhom12.hospital.controller;
 
 import com.nhom12.hospital.config.SessionAttributes;
-import com.nhom12.hospital.entity.BenhNhan;
-import com.nhom12.hospital.entity.Khoa;
 import com.nhom12.hospital.entity.LichHen;
-import com.nhom12.hospital.entity.NhanVien;
-import com.nhom12.hospital.entity.TaiKhoan;
 import com.nhom12.hospital.service.LichHenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
+
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
