@@ -1,6 +1,5 @@
 package com.nhom12.hospital.controller;
 
-
 import com.nhom12.hospital.config.SessionAttributes;
 import com.nhom12.hospital.service.TaiKhoanService;
 
@@ -19,13 +18,13 @@ public class TaiKhoanController {
     private final TaiKhoanService taiKhoanService;
 
     public TaiKhoanController(TaiKhoanService taiKhoanService) {
-    this.taiKhoanService = taiKhoanService;
-}
+        this.taiKhoanService = taiKhoanService;
+    }
 
     @GetMapping
     public List<Map<String, Object>> getAll() {
         return taiKhoanService.getAll();
-    } 
+    }
 
     @GetMapping("/unlinked")
     public List<Map<String, Object>> getUnlinkedAccounts() {
@@ -33,122 +32,87 @@ public class TaiKhoanController {
     }
 
     @PostMapping
-public ResponseEntity<?> create(@RequestBody Map<String, Object> payload,
-                                HttpServletRequest request) {
-    try {
-        Map<String, Object> result = taiKhoanService.create(payload);
+    public ResponseEntity<?> create(@RequestBody Map<String, Object> payload,
+            HttpServletRequest request) {
+        try {
+            Map<String, Object> result = taiKhoanService.create(payload);
 
-        request.setAttribute(
-                SessionAttributes.AUDIT_DETAIL,
-                "Cấp tài khoản " + result.get("username")
-                        + "; role=" + result.get("role")
-        );
+            request.setAttribute(
+                    SessionAttributes.AUDIT_DETAIL,
+                    "Cấp tài khoản " + result.get("username")
+                            + "; role=" + result.get("role"));
 
-        return ResponseEntity.ok(result);
+            return ResponseEntity.ok(result);
 
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.badRequest()
-                .body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
 
-    } catch (Exception e) {
-        return ResponseEntity.status(500)
-                .body(Map.of(
-                        "message",
-                        "Lỗi tạo tài khoản: "
-                                + (e.getMessage() != null
-                                ? e.getMessage()
-                                : e.toString())
-                ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of(
+                            "message",
+                            "Lỗi tạo tài khoản: "
+                                    + (e.getMessage() != null
+                                            ? e.getMessage()
+                                            : e.toString())));
+        }
     }
-}
-@PutMapping("/{id}")
-public ResponseEntity<?> updateAccount(
-        @PathVariable Long id,
-        @RequestBody Map<String, Object> payload,
-        HttpServletRequest request) {
 
-    try {
-        Long currentAccountId =
-                (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateAccount(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> payload,
+            HttpServletRequest request) {
 
-        boolean enabled = payload.get("enabled") instanceof Boolean value
-                ? value
-                : true;
+        try {
+            Long currentAccountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
+            boolean enabled = payload.get("enabled") instanceof Boolean value ? value : true;
+            taiKhoanService.updateAccount(id, enabled, currentAccountId);
 
-        taiKhoanService.updateAccount(
-        id,
-        enabled,
-        currentAccountId
-);
+            return ResponseEntity.ok(Map.of("success", true, "enabled", enabled));
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "success", true,
-                        "enabled", enabled
-                )
-        );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
 
-    } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
 
-        return ResponseEntity.badRequest()
-                .body(Map.of(
-                        "message", e.getMessage()
-                ));
-
-    } catch (Exception e) {
-
-        return ResponseEntity.status(500)
-                .body(Map.of(
-                        "message",
-                        "Lỗi cập nhật tài khoản: "
-                                + (e.getMessage() != null
-                                ? e.getMessage()
-                                : e.toString())
-                ));
+            return ResponseEntity.status(500)
+                    .body(Map.of(
+                            "message",
+                            "Lỗi cập nhật tài khoản: "
+                                    + (e.getMessage() != null
+                                            ? e.getMessage()
+                                            : e.toString())));
+        }
     }
-}
+
     @PostMapping("/change-password")
-public ResponseEntity<?> changePassword(
-        @RequestBody Map<String, String> req,
-        HttpServletRequest request) {
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, String> req,
+            HttpServletRequest request) {
 
-    try {
-        String username =
-                (String) request.getAttribute(
-                        SessionAttributes.USERNAME);
+        try {
+            String username = (String) request.getAttribute(SessionAttributes.USERNAME);
 
-        taiKhoanService.changePassword(
-                username,
-                req.get("oldPassword"),
-                req.get("newPassword")
-        );
+            taiKhoanService.changePassword(username, req.get("oldPassword"), req.get("newPassword"));
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "success", true,
-                        "message", "Đổi mật khẩu thành công!"
-                )
-        );
+            return ResponseEntity.ok(
+                    Map.of("success", true, "message", "Đổi mật khẩu thành công!"));
 
-    } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
 
-        return ResponseEntity.badRequest()
-                .body(Map.of(
-                        "message", e.getMessage()
-                ));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
 
-    } catch (Exception e) {
+        } catch (Exception e) {
 
-        return ResponseEntity.status(500)
-                .body(Map.of(
-                        "message",
-                        "Lỗi đổi mật khẩu: "
-                                + (e.getMessage() != null
-                                ? e.getMessage()
-                                : e.toString())
-                ));
+            return ResponseEntity.status(500)
+                    .body(Map.of("message",
+                            "Lỗi đổi mật khẩu: " + (e.getMessage() != null ? e.getMessage() : e.toString())));
+        }
     }
-}
+
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<?> resetPassword(
             @PathVariable Long id,
@@ -161,24 +125,20 @@ public ResponseEntity<?> changePassword(
 
             request.setAttribute(
                     SessionAttributes.AUDIT_DETAIL,
-                    "Reset mật khẩu tài khoản ID=" + id
-            );
+                    "Reset mật khẩu tài khoản ID=" + id);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Đặt lại mật khẩu thành công! Mật khẩu mới là: " + resultPass,
-                    "newPassword", resultPass
-            ));
+                    "newPassword", resultPass));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", e.getMessage()
-            ));
+                    "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
-                    "message", "Lỗi reset mật khẩu: " + (e.getMessage() != null ? e.getMessage() : e.toString())
-            ));
+                    "message", "Lỗi reset mật khẩu: " + (e.getMessage() != null ? e.getMessage() : e.toString())));
         }
     }
 }

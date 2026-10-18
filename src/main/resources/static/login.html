@@ -642,7 +642,7 @@
                     <input type="checkbox" id="rememberMe" checked>
                     <span>Duy trì đăng nhập</span>
                 </label>
-                <a href="javascript:void(0)" class="link-forgot" onclick="showSupportNotice()">Quên mật khẩu?</a>
+                <a href="javascript:void(0)" class="link-forgot" onclick="openForgotModal()">Quên mật khẩu?</a>
             </div>
 
             <!-- Nút gửi -->
@@ -701,10 +701,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="form-label-row"><label class="form-label" for="registerEmail">Email (không bắt buộc)</label></div>
+                    <div class="form-label-row"><label class="form-label" for="registerEmail">Email</label></div>
                     <div class="input-container">
                         <i class="fa-regular fa-envelope input-icon"></i>
-                        <input type="email" id="registerEmail" class="form-input" maxlength="100" autocomplete="email">
+                        <input type="email" id="registerEmail" class="form-input" maxlength="100" autocomplete="email" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -801,6 +801,7 @@
 
     document.getElementById('backToLoginBtn').addEventListener('click', showLoginForm);
 
+    // Đăng ký tài khoản cho bệnh nhân
     registerForm.addEventListener('submit', async event => {
         event.preventDefault();
         registerAlert.style.display = 'none';
@@ -812,6 +813,10 @@
         const confirmPassword = document.getElementById('registerConfirmPassword').value;
         const registerButton = document.getElementById('registerSubmitBtn');
 
+        if (!email) {
+            showRegistrationMessage('error', 'Vui lòng nhập email để phục vụ khôi phục mật khẩu.');
+            return;
+        }
         if (password.trim().length < 6) {
             showRegistrationMessage('error', 'Mật khẩu phải có ít nhất 6 ký tự.');
             return;
@@ -877,7 +882,7 @@
         toastAlert.style.display = 'none';
     }
 
-        // Xử lý gửi API đăng nhập vào Spring Boot
+    // Xử lý gửi API đăng nhập vào Spring Boot
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideToast();
@@ -921,7 +926,7 @@
                     loginTime: new Date().toISOString()
                 }));
 
-                                // Điều hướng chuẩn theo file HTML thực tế của dự án
+                // Điều hướng chuẩn theo file HTML thực tế của dự án
                 const ROLE_LANDING_PAGES = {
                     'QuanTri': '/dashboard.html',
                     'ADMIN': '/dashboard.html',
@@ -993,7 +998,183 @@
         toastMessage.innerHTML = htmlContent;
         toastAlert.style.display = 'flex';
     }
-</script>
+        // ==========================================
+    // LOGIC MODAL QUÊN MẬT KHẨU CHO BỆNH NHÂN
+    // ==========================================
+    function openForgotModal() {
+        document.getElementById('forgotPasswordModal').style.display = 'flex';
+        backToStep1();
+    }
 
+    function closeForgotModal() {
+        document.getElementById('forgotPasswordModal').style.display = 'none';
+        hideForgotAlert();
+    }
+
+    function backToStep1() {
+        document.getElementById('forgotStep1').style.display = 'block';
+        document.getElementById('forgotStep2').style.display = 'none';
+        hideForgotAlert();
+    }
+
+    function showForgotAlert(type, message) {
+        const alertBox = document.getElementById('forgotModalAlert');
+        alertBox.style.display = 'flex';
+        if (type === 'error') {
+            alertBox.style.background = '#fef2f2';
+            alertBox.style.color = '#b91c1c';
+            alertBox.style.border = '1px solid #fecaca';
+            alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${message}</span>`;
+        } else {
+            alertBox.style.background = '#f0fdf4';
+            alertBox.style.color = '#15803d';
+            alertBox.style.border = '1px solid #bbf7d0';
+            alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${message}</span>`;
+        }
+    }
+
+    function hideForgotAlert() {
+        document.getElementById('forgotModalAlert').style.display = 'none';
+    }
+
+    // Thao tác nhập email và nhấn nút gửi otp
+    async function handleSendForgotOtp() {
+        const email = document.getElementById('forgotEmailInput').value.trim();
+        if (!email) {
+            showForgotAlert('error', 'Vui lòng nhập địa chỉ email của bạn.');
+            return;
+        }
+        // chuyển trạng thái nút bấm gửi otp
+        const btn = document.getElementById('btnSendOtp');
+        btn.disabled = true;
+        btn.innerHTML = '<span>Đang gửi mã...</span> <i class="fa-solid fa-circle-notch fa-spin"></i>';
+        hideForgotAlert();
+
+        try {
+            const res = await fetch('/api/v1/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+                document.getElementById('forgotTargetEmailDisplay').innerText = email;
+                showForgotAlert('success', data.message);
+            } else {
+                showForgotAlert('error', data.message || 'Không thể gửi mã OTP.');
+            }
+        } catch (err) {
+            showForgotAlert('error', 'Không thể kết nối đến máy chủ.');
+        } finally {
+            // chuyển trạng thái nút bấm gửi otp
+            btn.disabled = false;
+            btn.innerHTML = '<span>Gửi mã OTP xác nhận</span> <i class="fa-solid fa-paper-plane"></i>';
+        }
+    }
+
+    async function handleConfirmResetPassword() {
+        const email = document.getElementById('forgotEmailInput').value.trim();
+        const otp = document.getElementById('forgotOtpInput').value.trim();
+        const newPassword = document.getElementById('forgotNewPasswordInput').value.trim();
+
+        if (!otp || !newPassword) {
+            showForgotAlert('error', 'Vui lòng nhập đầy đủ mã OTP và Mật khẩu mới.');
+            return;
+        }
+        if (newPassword.length < 6) {
+            showForgotAlert('error', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+            return;
+        }
+
+        const btn = document.getElementById('btnResetPass');
+        btn.disabled = true;
+        btn.innerHTML = '<span>Đang xử lý...</span> <i class="fa-solid fa-circle-notch fa-spin"></i>';
+        hideForgotAlert();
+
+        try {
+            const res = await fetch('/api/v1/auth/reset-password-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, otp: otp, newPassword: newPassword })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                showForgotAlert('success', data.message);
+                setTimeout(() => {
+                    closeForgotModal();
+                    displayToast('success', 'fa-solid fa-circle-check', 'Đổi mật khẩu thành công! Hãy đăng nhập bằng mật khẩu mới.');
+                }, 1500);
+            } else {
+                showForgotAlert('error', data.message || 'Mã OTP không đúng hoặc đã hết hạn.');
+            }
+        } catch (err) {
+            showForgotAlert('error', 'Không thể kết nối đến máy chủ.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Xác nhận đổi mật khẩu</span> <i class="fa-solid fa-check"></i>';
+        }
+    }
+</script>
+<!-- MODAL KHÔI PHỤC MẬT KHẨU DÀNH CHO BỆNH NHÂN -->
+<div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#ffffff; border-radius:16px; width:100%; max-width:440px; padding:28px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; font-family:'Inter', sans-serif;">
+        <button type="button" onclick="closeForgotModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:22px; color:#94a3b8; cursor:pointer;">&times;</button>
+        
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            <div style="width:42px; height:42px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:20px;">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h3 style="font-size:17px; font-weight:700; color:#0f172a; margin:0;">Khôi Phục Mật Khẩu</h3>
+                <span style="font-size:12px; color:#64748b;">Dành riêng cho Bệnh nhân</span>
+            </div>
+        </div>
+
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 12px; font-size:12px; color:#166534; margin-bottom:16px; line-height:1.5;">
+            <i class="fa-solid fa-shield-halved"></i> <strong>Lưu ý:</strong> Nhân viên y tế (Bác sĩ, Dược sĩ, Điều dưỡng...) vui lòng liên hệ <strong>Phòng CNTT (máy lẻ 1080)</strong> để cấp lại mật khẩu nội bộ.
+        </div>
+
+        <!-- BƯỚC 1: NHẬP EMAIL -->
+        <div id="forgotStep1">
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">Email đã đăng ký tài khoản *</label>
+                <input type="email" id="forgotEmailInput" class="form-input" placeholder="Ví dụ: benhnhan@gmail.com" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+            </div>
+            <button type="button" id="btnSendOtp" onclick="handleSendForgotOtp()" style="width:100%; padding:11px; background:#0284c7; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span>Gửi mã OTP xác nhận</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <!-- BƯỚC 2: NHẬP OTP & ĐỔI MẬT KHẨU -->
+        <div id="forgotStep2" style="display:none;">
+            <div style="font-size:13px; color:#475569; margin-bottom:12px;">
+                Mã OTP đã gửi tới: <strong id="forgotTargetEmailDisplay" style="color:#0284c7;"></strong>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">Mã OTP (6 chữ số) *</label>
+                <input type="text" id="forgotOtpInput" maxlength="6" placeholder="Nhập 6 số OTP" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; font-weight:700; letter-spacing:4px; text-align:center; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">Mật khẩu mới (ít nhất 6 ký tự) *</label>
+                <input type="password" id="forgotNewPasswordInput" placeholder="Nhập mật khẩu mới" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; box-sizing:border-box;">
+            </div>
+            <button type="button" id="btnResetPass" onclick="handleConfirmResetPassword()" style="width:100%; padding:11px; background:#10b981; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span>Xác nhận đổi mật khẩu</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <div style="text-align:center; margin-top:12px;">
+                <a href="javascript:void(0)" onclick="backToStep1()" style="font-size:12px; color:#64748b; text-decoration:none;">← Quay lại đổi email khác</a>
+            </div>
+        </div>
+
+        <!-- THÔNG BÁO LỖI / THÀNH CÔNG -->
+        <div id="forgotModalAlert" style="display:none; margin-top:14px; padding:10px 12px; border-radius:8px; font-size:13px; align-items:center; gap:8px;"></div>
+    </div>
+</div>
 </body>
 </html>

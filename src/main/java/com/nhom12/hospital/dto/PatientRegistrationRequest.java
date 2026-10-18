@@ -26,7 +26,9 @@ public class PatientRegistrationRequest {
     @Size(min = 6, max = 72)
     private String confirmPassword;
 
+    @NotBlank(message = "Email là bắt buộc để dùng cho việc khôi phục mật khẩu.")
     @Email
     @Size(max = 100)
     private String email;
+
 }

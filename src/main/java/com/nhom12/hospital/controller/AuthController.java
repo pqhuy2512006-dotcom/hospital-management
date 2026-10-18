@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.nhom12.hospital.dto.ForgotPasswordRequest;
 import java.util.Map;
 
 @RestController
@@ -50,7 +50,7 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
+    // Đăng ký tài khoản cho bệnh nhân
     @PostMapping("/register")
     public ResponseEntity<?> registerPatient(@Valid @RequestBody PatientRegistrationRequest request) {
         try {
@@ -77,4 +77,34 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Đăng xuất thành công."));
     }
 
+    
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập email."));
+            }
+            String msg = authService.generateAndSendOtp(request.getEmail());
+            return ResponseEntity.ok(Map.of("success", true, "message", msg));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "Lỗi xử lý yêu cầu: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password-otp")
+    public ResponseEntity<?> resetPasswordOtp(@RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.resetPasswordWithOtp(request.getEmail(), request.getOtp(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "Lỗi đặt lại mật khẩu: " + e.getMessage()));
+        }
+    }
 }

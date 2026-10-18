@@ -821,3 +821,22 @@ GO
 USE QuanLyBenhVien;
 GO
 
+USE QuanLyBenhVien;
+GO
+
+-- 1. Bật các cấu hình bắt buộc của SQL Server để làm việc với Filtered Index
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
+-- 2. Xóa bỏ ràng buộc UNIQUE cũ (ràng buộc này bị lỗi giới hạn chỉ cho phép 1 dòng NULL)
+ALTER TABLE dbo.TaiKhoan 
+DROP CONSTRAINT UQ__TaiKhoan__A9D10534A33DBE45;
+GO
+
+-- 3. Tạo Chỉ mục duy nhất có điều kiện (Filtered Unique Index): 
+-- Chỉ kiểm tra trùng lặp nếu người dùng CÓ nhập Email, cho phép nhiều tài khoản để trống Email (NULL)
+CREATE UNIQUE NONCLUSTERED INDEX UQ_TaiKhoan_Email_Filtered
+ON dbo.TaiKhoan(Email)
+WHERE Email IS NOT NULL;
+GO
