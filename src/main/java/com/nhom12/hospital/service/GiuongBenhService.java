@@ -26,28 +26,18 @@ public class GiuongBenhService {
         return giuongBenhRepository.findById(id);
     }
 
-        public GiuongBenh create(GiuongBenh giuongBenh) {
-        if (giuongBenh.getMaGiuong() == null || giuongBenh.getMaGiuong().trim().isEmpty()) {
-            giuongBenh.setMaGiuong(giuongBenh.getMaPhong() + "-" + giuongBenh.getSoGiuong().replace(" ", ""));
+    public void save(GiuongBenh giuongBenh) {
+        if (giuongBenh.getSoGiuong() == null || giuongBenh.getSoGiuong().trim().isEmpty()) {
+            throw new IllegalArgumentException("Số giường không được để trống!");
         }
-        if (giuongBenh.getTrangThai() == null) {
-            giuongBenh.setTrangThai("Trong");
+        if ((giuongBenh.getMaGiuong() == null || giuongBenh.getMaGiuong().trim().isEmpty())
+                && (giuongBenh.getMaPhong() == null || giuongBenh.getMaPhong().trim().isEmpty())) {
+            throw new IllegalArgumentException("Vui lòng chọn phòng cho giường!");
         }
-        return giuongBenhRepository.save(giuongBenh);
+        giuongBenhRepository.save(giuongBenh);
     }
 
     public void toggleStatus(String maGiuong) {
         giuongBenhRepository.toggleStatus(maGiuong);
     }
-
-    public Optional<GiuongBenh> update(String id, GiuongBenh updated) {
-        return giuongBenhRepository.findById(id).map(g -> {
-            g.setSoGiuong(updated.getSoGiuong());
-            g.setTrangThai(updated.getTrangThai());
-            g.setDonGiaNgay(updated.getDonGiaNgay());
-            g.setMaKhoa(updated.getMaKhoa());
-            return giuongBenhRepository.save(g);
-        });
-    }
 }
-

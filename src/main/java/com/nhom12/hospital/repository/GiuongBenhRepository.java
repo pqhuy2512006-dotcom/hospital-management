@@ -57,43 +57,17 @@ public class GiuongBenhRepository {
         return rows.stream().findFirst();
     }
 
-    public GiuongBenh save(GiuongBenh entity) {
+    public void save(GiuongBenh entity) {
         jdbcTemplate.update(
-                "EXEC dbo.usp_Entity_Save @EntityName = ?, @Payload = ?",
-                "GiuongBenh",
-                serializeEntity(entity)
+                "EXEC dbo.sp_GiuongBenh_Save @MaGiuong = ?, @MaPhong = ?, @SoGiuong = ?, @DonGiaNgay = ?",
+                entity.getMaGiuong(),
+                entity.getMaPhong(),
+                entity.getSoGiuong(),
+                entity.getDonGiaNgay()
         );
-        return entity;
     }
     
         public void toggleStatus(String maGiuong) {
         jdbcTemplate.update("EXEC dbo.sp_GiuongBenh_ToggleStatus @MaGiuong = ?", maGiuong);
-    }
-    private String serializeEntity(GiuongBenh entity) {
-        StringBuilder json = new StringBuilder("{");
-        json.append("\"MaGiuong\":").append(toJsonValue(entity.getMaGiuong())).append(',');
-        json.append("\"MaPhong\":").append(toJsonValue(entity.getMaPhong())).append(',');
-        json.append("\"SoGiuong\":").append(toJsonValue(entity.getSoGiuong())).append(',');
-        json.append("\"TrangThai\":").append(toJsonValue(entity.getTrangThai())).append(',');
-        json.append("\"DonGiaNgay\":").append(toJsonValue(entity.getDonGiaNgay()));
-        return json.append('}').toString();
-    }
-
-    private String toJsonValue(Object value) {
-        if (value == null) {
-            return "null";
-        }
-        if (value instanceof Number || value instanceof Boolean) {
-            return value.toString();
-        }
-        if (value instanceof java.math.BigDecimal decimal) {
-            return '"' + decimal.toPlainString() + '"';
-        }
-        return '"' + value.toString()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t") + '"';
     }
 }

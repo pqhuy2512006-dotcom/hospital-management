@@ -24,6 +24,7 @@ public class PhongController {
         return phongService.getPhongByKhoaAndLoaiPhong(maKhoa, loaiPhong);
     }
 
+    // Tạo và cập nhật phòng
     @PostMapping
     public ResponseEntity<?> savePhong(@RequestBody Phong phong) {
         try {

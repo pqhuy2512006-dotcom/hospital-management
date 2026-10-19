@@ -37,7 +37,7 @@ BEGIN
 END;  
 go
 
--- Tạo Cập nhật Khoa
+-- Tạo/Cập nhật Khoa
 CREATE PROCEDURE dbo.sp_Khoa_Save  
     @MaKhoa VARCHAR(10),  
     @TenKhoa NVARCHAR(100),  
@@ -129,4 +129,92 @@ BEGIN
         WHERE p.MaKhoa = @MaKhoa AND g.TrangThai = 'BaoTri';  
     END  
 END;  
-EXEC sp_helptext 'dbo.sp_Khoa_ToggleStatus'
+go
+
+-- Tạo/Cập nhật phòng
+CREATE   PROCEDURE dbo.sp_Phong_Save  
+    @MaPhong VARCHAR(15),  
+    @TenPhong NVARCHAR(100),  
+    @LoaiPhong VARCHAR(20),  
+    @MaKhoa VARCHAR(10)  
+AS  
+BEGIN  
+    SET NOCOUNT ON;  
+    IF EXISTS (SELECT 1 FROM Phong WHERE MaPhong = @MaPhong)  
+    BEGIN  
+        UPDATE Phong   
+        SET TenPhong = @TenPhong, LoaiPhong = @LoaiPhong, MaKhoa = @MaKhoa  
+        WHERE MaPhong = @MaPhong;  
+    END  
+    ELSE  
+    BEGIN  
+        INSERT INTO Phong (MaPhong, TenPhong, LoaiPhong, MaKhoa, TrangThai)  
+        VALUES (@MaPhong, @TenPhong, @LoaiPhong, @MaKhoa, 1);  
+    END  
+END;
+go
+
+-- Cập nhật trạng thái phòng
+CREATE   PROCEDURE dbo.sp_Phong_ToggleStatus  
+    @MaPhong VARCHAR(15)  
+AS  
+BEGIN  
+    SET NOCOUNT ON;  
+    DECLARE @NewStatus BIT;  
+    SELECT @NewStatus = CASE WHEN ISNULL(TrangThai, 1) = 1 THEN 0 ELSE 1 END   
+    FROM Phong   
+    WHERE MaPhong = @MaPhong;  
+  
+    -- Cập nhật trạng thái Phòng  
+    UPDATE Phong   
+    SET TrangThai = @NewStatus  
+    WHERE MaPhong = @MaPhong;  
+  
+    -- Nếu Phòng Tạm ngưng (0): Chuyển các giường Trống trong phòng sang 'BaoTri'  
+    IF @NewStatus = 0  
+    BEGIN  
+        UPDATE GiuongBenh  
+        SET TrangThai = 'BaoTri'  
+        WHERE MaPhong = @MaPhong AND TrangThai = 'Trong';  
+    END  
+    -- Nếu Phòng Mở lại (1): Trả các giường 'BaoTri' về lại 'Trong'  
+    ELSE  
+    BEGIN  
+        UPDATE GiuongBenh  
+        SET TrangThai = 'Trong'  
+        WHERE MaPhong = @MaPhong AND TrangThai = 'BaoTri';  
+    END  
+END;  
+go
+
+CREATE PROCEDURE dbo.sp_GiuongBenh_Save
+    @MaGiuong VARCHAR(15) = NULL,
+    @MaPhong VARCHAR(15) = NULL,
+    @SoGiuong NVARCHAR(50),
+    @DonGiaNgay DECIMAL(18, 2) = 250000
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Nếu chưa có mã giường (tạo mới) -> Tự động sinh mã: [Mã Phòng]-[Số Giường]
+    IF @MaGiuong IS NULL OR LTRIM(RTRIM(@MaGiuong)) = ''
+    BEGIN
+        SET @MaGiuong = @MaPhong + '-' + REPLACE(@SoGiuong, ' ', '');
+    END
+
+    -- 2. Kiểm tra nếu ĐÃ TỒN TẠI mã giường -> Chạy UPDATE (Sửa)
+    IF EXISTS (SELECT 1 FROM GiuongBenh WHERE MaGiuong = @MaGiuong)
+    BEGIN
+        UPDATE GiuongBenh
+        SET SoGiuong = @SoGiuong,
+            DonGiaNgay = @DonGiaNgay
+        WHERE MaGiuong = @MaGiuong;
+    END
+    -- 3. Nếu CHƯA CÓ mã giường -> Chạy INSERT (Tạo mới)
+    ELSE
+    BEGIN
+        INSERT INTO GiuongBenh (MaGiuong, SoGiuong, MaPhong, DonGiaNgay, TrangThai)
+        VALUES (@MaGiuong, @SoGiuong, @MaPhong, @DonGiaNgay, 'Trong');
+    END
+END;
+EXEC sp_helptext 'dbo.sp_Phong_ToggleStatus'

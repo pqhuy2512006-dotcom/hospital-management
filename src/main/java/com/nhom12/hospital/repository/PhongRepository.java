@@ -17,24 +17,40 @@ public class PhongRepository {
     }
 
     public List<Phong> findByKhoaAndLoaiPhong(String maKhoa, String loaiPhong) {
-        StringBuilder sql = new StringBuilder("SELECT * FROM dbo.vw_Phong WHERE 1=1");
-        
-        if (maKhoa != null && !maKhoa.isEmpty() && !maKhoa.equalsIgnoreCase("ALL")) {
-            sql.append(" AND MaKhoa = '").append(maKhoa).append("'");
+        boolean hasKhoa = maKhoa != null && !maKhoa.trim().isEmpty() && !maKhoa.equalsIgnoreCase("ALL");
+        boolean hasLoai = loaiPhong != null && !loaiPhong.trim().isEmpty() && !loaiPhong.equalsIgnoreCase("ALL");
+        // 1. Lọc cả Khoa và Loại phòng
+        if (hasKhoa && hasLoai) {
+            return jdbcTemplate.query(
+                    "SELECT * FROM dbo.vw_Phong WHERE MaKhoa = ? AND LoaiPhong = ?",
+                    new BeanPropertyRowMapper<>(Phong.class),
+                    maKhoa, loaiPhong);
         }
-        if (loaiPhong != null && !loaiPhong.isEmpty() && !loaiPhong.equalsIgnoreCase("ALL")) {
-            sql.append(" AND LoaiPhong = N'").append(loaiPhong).append("'");
+        // 2. Chỉ lọc theo Khoa
+        if (hasKhoa) {
+            return jdbcTemplate.query(
+                    "SELECT * FROM dbo.vw_Phong WHERE MaKhoa = ?",
+                    new BeanPropertyRowMapper<>(Phong.class),
+                    maKhoa);
         }
-        
-        return jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(Phong.class));
+        // 3. Chỉ lọc theo Loại phòng
+        if (hasLoai) {
+            return jdbcTemplate.query(
+                    "SELECT * FROM dbo.vw_Phong WHERE LoaiPhong = ?",
+                    new BeanPropertyRowMapper<>(Phong.class),
+                    loaiPhong);
+        }
+        // 4. Không lọc gì (lấy tất cả)
+        return jdbcTemplate.query(
+                "SELECT * FROM dbo.vw_Phong",
+                new BeanPropertyRowMapper<>(Phong.class));
     }
-    
-        public Optional<Phong> findById(String id) {
+
+    public Optional<Phong> findById(String id) {
         List<Phong> list = jdbcTemplate.query(
                 "SELECT * FROM dbo.vw_Phong WHERE MaPhong = ?",
                 new BeanPropertyRowMapper<>(Phong.class),
-                id
-        );
+                id);
         return list.stream().findFirst();
     }
 
@@ -44,8 +60,7 @@ public class PhongRepository {
                 phong.getMaPhong(),
                 phong.getTenPhong(),
                 phong.getLoaiPhong(),
-                phong.getMaKhoa()
-        );
+                phong.getMaKhoa());
     }
 
     public void toggleStatus(String maPhong) {

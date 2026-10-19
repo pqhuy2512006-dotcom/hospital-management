@@ -31,17 +31,18 @@ public class GiuongBenhController {
     }
 
     @PostMapping
-    public GiuongBenh create(@RequestBody GiuongBenh giuongBenh) {
-        return giuongBenhService.create(giuongBenh);
+    public ResponseEntity<?> saveGiuong(@RequestBody GiuongBenh giuongBenh) {
+        try {
+            giuongBenhService.save(giuongBenh);
+            return ResponseEntity.ok(java.util.Map.of("message", "Lưu thông tin giường thành công!"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("message", "Lỗi: " + e.getMessage()));
+        }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GiuongBenh> update(@PathVariable String id, @RequestBody GiuongBenh updated) {
-        return giuongBenhService.update(id, updated)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-        @PutMapping("/{id}/toggle-status")
+    @PutMapping("/{id}/toggle-status")
     public ResponseEntity<?> toggleStatus(@PathVariable String id) {
         try {
             giuongBenhService.toggleStatus(id);

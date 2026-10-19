@@ -250,7 +250,26 @@
         .btn-submit:hover {
             background: var(--primary-hover);
         }
+                .btn-cancel {
+            height: 32px;
+            padding: 0 12px;
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
 
+        .btn-cancel:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
         /* TABLE */
         table {
             width: 100%;
@@ -1119,7 +1138,8 @@
     <div class="modal-overlay" id="giuongModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-bed" style="color:var(--primary);"></i> Thêm Giường Bệnh Mới</h3>
+                <h3 id="giuongModalTitle"><i class="fa-solid fa-bed" style="color:var(--primary);"></i> Thêm Giường Bệnh
+                    Mới</h3>
                 <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;"
                     onclick="closeGiuongModal()">&times;</button>
             </div>
@@ -1516,7 +1536,7 @@
             }
             await loadUsers();
         };
-    
+
         //  CƠ CẤU KHOA - PHÒNG - GIƯỜNG
         let fKhoas = [];
         let fPhongs = [];
@@ -1669,7 +1689,7 @@
             if (selModal) selModal.innerHTML = modalHtml;
         }
 
-        // --- 2. PHÒNG ---
+        //Danh sách buồng phòng
         async function loadPhongs() {
             try {
                 const res = await fetch('/api/v1/phong');
@@ -1688,14 +1708,16 @@
             tbody.innerHTML = '';
 
             let list = fPhongs;
+            // Nếu không chọn 'ALL' thì lọc theo mã khoa
             if (filterKhoa !== 'ALL') list = list.filter(p => p.maKhoa === filterKhoa);
+            // Nếu không chọn 'ALL' thì lọc tiếp theo loại phòng
             if (filterLoai !== 'ALL') list = list.filter(p => p.loaiPhong === filterLoai);
 
             if (list.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Không tìm thấy phòng phù hợp.</td></tr>';
                 return;
             }
-
+            // gắn icon
             const loaiLabel = {
                 'KHAM_BENH': '<span style="color:#0284c7; font-weight:600;"><i class="fa-solid fa-stethoscope"></i> Khám Bệnh</span>',
                 'LUU_BENH': '<span style="color:#7c3aed; font-weight:600;"><i class="fa-solid fa-bed"></i> Lưu Bệnh (Nội trú)</span>',
@@ -1706,8 +1728,13 @@
             list.forEach(p => {
                 const isActive = p.trangThai === true || p.trangThai === 1 || p.trangThai == null;
                 const statusBadge = isActive
-                    ? '<span class="role-badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-check"></i> Hoạt động</span>'
-                    : '<span class="role-badge" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-wrench"></i> Tạm ngưng / Sửa chữa</span>';
+                    ? '<span class="role-badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-circle-check"></i> Đang hoạt động</span>'
+                    : '<span class="role-badge" style="background:#fee2e2; color:#b91c1c;"><i class="fa-solid fa-ban"></i> Tạm ngưng hoạt động</span>';
+
+                const toggleBtn = isActive
+                    ? `<button class="btn-cancel" style="padding:4px 8px; font-size:12px; color:#b91c1c; border-color:#fca5a5;" onclick="togglePhongStatus('${p.maPhong}', true)" title="Tạm ngưng hoạt động buồng phòng"><i class="fa-solid fa-lock"></i> Khóa</button>`
+                    : `<button class="btn-submit" style="padding:4px 8px; font-size:12px; background:#16a34a;" onclick="togglePhongStatus('${p.maPhong}', false)" title="Mở lại phòng hoạt động"><i class="fa-solid fa-lock-open"></i> Mở lại</button>`;
+                // ------------------------------------------------
 
                 tbody.innerHTML += `
                     <tr>
@@ -1718,7 +1745,7 @@
                         <td>${statusBadge}</td>
                         <td style="text-align:right;">
                             <button class="btn-cancel" style="padding:4px 8px; font-size:12px;" onclick="openEditPhongModal('${p.maPhong}')"><i class="fa-solid fa-pen"></i> Sửa</button>
-                            <button class="btn-cancel" style="padding:4px 8px; font-size:12px; border-color:#cbd5e1;" onclick="togglePhongStatus('${p.maPhong}')"><i class="fa-solid fa-power-off"></i> Bật/Tắt</button>
+                            ${toggleBtn}
                         </td>
                     </tr>
                 `;
@@ -1749,6 +1776,7 @@
 
         function closePhongModal() { document.getElementById('phongModal').style.display = 'none'; }
 
+        // Thêm Phòng Mới/Cập Nhật Phòng
         async function handleSavePhong(e) {
             e.preventDefault();
             const payload = {
@@ -1774,7 +1802,14 @@
             } catch (e) { alert('Lỗi kết nối.'); }
         }
 
-        async function togglePhongStatus(maPhong) {
+        // Khóa Phòng
+        async function togglePhongStatus(maPhong, isCurrentlyActive) {
+            if (isCurrentlyActive) {
+                const confirmLock = confirm(
+                    `⚠️ CẢNH BÁO:\n\nKhi tạm ngưng phòng [${maPhong}], hệ thống sẽ tự động chuyển các giường bệnh trống trong phòng này sang trạng thái BẢO TRÌ.\n\nBạn có chắc chắn muốn khóa phòng này không?`
+                );
+                if (!confirmLock) return;
+            }
             try {
                 const res = await fetch(`/api/v1/phong/${maPhong}/toggle-status`, { method: 'PUT' });
                 if (res.ok) {
@@ -1856,9 +1891,11 @@
                     canToggle = false;
                 }
 
+                                const btnStyle = "height:28px; font-size:12px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px; font-weight:500; width:100%; box-sizing:border-box;";
+
                 const toggleBtn = canToggle
-                    ? `<button class="btn-cancel" style="padding:4px 8px; font-size:12px; border-color:#cbd5e1;" onclick="toggleGiuongStatus('${g.maGiuong}')"><i class="fa-solid fa-wrench"></i> ${g.trangThai === 'Trong' ? 'Bảo trì' : 'Mở lại'}</button>`
-                    : `<span style="font-size:11px; color:var(--text-muted); font-style:italic;">Không thể khóa</span>`;
+                    ? `<button type="button" style="${btnStyle}" onclick="toggleGiuongStatus('${g.maGiuong}')"><i class="fa-solid fa-wrench"></i> ${g.trangThai === 'Trong' ? 'Bảo trì' : 'Mở lại'}</button>`
+                    : `<span style="font-size:11.5px; color:var(--text-muted); font-style:italic; text-align:center; display:block;">Không thể khóa</span>`;
 
                 tbody.innerHTML += `
                     <tr>
@@ -1868,32 +1905,56 @@
                         <td>${escapeHtml(g.maKhoa || '-')}</td>
                         <td>${Number(g.donGiaNgay || 0).toLocaleString('vi-VN')} đ</td>
                         <td>${statusBadge}</td>
-                        <td style="text-align:right;">${toggleBtn}</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <div style="display:inline-grid; grid-template-columns: 65px 85px; gap:8px; align-items:center;">
+                                <button type="button" style="${btnStyle}" onclick="openEditGiuongModal('${g.maGiuong}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                                ${toggleBtn}
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
         }
 
+
+        let editingGiuongId = null;
+
         function openGiuongModal() {
+            editingGiuongId = null;
+            document.getElementById('giuongModalTitle').innerHTML = '<i class="fa-solid fa-bed" style="color:var(--primary);"></i> Thêm Giường Bệnh Mới';
             document.getElementById('gMaPhong').value = '';
+            document.getElementById('gMaPhong').disabled = false;
             document.getElementById('gSoGiuong').value = '';
             document.getElementById('gDonGia').value = 250000;
             document.getElementById('giuongModal').style.display = 'flex';
         }
 
-        function closeGiuongModal() { document.getElementById('giuongModal').style.display = 'none'; }
+        function openEditGiuongModal(maGiuong) {
+            const g = fGiuongs.find(x => x.maGiuong === maGiuong);
+            if (!g) return;
 
+            editingGiuongId = maGiuong;
+            document.getElementById('giuongModalTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--primary);"></i> Cập Nhật Thông Tin Giường';
+            document.getElementById('gMaPhong').value = g.maPhong;
+            document.getElementById('gMaPhong').disabled = true;
+            document.getElementById('gSoGiuong').value = g.soGiuong;
+            document.getElementById('gDonGia').value = g.donGiaNgay || 250000;
+            document.getElementById('giuongModal').style.display = 'flex';
+        }
+
+        function closeGiuongModal() {
+            document.getElementById('giuongModal').style.display = 'none';
+        }
+
+
+        // Thêm giường mới và sửa
         async function handleSaveGiuong(e) {
             e.preventDefault();
-            const maPhong = document.getElementById('gMaPhong').value;
-            const soGiuong = document.getElementById('gSoGiuong').value.trim();
-            const donGia = parseFloat(document.getElementById('gDonGia').value) || 250000;
-
             const payload = {
-                maPhong: maPhong,
-                soGiuong: soGiuong,
-                donGiaNgay: donGia,
-                trangThai: 'Trong'
+                maGiuong: editingGiuongId || "",
+                maPhong: document.getElementById('gMaPhong').value,
+                soGiuong: document.getElementById('gSoGiuong').value.trim(),
+                donGiaNgay: parseFloat(document.getElementById('gDonGia').value) || 250000
             };
 
             try {
@@ -1903,13 +1964,16 @@
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    alert('Thêm giường thành công!');
+                    alert('Lưu giường thành công!');
                     closeGiuongModal();
                     loadGiuongs();
                 } else {
-                    alert('Lỗi lưu giường.');
+                    const err = await res.json();
+                    alert('Lỗi: ' + err.message);
                 }
-            } catch (e) { alert('Lỗi kết nối.'); }
+            } catch (e) {
+                alert('Lỗi kết nối.');
+            }
         }
 
         async function toggleGiuongStatus(maGiuong) {
