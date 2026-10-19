@@ -514,10 +514,10 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <h3 style="font-size: 16px; font-weight: 700;">
                             <i class="fa-solid fa-users" style="color:var(--primary);"></i> Danh Sách Tài Khoản Nhân
-                            Viên Nội Bộ (Bảng NguoiDung)
+                            Viên Nội Bộ
                         </h3>
                         <button class="btn-submit" style="height:36px; padding:0 14px;" onclick="openCreateUserModal()">
-                            <i class="fa-solid fa-user-plus"></i> Cấp Tài Khoản Mới (UC10)
+                            <i class="fa-solid fa-user-plus"></i> Cấp Tài Khoản Mới
                         </button>
                     </div>
 
@@ -1215,7 +1215,7 @@
                         <td><span style="color:${u.enabled ? '#10b981' : '#ef4444'}; font-weight:600;">${u.enabled ? 'Hoạt động' : 'Bị khóa'}</span></td>
                                                 <td>
                             <div style="display:flex; gap:6px;">
-                                <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, '${u.role}', ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
+                                <button type="button" style="padding:4px 8px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; border-radius:4px; cursor:pointer; font-size:12px;" onclick="updateAccount(${u.id}, ${!u.enabled})" ${isCurrentUser ? 'disabled' : ''}>
                                     ${u.enabled ? 'Khóa' : 'Mở khóa'}
                                 </button>
                                 <button type="button" style="padding:4px 8px; border:1px solid #f59e0b; background:#fffbeb; color:#b45309; border-radius:4px; cursor:pointer; font-size:12px;" onclick="handleResetPassword(${u.id}, '${escapeHtml(u.username)}')" ${isCurrentUser ? 'disabled' : ''} title="Đặt lại mật khẩu về 123456">
@@ -1227,12 +1227,12 @@
                 `;
             });
         }
-
-        async function updateAccount(id, role, enabled) {
+        //Khóa và Mở Khóa
+        async function updateAccount(id, enabled) {
             const response = await fetch(`/api/v1/taikhoan/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role, enabled })
+                body: JSON.stringify({ enabled })
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok) {
@@ -1242,6 +1242,8 @@
             }
             await loadUsers();
         }
+
+        //Reset Password 
         async function handleResetPassword(id, username) {
             const confirmReset = confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu cho tài khoản "${username}" về mặc định (123456) không?`);
             if (!confirmReset) return;
@@ -1412,6 +1414,8 @@
                 alert("Lỗi kết nối máy chủ khi cấp tài khoản mới: " + err.message);
             }
         }
+
+        // Thoát Thông Báo Toàn Viện
         async function handleSendBroadcast(e) {
             e.preventDefault();
             const tieuDe = document.getElementById('bcTieuDe').value.trim();
@@ -1450,7 +1454,7 @@
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Phát Thông Báo Ngay';
             }
         }
-
+        //Lịch Sử Các Thông Báo Gần Đây
         async function loadBroadcastHistory() {
             const tbody = document.getElementById('broadcastHistoryTbody');
             try {
@@ -1512,9 +1516,8 @@
             }
             await loadUsers();
         };
-        // ==========================================
-        // QUẢN LÝ CƠ CẤU KHOA - PHÒNG - GIƯỜNG JS
-        // ==========================================
+    
+        //  CƠ CẤU KHOA - PHÒNG - GIƯỜNG
         let fKhoas = [];
         let fPhongs = [];
         let fGiuongs = [];
@@ -1599,6 +1602,7 @@
 
         function closeKhoaModal() { document.getElementById('khoaModal').style.display = 'none'; }
 
+        // Thêm Khoa Mới và Sửa 
         async function handleSaveKhoa(e) {
             e.preventDefault();
             const payload = {
@@ -1623,8 +1627,9 @@
             } catch (e) { alert('Không thể kết nối đến máy chủ.'); }
         }
 
+        // Khóa Khoa
         async function toggleKhoaStatus(maKhoa, isCurrentlyActive) {
-            if (isCurrentlyActive) {
+            if (isCurrentlyActive) { // Trạng thái hiện tại của khoa
                 const confirmLock = confirm(
                     `⚠️ CẢNH BÁO QUAN TRỌNG:\n\nKhi khóa khoa [${maKhoa}], hệ thống sẽ:\n` +
                     `1. Tạm ngưng tiếp nhận bệnh nhân mới vào khoa này.\n` +

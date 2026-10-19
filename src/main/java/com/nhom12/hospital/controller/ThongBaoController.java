@@ -51,12 +51,11 @@ public class ThongBaoController {
             return ResponseEntity.status(401).body(Map.of("message", "Yêu cầu đăng nhập."));
         }
 
-        // Kiểm tra quyền: Chỉ Admin (QuanTri) hoặc Ban Giám Đốc (GiamDoc)
+        // Kiểm tra quyền: Chỉ Admin (QuanTri) 
         Optional<TaiKhoan> accountOpt = taiKhoanRepository.findById(accountId);
         if (accountOpt.isEmpty() || (!"QuanTri".equalsIgnoreCase(accountOpt.get().getVaiTro()) 
-                && !"ADMIN".equalsIgnoreCase(accountOpt.get().getVaiTro()) 
-                && !"GiamDoc".equalsIgnoreCase(accountOpt.get().getVaiTro()))) {
-            return ResponseEntity.status(403).body(Map.of("message", "Chỉ Quản trị viên hoặc Ban Giám Đốc mới có quyền phát thông báo toàn viện!"));
+                && !"ADMIN".equalsIgnoreCase(accountOpt.get().getVaiTro()) )) {
+            return ResponseEntity.status(403).body(Map.of("message", "Chỉ Quản trị viên mới có quyền phát thông báo toàn viện!"));
         }
 
         String tieuDe = payload.get("tieuDe");

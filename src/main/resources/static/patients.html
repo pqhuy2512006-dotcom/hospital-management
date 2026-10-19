@@ -576,7 +576,7 @@
                         <div class="form-group">
                             <label>Nhóm Máu</label>
                             <select id="fNhomMau" class="form-control">
-                                <option value="Chưa xác định">Chưa xác định</option>
+                                <option value="">Chưa xác định</option>
                                 <option value="O+">O+</option>
                                 <option value="A+">A+</option>
                                 <option value="B+">B+</option>
@@ -902,7 +902,7 @@
                 ? '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo hồ sơ cá nhân'
                 : '<i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân Mới (Mẫu QLBN_BM1)';
             document.getElementById('fMaBN').value = isPatientUser() ? '' : generatePatientId();
-            
+            document.getElementById('fNgaySinh').max = new Date().toISOString().split('T')[0];
             // Mở khóa ô CCCD và BHYT
             const cccdInput = document.getElementById('fCCCD');
             const bhytInput = document.getElementById('fMaBHYT');
@@ -939,7 +939,7 @@
             bhytInput.style.backgroundColor = '#f1f5f9';
 
             document.getElementById('fSDT').value = p.sdt;
-            document.getElementById('fNhomMau').value = p.nhomMau || 'Chưa xác định';
+            document.getElementById('fNhomMau').value = p.nhomMau || '';
             document.getElementById('fDiaChi').value = p.diaChi || '';
             document.getElementById('fEmail').value = p.email || '';
             document.getElementById('fNgheNghiep').value = p.ngheNghiep || '';
@@ -983,7 +983,17 @@
             const sdtThan = document.getElementById('fSDTThan').value.trim();
             const benhNen = document.getElementById('fBenhNen').value.trim();
             const diUng = document.getElementById('fDiUng').value.trim();
-
+            if (!ngaySinh) {
+                alert("Vui lòng chọn ngày tháng năm sinh!");
+                document.getElementById('fNgaySinh').focus();
+                return;
+            }
+            const today = new Date().toISOString().split('T')[0];
+            if (ngaySinh > today) {
+                alert("Ngày sinh không thể lớn hơn ngày hiện tại!");
+                document.getElementById('fNgaySinh').focus();
+                return;
+            }
             const payload = {
                 maBenhNhan: isEditMode ? maBN : "",
                 hoTen: hoTen,
@@ -992,7 +1002,7 @@
                 soCCCD: cccd,
                 soDienThoai: sdt,
                 maBHYT: maBHYT,
-                nhomMau: nhomMau,
+                nhomMau: nhomMau ? nhomMau : null,
                 diaChi: diaChi,
                 email: email,
                 ngheNghiep: ngheNghiep,

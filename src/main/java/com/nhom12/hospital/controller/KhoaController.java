@@ -23,6 +23,7 @@ public class KhoaController {
         return khoaService.getAllKhoa();
     }
 
+    // Thêm Khoa Mới
     @PostMapping
     public ResponseEntity<?> saveKhoa(@RequestBody Khoa khoa) {
         try {
@@ -35,6 +36,7 @@ public class KhoaController {
         }
     }
 
+    // Cập Nhật Trạng Thái Của Khoa 
     @PutMapping("/{id}/toggle-status")
     public ResponseEntity<?> toggleStatus(@PathVariable String id) {
         try {

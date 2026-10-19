@@ -88,6 +88,12 @@ public class BenhNhanService {
         if (benhNhan.getNgayTaoHoSo() == null) {
             benhNhan.setNgayTaoHoSo(LocalDateTime.now());
         }
+        if (benhNhan.getNgaySinh() == null) {
+            throw new IllegalArgumentException("Ngày sinh không được để trống!");
+        }
+        if (benhNhan.getNgaySinh().isAfter(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày sinh không thể lớn hơn ngày hiện tại!");
+        }
         if (benhNhan.getSoCCCD() != null && !benhNhan.getSoCCCD().trim().isEmpty()) {
             boolean exists = benhNhanRepository.findAll().stream()
                     .anyMatch(b -> benhNhan.getSoCCCD().equals(b.getSoCCCD()));

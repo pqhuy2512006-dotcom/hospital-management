@@ -16,7 +16,7 @@ public class TaiKhoanService {
 
     private static final Set<String> STAFF_ROLES = Set.of(
             "QuanTri", "BacSi", "DieuDuong", "LeTan",
-            "DuocSi", "KTV", "ThuNgan", "QuanLyNhanSu", "GiamDoc");
+            "DuocSi", "KTV", "ThuNgan", "QuanLyNhanSu");
 
     private final TaiKhoanRepository taiKhoanRepository;
     private final NhanVienRepository nhanVienRepository;
@@ -239,11 +239,8 @@ public class TaiKhoanService {
             throw new IllegalArgumentException("Vui lòng dùng chức năng Đổi Mật Khẩu cá nhân thay vì Reset.");
         }
 
-        // Mật khẩu mặc định là 123456 nếu không truyền vào mật khẩu tùy chọn
-        String passToSet = (newPassword != null && !newPassword.trim().isEmpty()) ? newPassword.trim() : "123456";
-        if (passToSet.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu mới phải có tối thiểu 6 ký tự.");
-        }
+        // Mật khẩu mặc định là 123456
+        String passToSet = "123456";
 
         account.setMatKhauHash(passwordEncoder.encode(passToSet));
         taiKhoanRepository.save(account);

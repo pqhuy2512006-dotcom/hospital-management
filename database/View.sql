@@ -1,7 +1,9 @@
 use QuanLyBenhVien
 go
 
+CREATE VIEW dbo.vw_TaiKhoan  
+AS  
+    SELECT MaTaiKhoan, TenDangNhap, MatKhauHash, Email, SoDienThoai, VaiTro, TrangThai, NgayTao  
+    FROM dbo.TaiKhoan;  
 
-select * from TaiKhoan
-
-EXEC sp_helptext 'vw_TaiKhoan';
+EXEC sp_helptext 'dbo.vw_TaiKhoan';

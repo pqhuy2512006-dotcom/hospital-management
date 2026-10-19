@@ -17,7 +17,7 @@ public class KhoaService {
     public List<Khoa> getAllKhoa() {
         return khoaRepository.findAll();
     }
-        public void save(Khoa khoa) {
+    public void save(Khoa khoa) {
         if (khoa.getMaKhoa() == null || khoa.getMaKhoa().trim().isEmpty()) {
             throw new IllegalArgumentException("Mã khoa không được để trống!");
         }
