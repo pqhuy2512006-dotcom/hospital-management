@@ -41,7 +41,7 @@ public class LichHenController {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);
         return ResponseEntity.ok(lichHenService.getAllAppointments(accountId, date));
     }
-
+    // Lấy lịch hẹn của bacsi
     @GetMapping("/me")
     public ResponseEntity<?> getMyAppointments(HttpServletRequest request) {
         Long accountId = (Long) request.getAttribute(SessionAttributes.ACCOUNT_ID);

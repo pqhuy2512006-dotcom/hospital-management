@@ -707,6 +707,8 @@
                 slotSelect.innerHTML = '<option value="">Lỗi kết nối lịch</option>';
             }
         }
+
+        // Hàng đợi
         async function loadPatientQueue() {
             try {
                 const [appointmentsRes, patientsRes, drugsRes, clsRes] = await Promise.all([
@@ -727,7 +729,7 @@
                 const patientMap = new Map(patients.map(p => [p.maBenhNhan, p]));
 
                 // Lọc bỏ những lịch đã hủy hoặc đã khám xong, chỉ hiển thị Đã đặt lịch và Đang khám
-                const todayStr = new Date().toLocaleDateString('en-CA');
+                const todayStr = new Date().toLocaleDateString('en-CA');  // Lấy ngày hôm nay: YYYY-MM-DD
                 const filteredAppointments = appointments.filter(item => 
                     item.ngayKham === todayStr && (item.trangThai === 'DangChoKham' || item.trangThai === 'DangKham')
                 );
@@ -762,6 +764,7 @@
             }
         }
 
+        // Bác sĩ bấm tiếp nhận
         async function handleStartExam() {
             const currentPatient = patientQueue[selectedQueueIdx];
             if (!currentPatient) return alert("Vui lòng chọn một bệnh nhân trong hàng đợi!");
@@ -833,6 +836,7 @@
             if (wc) wc.innerText = `${waitCount} ca chờ`;
         }
 
+        // Bác sĩ chọn bệnh nhân trong hàng đợi
         function selectPatient(idx) {
             selectedQueueIdx = idx;
             const p = patientQueue[idx];

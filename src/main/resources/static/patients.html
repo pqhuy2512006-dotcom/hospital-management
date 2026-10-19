@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -226,7 +227,7 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         }
 
         table {
@@ -295,13 +296,19 @@
             background: #e0f2fe;
             color: #0284c7;
         }
-        .btn-view-emr:hover { background: #bae6fd; }
+
+        .btn-view-emr:hover {
+            background: #bae6fd;
+        }
 
         .btn-edit {
             background: #fef3c7;
             color: #b45309;
         }
-        .btn-edit:hover { background: #fde68a; }
+
+        .btn-edit:hover {
+            background: #fde68a;
+        }
 
         /* MODAL COMMON */
         .modal-overlay {
@@ -446,6 +453,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Sidebar Menu chuẩn 10 phân hệ -->
@@ -457,7 +465,8 @@
         <ul class="sidebar-menu">
             <li><a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> Bảng điều khiển</a></li>
             <li><a href="/appointments.html"><i class="fa-solid fa-calendar-check"></i> Đặt lịch & Tiếp đón</a></li>
-            <li><a href="/patients.html" class="active"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a></li>
+            <li><a href="/patients.html" class="active"><i class="fa-solid fa-hospital-user"></i> Quản lý Bệnh nhân</a>
+            </li>
             <li><a href="/doctors.html"><i class="fa-solid fa-user-doctor"></i> Danh sách Nhân viên</a></li>
             <li><a href="/examination.html"><i class="fa-solid fa-stethoscope"></i> Tiếp đón & Khám bệnh</a></li>
             <li><a href="/laboratory.html"><i class="fa-solid fa-flask-vial"></i> Cận lâm sàng (CLS)</a></li>
@@ -487,13 +496,15 @@
             <div class="action-bar">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="patientSearchInput" class="search-input" 
-                           placeholder="Tra cứu CCCD, Mã BHYT, Tên hoặc SĐT..." 
-                           onkeyup="filterPatients()">
+                    <input type="text" id="patientSearchInput" class="search-input"
+                        placeholder="Tra cứu CCCD, Mã BHYT, Tên hoặc SĐT..." onkeyup="filterPatients()">
                 </div>
-                <div class="doctor-record-tabs" id="doctorRecordTabs" style="display:none;" role="tablist" aria-label="Nhóm hồ sơ bệnh nhân">
-                    <button type="button" class="active" data-view="current" onclick="switchDoctorPatientView('current', this)">Đang chờ / đang khám</button>
-                    <button type="button" data-view="history" onclick="switchDoctorPatientView('history', this)">Lịch sử khám</button>
+                <div class="doctor-record-tabs" id="doctorRecordTabs" style="display:none;" role="tablist"
+                    aria-label="Nhóm hồ sơ bệnh nhân">
+                    <button type="button" class="active" data-view="current"
+                        onclick="switchDoctorPatientView('current', this)">Bệnh nhân có lịch hẹn</button>
+                    <button type="button" data-view="history" onclick="switchDoctorPatientView('history', this)">Lịch sử
+                        khám</button>
                 </div>
                 <button class="btn-create-patient" onclick="openCreateModal()">
                     <i class="fa-solid fa-user-plus"></i> Tạo Hồ Sơ Bệnh Nhân Mới (UC24)
@@ -527,19 +538,23 @@
     <div class="modal-overlay" id="patientModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh Nhân (Mẫu QLBN_BM1)</h3>
-                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closePatientModal()">&times;</button>
+                <h3 id="modalTitle"><i class="fa-solid fa-id-card" style="color:var(--primary);"></i> Tạo Hồ Sơ Bệnh
+                    Nhân (Mẫu QLBN_BM1)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;"
+                    onclick="closePatientModal()">&times;</button>
             </div>
             <form id="patientForm" onsubmit="handleSavePatient(event)">
                 <div class="modal-body">
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Mã Bệnh Nhân (Tự động sinh)</label>
-                            <input type="text" id="fMaBN" class="form-control" readonly style="background:#f1f5f9; font-weight:700; color:var(--primary);">
+                            <input type="text" id="fMaBN" class="form-control" readonly
+                                style="background:#f1f5f9; font-weight:700; color:var(--primary);">
                         </div>
                         <div class="form-group">
                             <label>Họ và Tên Bệnh Nhân *</label>
-                            <input type="text" id="fHoTen" class="form-control" placeholder="Ví dụ: Nguyễn Văn An" required>
+                            <input type="text" id="fHoTen" class="form-control" placeholder="Ví dụ: Nguyễn Văn An"
+                                required>
                         </div>
                     </div>
 
@@ -560,7 +575,8 @@
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Số CCCD / Định Danh *</label>
-                            <input type="text" id="fCCCD" class="form-control" placeholder="12 chữ số" required maxlength="12">
+                            <input type="text" id="fCCCD" class="form-control" placeholder="12 chữ số" required
+                                maxlength="12">
                         </div>
                         <div class="form-group">
                             <label>Mã Thẻ BHYT (Nếu có)</label>
@@ -598,13 +614,15 @@
 
                     <div class="form-group">
                         <label>Địa Chỉ Thường Trú</label>
-                        <input type="text" id="fDiaChi" class="form-control" placeholder="Số nhà, Phường/Xã, Quận/Huyện, Tỉnh/TP">
+                        <input type="text" id="fDiaChi" class="form-control"
+                            placeholder="Số nhà, Phường/Xã, Quận/Huyện, Tỉnh/TP">
                     </div>
 
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Người Liên Hệ Khẩn Cấp</label>
-                            <input type="text" id="fNguoiThan" class="form-control" placeholder="Họ tên thân nhân / Mối quan hệ">
+                            <input type="text" id="fNguoiThan" class="form-control"
+                                placeholder="Họ tên thân nhân / Mối quan hệ">
                         </div>
                         <div class="form-group">
                             <label>Quan hệ với người liên hệ</label>
@@ -618,11 +636,13 @@
 
                     <div class="form-group">
                         <label>Tiền sử bệnh nền</label>
-                        <textarea id="fBenhNen" class="form-control" maxlength="500" placeholder="Thông tin bệnh nền"></textarea>
+                        <textarea id="fBenhNen" class="form-control" maxlength="500"
+                            placeholder="Thông tin bệnh nền"></textarea>
                     </div>
                     <div class="form-group">
                         <label>Tiền sử dị ứng</label>
-                        <textarea id="fDiUng" class="form-control" maxlength="500" placeholder="Thông tin dị ứng"></textarea>
+                        <textarea id="fDiUng" class="form-control" maxlength="500"
+                            placeholder="Thông tin dị ứng"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -639,8 +659,10 @@
     <div class="modal-overlay" id="emrModal">
         <div class="modal-box" style="max-width: 760px;">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Lịch Sử Khám Bệnh & Đơn Thuốc / CLS (Mã: <span id="emrMaBN"></span>)</h3>
-                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;" onclick="closeEmrModal()">&times;</button>
+                <h3><i class="fa-solid fa-notes-medical" style="color:var(--primary);"></i> Lịch Sử Khám Bệnh & Đơn
+                    Thuốc / CLS (Mã: <span id="emrMaBN"></span>)</h3>
+                <button type="button" style="background:none; border:none; font-size:20px; cursor:pointer;"
+                    onclick="closeEmrModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="emr-header-box">
@@ -648,12 +670,14 @@
                     <div>Số CCCD: <strong id="emrCCCD">---</strong></div>
                     <div>Thẻ BHYT: <strong id="emrBHYT">---</strong></div>
                     <div style="grid-column: span 3; color: var(--danger); font-weight:600;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo dị ứng: <span id="emrDiUng">Không có</span>
+                        <i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo dị ứng: <span id="emrDiUng">Không
+                            có</span>
                     </div>
                 </div>
 
                 <h4 style="font-size: 15px; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Danh Sách Các Lần Khám Trước
+                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Danh Sách Các Lần Khám
+                    Trước
                 </h4>
 
                 <div id="emrHistoryList">
@@ -694,6 +718,7 @@
             }
         }
 
+        // Bệnh nhân có lịch hẹn và lịch sử khám
         async function loadPatients() {
             try {
                 if (isPatientUser()) {
@@ -718,6 +743,9 @@
                     return;
                 }
 
+                // response: Chứa dữ liệu danh sách bệnh nhân.
+                // appointmentsResponse: Chứa các lịch hẹn của Bác sĩ (/api/v1/lichhen/me).
+                // examinationsResponse: Chứa lịch sử các ca đã khám của Bác sĩ (/api/v1/phieukham/me).
                 const requests = [fetch('/api/v1/benhnhan')];
                 if (isDoctorUser()) {
                     requests.push(fetch('/api/v1/lichhen/me'), fetch('/api/v1/phieukham/me'));
@@ -742,20 +770,6 @@
                 }
 
                 patients = data.map(mapPatient);
-
-                if (isDoctorUser()) {
-                    const patientsById = new Map(patients.map(patient => [patient.maBN, patient]));
-                    const currentStatusByPatient = new Map();
-                    doctorAppointments.forEach(appointment => {
-                        if (!currentStatusByPatient.has(appointment.maBenhNhan)) {
-                            currentStatusByPatient.set(appointment.maBenhNhan, 'Đã đặt lịch');
-                        }
-                    });
-                    currentStatusByPatient.forEach((status, patientId) => {
-                        const patient = patientsById.get(patientId);
-                        if (patient) patient.doctorStatus = status;
-                    });
-                }
 
                 renderPatients(isDoctorUser() ? getDoctorPatientList() : patients);
             } catch (error) {
@@ -817,8 +831,8 @@
                 const emptyMessage = isPatientUser()
                     ? 'Bạn chưa có hồ sơ bệnh nhân. Hãy tạo hồ sơ cá nhân để tiếp tục.'
                     : isDoctorUser() && doctorPatientView === 'current'
-                    ? 'Không có bệnh nhân đang chờ hoặc đang khám.'
-                    : (isDoctorUser() ? 'Chưa có bệnh nhân nào trong lịch sử khám của bạn.' : 'Không tìm thấy hồ sơ bệnh nhân phù hợp');
+                        ? 'Chưa có bệnh nhân nào có lịch hẹn khám với bạn.'
+                        : (isDoctorUser() ? 'Chưa có bệnh nhân nào trong lịch sử khám của bạn.' : 'Không tìm thấy hồ sơ bệnh nhân phù hợp');
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">${emptyMessage}</td></tr>`;
                 return;
             }
@@ -826,7 +840,7 @@
             const isDoctor = isDoctorUser();
             dataList.forEach(p => {
                 const age = calculateAge(p.ngaySinh);
-                const bhytBadge = p.maBHYT 
+                const bhytBadge = p.maBHYT
                     ? `<span class="badge-bhyt"><i class="fa-solid fa-shield-halved"></i> ${p.maBHYT}</span>`
                     : `<span style="color:var(--text-muted); font-size:12px;">Viện phí thường</span>`;
                 const doctorStatus = isDoctor && p.doctorStatus
@@ -856,7 +870,7 @@
             });
         }
 
-        // Tra cứu tìm kiếm bệnh nhân (UC26)
+        // Tìm kiếm theo cccd, bhyt, tên, sdt
         function filterPatients() {
             const kw = document.getElementById('patientSearchInput').value.trim().toLowerCase();
             const source = getDoctorPatientList();
@@ -926,7 +940,7 @@
             document.getElementById('fHoTen').value = p.hoTen;
             document.getElementById('fNgaySinh').value = p.ngaySinh;
             document.getElementById('fGioiTinh').value = p.gioiTinh;
-            
+
             // Khóa trường CCCD theo đúng quy định đặc tả (Không cho sửa CCCD/BHYT sau khi tạo hồ sơ)
             const cccdInput = document.getElementById('fCCCD');
             const bhytInput = document.getElementById('fMaBHYT');
@@ -1059,7 +1073,7 @@
             }
         }
 
-        // Xem lịch sử khám bệnh và hồ sơ bệnh án (UC28 & UC29)
+        // Thao tác xem bệnh án
         async function viewPatientEMR(maBN) {
             const p = patients.find(item => item.maBN === maBN);
             if (!p) return;
@@ -1117,10 +1131,11 @@
             window.location.href = '/login.html';
         }
 
-        window.onload = function() {
+        window.onload = function () {
             loadPatients();
         };
     </script>
     <script src="/auth-guard.js?v=2"></script>
 </body>
+
 </html>
