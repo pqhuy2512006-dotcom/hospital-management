@@ -75,7 +75,7 @@ public class TaiKhoanRepository {
 
     public List<TaiKhoan> findUnlinkedAccounts() {
         String sql = "SELECT tk.* FROM dbo.vw_TaiKhoan tk " +
-                     "WHERE tk.VaiTro <> 'BenhNhan' " +
+                     "WHERE tk.VaiTro <> 'BenhNhan' and tk.Vaitro <> 'QuanTri' " +
                      "AND tk.TrangThai = 1 " +
                      "AND NOT EXISTS (SELECT 1 FROM NhanVien nv WHERE nv.MaTaiKhoan = tk.MaTaiKhoan) " +
                      "ORDER BY tk.NgayTao DESC";

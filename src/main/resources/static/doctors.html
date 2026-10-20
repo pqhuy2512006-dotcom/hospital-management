@@ -1224,17 +1224,17 @@
             updateHocViByRole('BacSi'); // Khởi tạo danh sách học vị của Bác Sĩ
             document.getElementById('dTrangThai').value = 'DangLamViec';
 
-            // Tải danh sách tài khoản Admin đã cấp nhưng chưa có hồ sơ
+            // Liên Kết Tài Khoản Hệ Thống (Admin đã cấp)
             const grp = document.getElementById('grpChonTaiKhoan');
             if (grp) {
                 grp.style.display = 'block';
                 const sel = document.getElementById('dChonTaiKhoan');
                 sel.innerHTML = '<option value="">-- Đang tải tài khoản... --</option>';
                 try {
-                                        const res = await fetch('/api/v1/taikhoan/unlinked');
+                    const res = await fetch('/api/v1/taikhoan/unlinked');
                     if (res.ok) {
                         const accounts = await res.json();
-                        sel.innerHTML = '<option value="">-- Chọn tài khoản Admin đã cấp --</option>';
+                        sel.innerHTML = '<option value="" hidden disabled selected>-- Chọn tài khoản liên kết --</option>';
                         if (accounts.length === 0) {
                             sel.innerHTML = '<option value="">(Không có tài khoản mới nào đang chờ tạo hồ sơ)</option>';
                         } else {

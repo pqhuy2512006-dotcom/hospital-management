@@ -39,7 +39,7 @@ CREATE TABLE TaiKhoan (
     Email           VARCHAR(100)         NULL UNIQUE,
     SoDienThoai     VARCHAR(15)          NOT NULL,
     VaiTro          VARCHAR(20)          NOT NULL 
-                    CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','QuanLyNhanSu','GiamDoc','BenhNhan')),
+                    CHECK (VaiTro IN ('BacSi','DieuDuong','LeTan','DuocSi','KTV','ThuNgan','QuanTri','QuanLyNhanSu','BenhNhan')),
     TrangThai       BIT                  NOT NULL DEFAULT 1,
     NgayTao         DATETIME             NOT NULL DEFAULT GETDATE()
 );
